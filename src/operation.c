@@ -149,10 +149,11 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 		int64_t tlow=(NV*thread)/NT;
 		int64_t thigh=(NV*(thread+1))/NT-1;
 		for(uint64_t v=tlow;v<thigh;v++){
+                        printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
 			for(uint64_t t=0;t<NT;t++){
 				forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
 			}
-                        printf("dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+                        printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
 		}
 
 	}
