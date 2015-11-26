@@ -76,11 +76,12 @@ void bfsBrandesForApproxCaseParallel(bcForest* forest, struct stinger* sStinger,
 
 
 #pragma omp parallel for
-	for(uint64_t v=0;v<forest->NV;v++)
-		for(uint64_t t=0;t<NT;t++)
-			forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
-
-
+	for(uint64_t v=0;v<forest->NV;v++) {
+		for(uint64_t t=0;t<NT;t++) {
+                	forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
+                }
+		printf("static: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+        }
 }
 
 

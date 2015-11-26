@@ -11,6 +11,7 @@
 
 #include "streaming_utils.h"
 #include "streaming_insertions.h"
+#include "streaming_deletions.h"
 #include "operation.h"
 #include "graphGen.h"
 
@@ -46,9 +47,14 @@ uint64_t*  parentCounter;
 int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 
-#define INS_COUNT 50
-int64_t insertionArraySrc[INS_COUNT];
-int64_t insertionArrayDest[INS_COUNT];
+#define COUNT 200
+#define INSERTING 1
+
+int64_t insertionArraySrc[COUNT];
+int64_t insertionArrayDest[COUNT];
+int64_t deletionArraySrc[COUNT];
+int64_t deletionArrayDest[COUNT];
+
 int64_t * rootArrayForApproximation;
 
 int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
@@ -82,6 +88,24 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	return timeStreamMulti;
 }
 
+double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, extraArraysPerThread **eAPT_perThread,
+                uint64_t *rootArrayForApproximation, int64_t NK, bcForest *beforeBCForest, int64_t u_old, int64_t v_old)
+{
+    uint64_t iterator;
+    float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti = 0;
+    float_t avgComponents = 0;
+
+    fflush(stdout);
+    iterationCount = 1;
+
+    double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
+
+    tic();
+    *oneSEI = deleteEdgeBrandes(beforeBCForest, stingerGraph, u_old, v_old, rootArrayForApproximation, NK, eAPT_perThread);
+    timeStreamMulti = toc();
+
+    return timeStreamMulti;
+}
 
 int doubleCompareforMinSort (const void * a, const void * b)
 {
@@ -93,24 +117,39 @@ int doubleCompareforMinSort (const void * a, const void * b)
 int main(int argc, char *argv[])
 {
 	hostParseArgsVitalUpdate(argc, argv);
-	double timingDynamic[threadArraySize][INS_COUNT];
+    
+        double timingDynamic[threadArraySize][COUNT];
 	double timingStatic[threadArraySize];
 	double timingDynamicTotal[threadArraySize];
 
-	StreamingExtraInfo seiDynamic[threadArraySize][INS_COUNT];
+	StreamingExtraInfo seiDynamic[threadArraySize][COUNT];
 	StreamingExtraInfo seiDynamicTotal[threadArraySize];
 
 	int64_t staticTraverseVerticeCounter[threadArraySize];
 	int64_t staticTraverseEdgeCounter[threadArraySize];
 
-	int64_t dynamicTraverseVerticeCounter[threadArraySize][INS_COUNT];
-	int64_t dynamicTraverseEdgeCounter[threadArraySize][INS_COUNT];
+	int64_t dynamicTraverseVerticeCounter[threadArraySize][COUNT];
+	int64_t dynamicTraverseEdgeCounter[threadArraySize][COUNT];
 	int64_t dynamicTraverseVerticeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterTotal[threadArraySize];
-	int64_t dynamicTraverseEdgeCounterMax[threadArraySize][INS_COUNT];
+	int64_t dynamicTraverseEdgeCounterMax[threadArraySize][COUNT];
+/*
+        double timingDynamicDeleting[threadArraySize][DEL_COUNT];
+        double timingStaticDeleting[threadArraySize];
+        double timingDynamicTotalDeleting[threadArraySize];
 
+        StreamingExtraInfo seiDynamicDeleting[threadArraySize][DEL_COUNT];
+        StreamingExtraInfo seiDynamicTotalDeleting[threadArraySize];
 
+        int64_t staticTraverseVerticeCounterDeleting[threadArraySize];
+        int64_t staticTraverseEdgeCounterDeleting[threadArraySize];
 
+        int64_t dynamicTraverseVerticeCounterDeleting[threadArraySize][DEL_COUNT];
+        int64_t dynamicTraverseEdgeCounterDeleting[threadArraySize][DEL_COUNT];
+        int64_t dynamicTraverseVerticeCounterTotalDeleting[threadArraySize];
+        int64_t dynamicTraverseEdgeCounterTotalDeleting[threadArraySize];
+        int64_t dynamicTraverseEdgeCounterMaxDeleting[threadArraySize][DEL_COUNT];
+*/
 	for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 	{
 		NT = threadArray[threadCount];
@@ -140,7 +179,6 @@ int main(int argc, char *argv[])
 			CSRGraph->vertexPointerArray[1]=0;
 			int64_t counter=0;
 			for(int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
-
 				uint64_t neigh=0;
 				uint64_t v = 0;
 				char * ptr = line;
@@ -151,9 +189,10 @@ int main(int argc, char *argv[])
 					neigh++;
 					CSRGraph->edgeArray[counter++]=v;
 				}
+    
 				CSRGraph->vertexPointerArray[u+1]=CSRGraph->vertexPointerArray[u]+neigh;
 			}
-
+                        
 			CreateStingerFromCSR(CSRGraph,&stingerGraph);
 
 			FreeCSR(CSRGraph);
@@ -175,7 +214,7 @@ int main(int argc, char *argv[])
 			}
 
 			for(int64_t vr=0;vr<NK;vr++){
-				int tempV=rand()%NV;
+                                int tempV=rand()%NV;
 				if(flag[tempV]==1)
 				{
 					vr--;
@@ -195,7 +234,12 @@ int main(int argc, char *argv[])
 
 		bcForest* beforeBCForest=NULL;
 
-		CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,INS_COUNT);
+                #if INSERTING==1 
+		CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
+                #else
+                CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
+                                            deletionArrayDest, COUNT);
+                #endif
 
 		if(0)
 		{
@@ -256,37 +300,47 @@ int main(int argc, char *argv[])
 		dynamicTraverseVerticeCounterTotal[threadCount]=0;
 		dynamicTraverseEdgeCounterTotal[threadCount]=0;
 
-		for(int64_t ins=0; ins<INS_COUNT; ins++)
+		for(int64_t count=0; count<COUNT; count++)
 		{
-			int64_t src = insertionArraySrc[ins];
-			int64_t dest = insertionArrayDest[ins];
+                        #if INSERTING==1
+			int64_t src = insertionArraySrc[count];
+			int64_t dest = insertionArrayDest[count];
 
 			stinger_insert_edge(stingerGraph,0,src,dest,0,0);
 			stinger_insert_edge(stingerGraph,0,dest,src,0,0);
 
-			timingDynamic[threadCount][ins] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation,NK,beforeBCForest,src, dest);
+			timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation,NK,beforeBCForest,src, dest);
+                        #else
+                        int64_t src = deletionArraySrc[count];
+                        int64_t dest = deletionArrayDest[count];
 
-			timingDynamicTotal[threadCount]+=timingDynamic[threadCount][ins];
+                        stinger_remove_edge(stingerGraph, 0, src, dest);
+                        stinger_remove_edge(stingerGraph, 0, dest, src);
+                            
+                        timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, rootArrayForApproximation, NK, beforeBCForest, src, dest);
+                        #endif
+
+			timingDynamicTotal[threadCount]+=timingDynamic[threadCount][count];
 
 			globalSEI.adjacent += oneSEI.adjacent; globalSEI.movement += oneSEI.movement; globalSEI.sameLevel += oneSEI.sameLevel;
-			seiDynamic[threadCount][ins].movement = oneSEI.movement; 
-			seiDynamic[threadCount][ins].adjacent = oneSEI.adjacent; 
-			seiDynamic[threadCount][ins].sameLevel = oneSEI.sameLevel; 
+			seiDynamic[threadCount][count].movement = oneSEI.movement; 
+			seiDynamic[threadCount][count].adjacent = oneSEI.adjacent; 
+			seiDynamic[threadCount][count].sameLevel = oneSEI.sameLevel; 
 			oneSEI.adjacent=0; oneSEI.movement=0; oneSEI.sameLevel=0;
 
 
-			dynamicTraverseVerticeCounter[threadCount][ins]=eAPT_perThread[0]->dynamicTraverseVerticeCounter;
-			dynamicTraverseEdgeCounter[threadCount][ins]=eAPT_perThread[0]->dynamicTraverseEdgeCounter;
-			dynamicTraverseVerticeCounterTotal[threadCount]+=dynamicTraverseVerticeCounter[threadCount][ins];
-			dynamicTraverseEdgeCounterTotal[threadCount]+=dynamicTraverseEdgeCounter[threadCount][ins];
+			dynamicTraverseVerticeCounter[threadCount][count]=eAPT_perThread[0]->dynamicTraverseVerticeCounter;
+			dynamicTraverseEdgeCounter[threadCount][count]=eAPT_perThread[0]->dynamicTraverseEdgeCounter;
+			dynamicTraverseVerticeCounterTotal[threadCount]+=dynamicTraverseVerticeCounter[threadCount][count];
+			dynamicTraverseEdgeCounterTotal[threadCount]+=dynamicTraverseEdgeCounter[threadCount][count];
 
 
-			dynamicTraverseEdgeCounterMax[threadCount][ins]= eAPT_perThread[0]->dynamicTraverseEdgeCounter;
+			dynamicTraverseEdgeCounterMax[threadCount][count]= eAPT_perThread[0]->dynamicTraverseEdgeCounter;
 
 			for(int t=0;t<NT;t++)                                                      
 			{
-				if(dynamicTraverseEdgeCounterMax[threadCount][ins]<eAPT_perThread[t]->dynamicTraverseEdgeCounter)
-					dynamicTraverseEdgeCounterMax[threadCount][ins]=eAPT_perThread[t]->dynamicTraverseEdgeCounter;
+				if(dynamicTraverseEdgeCounterMax[threadCount][count]<eAPT_perThread[t]->dynamicTraverseEdgeCounter)
+					dynamicTraverseEdgeCounterMax[threadCount][count]=eAPT_perThread[t]->dynamicTraverseEdgeCounter;
 				ClearCounters(eAPT_perThread[t]);
 			}
 		}
@@ -310,12 +364,12 @@ int main(int argc, char *argv[])
 	if(1)
 	{
 
-		for(int64_t ins=0; ins<INS_COUNT;ins++)
+		for(int64_t count=0; count<COUNT;count++)
 		{
-			printf("%ld,",ins);
-			printf("%ld,",seiDynamic[0][ins].sameLevel);
-			printf("%ld,",seiDynamic[0][ins].adjacent);  
-			printf("%ld,", seiDynamic[0][ins].movement); 
+			printf("%ld,",count);
+			printf("%ld,",seiDynamic[0][count].sameLevel);
+			printf("%ld,",seiDynamic[0][count].adjacent);  
+			printf("%ld,", seiDynamic[0][count].movement); 
 			printf("%9lf, ",(double)(timingStatic[0])); // Min speedup 
 			for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 			{	
@@ -326,10 +380,10 @@ int main(int argc, char *argv[])
 				 (double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounter[0][ins]);
 				 printf("%9lf, ",(double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounterMax[threadCount]);
 				 */
-				printf("%9lf, ",(double)(timingDynamic[threadCount][ins])); // Min speedup 
-				printf("%9lf, ",(double)(timingDynamic[threadCount][ins])/(double)timingStatic[threadCount]); // Min speedup 
-				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][ins])/(double)(staticTraverseEdgeCounter[threadCount]) );
-				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][ins])/(double)(staticTraverseEdgeCounter[0]) );
+				printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
+				printf("%9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
+				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
+				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[0]) );
 
 				//				printf("%3ld, %3ld, ",ins,threadArray[threadCount]); // Number of threads used
 				//				printf("%9lf, ",(double)timingStatic[threadCount]/(double)(timingDynamic[threadCount][ins])); // Min speedup 
@@ -343,29 +397,29 @@ int main(int argc, char *argv[])
 		for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 		{   
 			int64_t threads = threadArray[threadCount];
-			qsort(timingDynamic[threadCount],INS_COUNT,sizeof(double), doubleCompareforMinSort);
+			qsort(timingDynamic[threadCount],COUNT,sizeof(double), doubleCompareforMinSort);
 			printf("%3ld, ",threads); // Number of threads used
 			printf("%9lf, ",timingStatic[threadCount]); // Time of static algorithm
-			printf("%9lf, ",timingDynamicTotal[threadCount]/INS_COUNT); // Time of dynamic algorithm
-			printf("%9lf, ",1.0/(double)timingDynamicTotal[threadCount]*INS_COUNT); // Updates per second
+			printf("%9lf, ",timingDynamicTotal[threadCount]/COUNT); // Time of dynamic algorithm
+			printf("%9lf, ",1.0/(double)timingDynamicTotal[threadCount]*COUNT); // Updates per second
 			printf("%9lf, ",timingStatic[0]/timingStatic[threadCount]); // Speedup of static algorithm
 			printf("%9lf, ",timingDynamicTotal[0]/timingDynamicTotal[threadCount]); // Speedup of dynamic algorithm
 
 
 			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][0])); // Min speedup 
-			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][INS_COUNT/4])); // Min speedup 
-			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][INS_COUNT/2])); // Min speedup 
-			printf("%9lf, ",timingStatic[0]/(timingDynamicTotal[threadCount]/INS_COUNT)); // Average speedup
-			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][3*INS_COUNT/4])); // Min speedup 
-			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][INS_COUNT-1])); // Max Speedup
+			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][COUNT/4])); // Min speedup 
+			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][COUNT/2])); // Min speedup 
+			printf("%9lf, ",timingStatic[0]/(timingDynamicTotal[threadCount]/COUNT)); // Average speedup
+			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][3*COUNT/4])); // Min speedup 
+			printf("%9lf, ",timingStatic[0]/(timingDynamic[threadCount][COUNT-1])); // Max Speedup
 
-			printf("%9lf, ",timingStatic[threadCount]/(timingDynamicTotal[threadCount]/INS_COUNT)); //
+			printf("%9lf, ",timingStatic[threadCount]/(timingDynamicTotal[threadCount]/COUNT)); //
 			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][0])); // Min speedup 
-			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][INS_COUNT/4])); // Min speedup 
-			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][INS_COUNT/2])); // Min speedup 
-			printf("%9lf, ",timingStatic[threadCount]/(timingDynamicTotal[threadCount]/INS_COUNT)); // Average speedup
-			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][3*INS_COUNT/4])); // Min speedup 
-			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][INS_COUNT-1])); // Max Speedup
+			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][COUNT/4])); // Min speedup 
+			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][COUNT/2])); // Min speedup 
+			printf("%9lf, ",timingStatic[threadCount]/(timingDynamicTotal[threadCount]/COUNT)); // Average speedup
+			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][3*COUNT/4])); // Min speedup 
+			printf("%9lf, ",timingStatic[threadCount]/(timingDynamic[threadCount][COUNT-1])); // Max Speedup
 
 			//printf("%9lf, ",(double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounterTotal[0]);
 
@@ -376,8 +430,8 @@ int main(int argc, char *argv[])
 			printf("%9lf,"); //
 			printf("%9lf,"); //
 			 */		//printf("%lf,"); //
-			//printf("%lf, %lf, %lf, %lf, %lf, %lf, %lf\n",timeFullBeforeMulti,streamingTimeTotal/INS_COUNT,minTime,maxTime, 
-			//		(double)globalSEI.sameLevel/(double)INS_COUNT, (double)globalSEI.adjacent/(double)INS_COUNT, (double)globalSEI.movement/(double)INS_COUNT);
+			//printf("%lf, %lf, %lf, %lf, %lf, %lf, %lf\n",timeFullBeforeMulti,streamingTimeTotal/COUNT,minTime,maxTime, 
+			//		(double)globalSEI.sameLevel/(double)COUNT, (double)globalSEI.adjacent/(double)COUNT, (double)globalSEI.movement/(double)COUNT);
 			printf("\n");
 		} 
 
@@ -424,6 +478,42 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		ins++;
 	}
 
+}
+
+void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,
+                int64_t* deletionArrayDest, int64_t deletionCount)
+{
+    int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;
+
+    while (del < deletionCount)
+    {
+        src = rand() % NV;
+
+        srcAdj = stinger_typed_outdegree(stingerGraph, src, 0);
+
+        // No adjacencies
+        if (srcAdj == 0)
+            continue;
+
+        destInAdj = rand() % srcAdj;
+        destCounter = 0;
+        dest = 0;
+        STINGER_FORALL_EDGES_OF_VTX_BEGIN(stingerGraph, srcAdj)
+            dest = STINGER_EDGE_DEST;
+            if (destInAdj == destCounter)
+                break;
+            destCounter++;
+        STINGER_FORALL_EDGES_OF_VTX_END();
+
+        if (src == dest)
+            continue;
+        if (src > NV || dest > NV)
+            printf("Oops %ld\n", del);
+
+        deletionArraySrc[del] = src;
+        deletionArrayDest[del] = dest;
+        del++;
+    }
 }
 
 void hostParseArgsVitalUpdate(int argc, char** argv) {
