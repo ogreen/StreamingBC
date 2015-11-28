@@ -143,8 +143,8 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 			}
 			eAPT[thread]->adjacentCounter++;
 		}
-
-		#pragma omp barriar
+                /*
+		#pragma omp barrier
 
 		int64_t tlow=(NV*thread)/NT;
 		int64_t thigh=(NV*(thread+1))/NT-1;
@@ -153,21 +153,42 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
                 printf("NT: %d\n", NT);
                 printf("before_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
                 printf("before_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]); 
-		for(uint64_t v=tlow;v<thigh;v++){
+		fflush(stdout);
+                for(uint64_t v=tlow;v<thigh;v++){
                         //printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
 			for(uint64_t t=0;t<NT;t++){
 				forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
 			}
-                        //printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+                        printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
 		}
                 //printf("eAPT[0]->sV[newU: %d].totalBC: %d\n", newU, eAPT[0]->sV[newU].totalBC);
                 printf("after_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
                 printf("after_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]);
-
+                fflush(stdout); */
 	}
 
-
-
+        #pragma omp barrier
+        	
+        int64_t tlow=(NV*thread)/NT;
+	int64_t thigh=(NV*(thread+1))/NT-1;
+      
+        printf("newU: %d\n", newU);
+        printf("newV: %d\n", newV); 
+        
+        printf("before_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
+        printf("before_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]); 
+        #pragma omp parallel 
+        for(uint64_t v=tlow;v<thigh;v++){
+            printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+	    for(uint64_t t=0;t<NT;t++){
+	        forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
+	    }
+            printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+	}
+        
+        printf("after_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
+        printf("after_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]);
+        
         StreamingExtraInfo returnSEI={0,0,0,0};
         returnSEI.sameLevel= samelevel;
         returnSEI.adjacent = adjacent;
@@ -300,10 +321,12 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, 1, myExtraArrays);
             eAPT[thread]->movementCounter++;
         }
-
+        
+        /*
         int64_t tlow = (NV * thread) / NT;
         int64_t thigh = (NV * (thread + 1)) / NT - 1;
-        #pragma omp barriar
+        
+        #pragma omp barrier
         for (uint64_t v = tlow; v < thigh; v++)
         {
             for (uint64_t t = 0; t < NT; t++)
@@ -311,9 +334,21 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
                 forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             }
             printf("dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
-        }
+        } */
     }
-
+    
+    int64_t tlow = (NV * thread) / NT;
+    int64_t thigh = (NV * (thread + 1)) / NT - 1;
+        
+    #pragma omp barrier
+    for (uint64_t v = tlow; v < thigh; v++)
+    {
+        for (uint64_t t = 0; t < NT; t++)
+        {
+            forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
+        }
+        printf("dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+    } 
     StreamingExtraInfo returnSEI = {0,0,0,0};
 
     returnSEI.sameLevel = samelevel;
