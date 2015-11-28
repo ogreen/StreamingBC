@@ -47,7 +47,7 @@ uint64_t*  parentCounter;
 int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 
-#define COUNT 200
+#define COUNT 2
 #define INSERTING 1
 
 int64_t insertionArraySrc[COUNT];

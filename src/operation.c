@@ -148,13 +148,21 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 
 		int64_t tlow=(NV*thread)/NT;
 		int64_t thigh=(NV*(thread+1))/NT-1;
+                printf("tlow: %d\n", tlow);
+                printf("thigh: %d\n", thigh);
+                printf("NT: %d\n", NT);
+                printf("before_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
+                printf("before_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]); 
 		for(uint64_t v=tlow;v<thigh;v++){
-                        printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+                        //printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
 			for(uint64_t t=0;t<NT;t++){
 				forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
 			}
-                        printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+                        //printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
 		}
+                //printf("eAPT[0]->sV[newU: %d].totalBC: %d\n", newU, eAPT[0]->sV[newU].totalBC);
+                printf("after_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
+                printf("after_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]);
 
 	}
 
