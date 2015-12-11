@@ -51,7 +51,8 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 		extraArraysPerThread* myExtraArrays = eAPT[thread];
 		bcTree* tree = forest->forest[i];
 		int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
-		// New edge is connecting vertices in the same level. Nothing needs to be done.
+                //printf("newU, newV, newU_level, newV_level, root: %ld, %ld, %ld, %ld, %ld\n", newU, newV, tree->vArr[newU].level, tree->vArr[newV].level, i);
+                // New edge is connecting vertices in the same level. Nothing needs to be done.
 		//        continue;
 		if(diff==0)
 		{
@@ -73,7 +74,7 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 
 
 	for(uint64_t thread=0; thread<1; ++thread){
-		//printf("Thread=%d,", thread);
+		//printf("Thread=%ld,", thread);
 		samelevel += eAPT[thread]->samelevelCounter;
 		compConn += eAPT[thread]->compConnCounter;
 		adjacent += eAPT[thread]->adjacentCounter;
@@ -148,22 +149,22 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 
 		int64_t tlow=(NV*thread)/NT;
 		int64_t thigh=(NV*(thread+1))/NT-1;
-                printf("tlow: %d\n", tlow);
-                printf("thigh: %d\n", thigh);
-                printf("NT: %d\n", NT);
-                printf("before_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
-                printf("before_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]); 
+                printf("tlow: %ld\n", tlow);
+                printf("thigh: %ld\n", thigh);
+                printf("NT: %ld\n", NT);
+                printf("before_dynamic: totalBC[newU: %ld]: %ld\n", newU, forest->totalBC[newU]); 
+                printf("before_dynamic: totalBC[newV: %ld]: %ld\n", newV, forest->totalBC[newV]); 
 		fflush(stdout);
                 for(uint64_t v=tlow;v<thigh;v++){
-                        //printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+                        //printf("before_dynamic: totalBC[%ld]: %ld\n", v, forest->totalBC[v]);
 			for(uint64_t t=0;t<NT;t++){
 				forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
 			}
-                        printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+                        printf("after_dynamic: totalBC[%ld]: %ld\n", v, forest->totalBC[v]);
 		}
-                //printf("eAPT[0]->sV[newU: %d].totalBC: %d\n", newU, eAPT[0]->sV[newU].totalBC);
-                printf("after_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
-                printf("after_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]);
+                //printf("eAPT[0]->sV[newU: %ld].totalBC: %ld\n", newU, eAPT[0]->sV[newU].totalBC);
+                printf("after_dynamic: totalBC[newU: %ld]: %ld\n", newU, forest->totalBC[newU]); 
+                printf("after_dynamic: totalBC[newV: %ld]: %ld\n", newV, forest->totalBC[newV]);
                 fflush(stdout); */
 	}
 
@@ -171,23 +172,27 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
         	
         int64_t tlow=(NV*thread)/NT;
 	int64_t thigh=(NV*(thread+1))/NT-1;
-      
-        printf("newU: %d\n", newU);
-        printf("newV: %d\n", newV); 
+     
+        printf("newU: %ld\n", newU);
+        printf("newV: %ld\n", newV); 
         
-        printf("before_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
-        printf("before_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]); 
+        //printf("before_dynamic: totalBC[newU: %ld]: %lf\n", newU, forest->totalBC[newU]); 
+        //printf("before_dynamic: totalBC[newV: %ld]: %lf\n", newV, forest->totalBC[newV]); 
+        //printf("%lf\n", forest->totalBC[newU]); 
+        //printf("%lf\n", forest->totalBC[newU]); 
         #pragma omp parallel 
         for(uint64_t v=tlow;v<thigh;v++){
-            printf("before_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
-	    for(uint64_t t=0;t<NT;t++){
+            //printf("before_dynamic: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
+            //printf("%lf\n", forest->totalBC[v]);
+            for(uint64_t t=0;t<NT;t++){
 	        forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
 	    }
-            printf("after_dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+            //printf("after_dynamic: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
+            printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
 	}
         
-        printf("after_dynamic: totalBC[newU: %d]: %d\n", newU, forest->totalBC[newU]); 
-        printf("after_dynamic: totalBC[newV: %d]: %d\n", newV, forest->totalBC[newV]);
+        //printf("after_dynamic: totalBC[newU: %ld]: %lf\n", newU, forest->totalBC[newU]); 
+        //printf("after_dynamic: totalBC[newV: %ld]: %lf\n", newV, forest->totalBC[newV]);
         
         StreamingExtraInfo returnSEI={0,0,0,0};
         returnSEI.sameLevel= samelevel;
@@ -213,9 +218,10 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
 
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
-
+    
     for (currRoot = 0; currRoot < NK; currRoot++)
     {
+        //printf("currRoot: %ld\n", currRoot);
         uint64_t i = rootArrayForApproximation[currRoot];
         int64_t thread = 0;
         extraArraysPerThread *myExtraArrays = eAPT[thread];
@@ -229,7 +235,7 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
             continue;
         }
 
-        int64_t numParents = 0;
+        int64_t extraParents = 0;
         int64_t childVertex = oldU;
         if (tree->vArr[oldU].level < tree->vArr[oldV].level)
         {
@@ -241,16 +247,18 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
             uint64_t neighbor = STINGER_EDGE_DEST;
             if (tree->vArr[neighbor].level + 1 == tree->vArr[childVertex].level)
             {
-                numParents++;
+                extraParents++;
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
         
-        if (numParents > 1)
+        //printf("oldU, oldV, childVertex, extraParents, root: %ld, %ld, %ld, %ld, %ld\n", oldU, oldV, childVertex, extraParents, i);
+        
+        if (extraParents >= 1)
         {
             adjRootArray[eAPT[thread]->adjacentCounter++] = i;
         }
-        else if (numParents == 1)
+        else
         {
             moveRootArray[eAPT[thread]->movementCounter++] = i;
         }
@@ -270,6 +278,7 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
 
     int64_t newRootArray[NK];
     int64_t counter = 0, thread = 0;
+    
     for (int64_t m = 0; m < movement; m++)
     {
         newRootArray[counter++] = moveRootArray[m++]; // Why are there two m++'s?
@@ -285,14 +294,15 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
 
     #pragma omp parallel for schedule(dynamic,1)
     for (r = 0; r < counter; r++)
-    {
+    { 
+        //printf("before\n");
         int64_t i = newRootArray[r];
         int64_t thread = omp_get_thread_num();
         extraArraysPerThread *myExtraArrays = eAPT[thread];
 
         bcTree *tree = forest->forest[i];
 
-        int64_t numParents;
+        int64_t extraParents = 0;
         int64_t childVertex = oldU;
         int64_t parentVertex = oldV;
         if (tree->vArr[oldU].level < tree->vArr[oldV].level)
@@ -306,12 +316,13 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
 
             if (tree->vArr[neighbor].level + 1 == tree->vArr[childVertex].level)
             {
-                numParents++;
+                extraParents++;
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
-
-        if (numParents > 1)
+    
+        //printf("oldU, oldV, childVertex, extraParents, root: %ld, %ld, %ld, %ld, %ld\n", oldU, oldV, childVertex, extraParents, i);
+        if (extraParents >= 1)
         {
             deleteEdgeWithoutMovement(forest, sStinger, i, childVertex, parentVertex, tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
             eAPT[thread]->adjacentCounter++;
@@ -333,21 +344,23 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
             {
                 forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             }
-            printf("dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+            printf("dynamic: totalBC[%ld]: %ld\n", v, forest->totalBC[v]);
         } */
     }
     
     int64_t tlow = (NV * thread) / NT;
     int64_t thigh = (NV * (thread + 1)) / NT - 1;
-        
+       
+    printf("oldU: %d\n", oldU);
+    printf("oldV: %d\n", oldV);  
     #pragma omp barrier
     for (uint64_t v = tlow; v < thigh; v++)
-    {
+    { 
         for (uint64_t t = 0; t < NT; t++)
         {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
         }
-        printf("dynamic: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+        printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
     } 
     StreamingExtraInfo returnSEI = {0,0,0,0};
 

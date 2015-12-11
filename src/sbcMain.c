@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <assert.h>
 
 #include <time.h>
 #include <math.h>
@@ -47,7 +48,7 @@ uint64_t*  parentCounter;
 int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 
-#define COUNT 2
+#define COUNT 1
 #define INSERTING 1
 
 int64_t insertionArraySrc[COUNT];
@@ -203,7 +204,8 @@ int main(int argc, char *argv[])
 
 		uint64_t * rootArrayForApproximation = NULL;
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
-		if(NK==NV){
+		//assert (NK == NV);
+                if(NK==NV){
 			for(int64_t vr=0;vr<NK;vr++)
 				rootArrayForApproximation[vr] = vr;
 		}
@@ -233,14 +235,14 @@ int main(int argc, char *argv[])
 
 
 		bcForest* beforeBCForest=NULL;
-
+                              
                 #if INSERTING==1 
 		CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
                 #else
                 CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
                                             deletionArrayDest, COUNT);
                 #endif
-
+                
 		if(0)
 		{
 			//-------Compute static BC
@@ -268,7 +270,7 @@ int main(int argc, char *argv[])
 
 			tic();
 			bfsBrandesForApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
-			timingStatic[threadCount]=toc();
+                        timingStatic[threadCount]=toc();
 			staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
 			staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
 
@@ -285,7 +287,7 @@ int main(int argc, char *argv[])
 
 			//-------END
 		}
-
+                 
 
 		//-------Compute streaming BC
 		//-------START
@@ -348,8 +350,33 @@ int main(int argc, char *argv[])
 		seiDynamicTotal[threadCount].movement =globalSEI.movement; 
 		seiDynamicTotal[threadCount].adjacent =globalSEI.adjacent; 
 		seiDynamicTotal[threadCount].sameLevel =globalSEI.sameLevel; 
+                        	
+                //-------Compute static BC - Parallel
+                //-------START
 
-		destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
+                beforeBCForest=CreateForestForApproxCase(&beforeBCForest, NV, rootArrayForApproximation, NK);
+                extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
+
+                tic();
+                bfsBrandesForApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
+                timingStatic[threadCount]=toc();
+                staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
+                staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
+
+                //   printf("********* %ld %ld  *********", staticTraverseVerticeCounter[threadCount], staticTraverseEdgeCounter[threadCount]);
+
+                /*
+                   printf("---------------------\n---------------------\n");
+                   for(int64_t t=0;t<NT;t++)
+                   printf("%ld %ld %ld\n", t,
+                   eAPT_perThread2[t]->staticTraverseVerticeCounter,eAPT_perThread2[t]->staticTraverseEdgeCounter);
+                   printf("---------------------\n---------------------\n");
+                 */
+                
+                destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
+                destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
+		//-------END
+                
 
 
 		DestroyForestForApproxCase(&beforeBCForest,rootArrayForApproximation, NK);
@@ -483,6 +510,25 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,
                 int64_t* deletionArrayDest, int64_t deletionCount)
 {
+    int64_t del = 0, src, dest;
+
+    while (del < deletionCount)
+    {
+        src = rand() % NV;
+        dest = rand() % NV;
+        if (src == dest)
+            continue;
+
+        int result = stinger_insert_edge(stingerGraph, 0, src, dest, 0, 0);
+
+        if (result < 1)
+            continue;
+
+        deletionArraySrc[del] = src;
+        deletionArrayDest[del] = dest;
+        del++;
+    }
+    /*
     int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;
 
     while (del < deletionCount)
@@ -513,7 +559,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         deletionArraySrc[del] = src;
         deletionArrayDest[del] = dest;
         del++;
-    }
+    }*/
 }
 
 void hostParseArgsVitalUpdate(int argc, char** argv) {

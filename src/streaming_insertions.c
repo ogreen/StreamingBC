@@ -74,14 +74,15 @@ void bfsBrandesForApproxCaseParallel(bcForest* forest, struct stinger* sStinger,
 		//            printf("%ld\n",rootArrayForApproximation[i]);
 	}
 
-
 #pragma omp parallel for
 	for(uint64_t v=0;v<forest->NV;v++) {
-		printf("before_static: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+		//printf("before_static: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
+		//printf("%lf\n", forest->totalBC[v]);
 		for(uint64_t t=0;t<NT;t++) {
                 	forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
                 }
-		printf("after_static: totalBC[%d]: %d\n", v, forest->totalBC[v]);
+		//printf("after_static: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
+		printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
         }
 }
 
@@ -483,7 +484,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	   }
 	 */
 
-	//printf("%lf,",toc());
+	//printf("%ld,",toc());
 	//return;
 	//tic();                 
 

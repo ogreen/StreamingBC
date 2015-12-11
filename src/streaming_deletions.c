@@ -12,7 +12,7 @@
 #include "list.h"
 #include "dsUtils.h"
 
-#define MAX(X, Y) ((X > Y)) ? (X) : (Y)
+#define MAX(X, Y) ((X) > (Y) ? X : Y)
 
 void deleteEdgeWithoutMovement(bcForest* forest, struct stinger *sStinger,
                     uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
@@ -64,8 +64,8 @@ void deleteEdgeWithoutMovement(bcForest* forest, struct stinger *sStinger,
                 }
                 else if (eAPT->sV[neighbor].touched == currElementLevel + 1)
                 {
-                    eAPT->sV[neighbor].diffPath -= eAPT->sV[currElement].diffPath;
-                    eAPT->sV[neighbor].newPathsToRoot += eAPT->sV[currElement].diffPath;
+                    eAPT->sV[neighbor].diffPath += eAPT->sV[currElement].diffPath;
+                    eAPT->sV[neighbor].newPathsToRoot -= eAPT->sV[currElement].diffPath;
                 }
             }
         }
@@ -208,6 +208,7 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
 
     for (uint64_t i = 0; i < NV; i++)
     {
+        newLevel[i] = 0;
         eAPT->sV[i].newPathsToRoot = tree->vArr[i].pathsToRoot;
     }
 
@@ -225,6 +226,8 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
     
     list_ptr *multiLevelQueues = eAPT->multiLevelQueues;
 
+    // Sets newLevel to tree level for all siblings of startVertex and infinity for all other neighbors of startVertex.
+    // Puts siblingts of startVertex in QueueSame and every other neighbor in QueueDown.
     STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, startVertex)
     {
         int64_t neighbor = STINGER_EDGE_DEST;
@@ -251,7 +254,7 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
     qDownStart = 1;
     while (qDownStart != qDownEnd)
     {
-        int64_t currElement = QueueDown[qDownStart];
+        int64_t currElement = QueueDown[qDownStart++];
         
         // Adds every vertex on same level as startVertex with at least one child to QueueSame.
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, currElement)
@@ -288,8 +291,8 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
     {
         QueueDown[i] = QueueSame[i];
         eAPT->sV[i].newDelta = 0;
-        newLevel[parentVertex] = tree->vArr[parentVertex].level;
-        eAPT->sV[i].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
+        //newLevel[parentVertex] = tree->vArr[parentVertex].level; Commented out on 12/9/15 5:50pm
+        //eAPT->sV[i].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot; Commented out on 12/9/15 5:50pm
         append(multiLevelQueues[stopLevel], makeNode(QueueSame[i]));
     }
 
@@ -300,7 +303,7 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
     append(multiLevelQueues[stopLevel - 1], makeNode(parentVertex));
     eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta - 
                             ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
-                            (bc_t)(tree->vArr[startVertex].delta);
+                            (bc_t)(tree->vArr[startVertex].delta + 1);
    
     // Starting BFS descent. 
     // While QueueDown is not empty.
@@ -322,7 +325,9 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
                     QueueDown[qDownEnd++] = neighbor;
                     eAPT->sV[neighbor].newDelta = 0;
                     deepestLevel = MAX(deepestLevel, newLevel[neighbor]);
-                    append(multiLevelQueues, makeNode(neighbor));       
+                    append(multiLevelQueues[newLevel[neighbor]], makeNode(neighbor));       
+                    if (eAPT->sV[neighbor].touched == 0)
+                        printf("ooooooooooooooooooooooooooooooooooops\n");
                 }
                 
                 if (eAPT->sV[neighbor].newPathsToRoot == INFINITY_MY)
@@ -367,7 +372,7 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
     //    vlaues have changed due to the the changes occurring below them. Because of this, they are
     //    placed in the multi-level queue.
    
-    while (deepestLevel > 0 && multiLevelQueues[deepestLevel]->size > 0) 
+    while (deepestLevel >= 0 && multiLevelQueues[deepestLevel]->size > 0) 
     {
         node_t *currQueue = getFirst(multiLevelQueues[deepestLevel]);
         while (currQueue != NULL)
@@ -383,8 +388,8 @@ void moveDownTreeBrandes(bcForest *forest, struct stinger *sStinger,
                     if (eAPT->sV[neighbor].touched == 0)
                     {
                         eAPT->sV[neighbor].newDelta = tree->vArr[neighbor].delta;
-                        eAPT->sV[neighbor].touched = 1;
-                        append(multiLevelQueues[tree->vArr[neighbor].level], neighbor);
+                        eAPT->sV[neighbor].touched = -1;
+                        append(multiLevelQueues[tree->vArr[neighbor].level], makeNode(neighbor));
                     }
 
                     eAPT->sV[neighbor].newDelta += 
