@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "main.h"
 #include "operation.h"
@@ -44,10 +45,17 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 	uint64_t currRoot = 0;
 	uint64_t samelevel = 0, compConn = 0, adjacent=0, movement=0;
         
-	for(currRoot = 0; currRoot < NK; currRoot++)
+
+        int64_t root[NV]; // Root tally array for debugging purposes.
+	for (uint64_t i = 0; i < NV; i++) {
+            root[i] = 0;
+        }
+	
+        for(currRoot = 0; currRoot < NK; currRoot++)
 	{
 		uint64_t i = rootArrayForApproximation[currRoot];
-		int64_t thread = 0;
+		root[i] = 1;
+                int64_t thread = 0;
 		extraArraysPerThread* myExtraArrays = eAPT[thread];
 		bcTree* tree = forest->forest[i];
 		int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
@@ -71,8 +79,12 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 		}
 	}
 
+        int64_t tallySum = 0;
+        for (int64_t i = 0; i < NV; i++) {
+            tallySum += root[i];
+        }
 
-
+        printf("tallySum, NK: %ld, %ld\n", tallySum, NK);
 	for(uint64_t thread=0; thread<1; ++thread){
 		//printf("Thread=%ld,", thread);
 		samelevel += eAPT[thread]->samelevelCounter;
@@ -101,11 +113,12 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 	double times[NT];
 	uint64_t r;
 
-	#pragma omp parallel for schedule(dynamic,1)
+        #pragma omp parallel for schedule(dynamic,1)
 	for(r = 0; r < counter; r++)
 		//    for(r = 0; r < NK; r++)
 	{
 		int64_t i=newRootArray[r];
+                root[i] = 1;
 		//            int64_t i=rootArrayForApproximation[r];
 		int64_t thread = omp_get_thread_num();
 		extraArraysPerThread* myExtraArrays = eAPT[thread];
@@ -167,9 +180,10 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
                 printf("after_dynamic: totalBC[newV: %ld]: %ld\n", newV, forest->totalBC[newV]);
                 fflush(stdout); */
 	}
-
         #pragma omp barrier
         	
+       
+        //assert(tallySum == NK);
         int64_t tlow=(NV*thread)/NT;
 	int64_t thigh=(NV*(thread+1))/NT-1;
      
@@ -324,11 +338,22 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
         //printf("oldU, oldV, childVertex, extraParents, root: %ld, %ld, %ld, %ld, %ld\n", oldU, oldV, childVertex, extraParents, i);
         if (extraParents >= 1)
         {
+            /*
+            extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT, NV);
+            bfsBrandesForApproxCaseParallel(forest, sStinger, rootArrayForApproximation,NK, eAPT_perThread2, NT);
+            destroyExtraArraysForThreads(eAPT_perThread2, NT, NV);
+            */
+            // Static for debugging.
             deleteEdgeWithoutMovement(forest, sStinger, i, childVertex, parentVertex, tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
             eAPT[thread]->adjacentCounter++;
         }
         else
         {
+            // Static for debugging.
+            /*extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT, NV);
+            bfsBrandesForApproxCaseParallel(forest, sStinger, rootArrayForApproximation,NK, eAPT_perThread2, NT);
+            destroyExtraArraysForThreads(eAPT_perThread2, NT, NV);
+            */
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, 1, myExtraArrays);
             eAPT[thread]->movementCounter++;
         }

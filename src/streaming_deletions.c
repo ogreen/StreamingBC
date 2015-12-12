@@ -150,7 +150,7 @@ void deleteEdgeWithoutMovement(bcForest* forest, struct stinger *sStinger,
                                                 (bc_t)eAPT->sV[currElement].newPathsToRoot) * 
                                                 (bc_t)(eAPT->sV[currElement].newDelta + 1);
 
-                if (eAPT->sV[neighbor].touched == -1 && (neighbor != parentVertex || currElement != startVertex))
+                if (eAPT->sV[neighbor].touched < 0 && (neighbor != parentVertex || currElement != startVertex))
                 {
                     eAPT->sV[neighbor].newDelta -= ((bc_t)tree->vArr[neighbor].pathsToRoot / 
                                                     (bc_t)tree->vArr[neighbor].pathsToRoot) * 
