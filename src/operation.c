@@ -30,196 +30,142 @@ int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval 
 }
 
 StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
-		uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK,extraArraysPerThread** eAPT)
+        uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK,extraArraysPerThread** eAPT)
 {
 
-	omp_set_num_threads(NT);
+    omp_set_num_threads(NT);
 
 
-	int64_t adjRootArray[NK];
-	int64_t moveRootArray[NK];
+    int64_t adjRootArray[NK];
+    int64_t moveRootArray[NK];
 
-	for(int64_t tk=0; tk<NK; tk++) {adjRootArray[tk]=0; moveRootArray[tk]=0;}
+    for(int64_t tk=0; tk<NK; tk++) {adjRootArray[tk]=0; moveRootArray[tk]=0;}
 
 
-	uint64_t currRoot = 0;
-	uint64_t samelevel = 0, compConn = 0, adjacent=0, movement=0;
-       
-       	int64_t root[NV]; // Root tally array for debugging purposes.
-	for (uint64_t i = 0; i < NV; i++) {
-		root[i] = 0;
-	}
+    uint64_t currRoot = 0;
+    uint64_t samelevel = 0, compConn = 0, adjacent=0, movement=0;
 
-        for(currRoot = 0; currRoot < NK; currRoot++)
-	{
-		uint64_t i = rootArrayForApproximation[currRoot];
-                root[i] = 1;
-		int64_t thread = 0;
-		extraArraysPerThread* myExtraArrays = eAPT[thread];
-		bcTree* tree = forest->forest[i];
-		int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
-                //printf("newU, newV, newU_level, newV_level, root: %ld, %ld, %ld, %ld, %ld\n", newU, newV, tree->vArr[newU].level, tree->vArr[newV].level, i);
-                // New edge is connecting vertices in the same level. Nothing needs to be done.
-		//        continue;
-		if(diff==0)
-		{
-			eAPT[thread]->samelevelCounter++;
-			continue;
-		}
-		// Newly inserted edge is causing movement in the tee
-		if(diff < -1 || diff > 1)
-		{
-			moveRootArray[ eAPT[thread]->movementCounter++]=i;
-		}
-		// Newly inserted edge is connecting vertices that were in adjacent levels before insertions
-		else if(diff == -1 || diff == 1)
-		{
-			adjRootArray[ eAPT[thread]->adjacentCounter++]=i;
-		}
-	}
-        
-        
-        int64_t zeroElement = -1;
-        int64_t zeroIndex = -1;
-        int64_t tallySum = 0;
-        for (int64_t i = 0; i < NV; i++) {
-            tallySum += root[i];
-            if (root[i] == 0) {
-                zeroElement = 1;
-                zeroIndex = i;
+    for(currRoot = 0; currRoot < NK; currRoot++)
+    {
+        uint64_t i = rootArrayForApproximation[currRoot];
+        int64_t thread = 0;
+        extraArraysPerThread* myExtraArrays = eAPT[thread];
+        bcTree* tree = forest->forest[i];
+        int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
+        // New edge is connecting vertices in the same level. Nothing needs to be done.
+        //        continue;
+        if(diff==0)
+        {
+            eAPT[thread]->samelevelCounter++;
+            continue;
+        }
+        // Newly inserted edge is causing movement in the tee
+        if(diff < -1 || diff > 1)
+        {
+            moveRootArray[ eAPT[thread]->movementCounter++]=i;
+        }
+        // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
+        else if(diff == -1 || diff == 1)
+        {
+            adjRootArray[ eAPT[thread]->adjacentCounter++]=i;
+        }
+    }
+
+
+
+    for(uint64_t thread=0; thread<1; ++thread){
+        //printf("Thread=%d,", thread);
+        samelevel += eAPT[thread]->samelevelCounter;
+        compConn += eAPT[thread]->compConnCounter;
+        adjacent += eAPT[thread]->adjacentCounter;
+        movement += eAPT[thread]->movementCounter;
+
+        //      eAPT[thread]->samelevelCounter=0;
+        eAPT[thread]->compConnCounter=0;
+        eAPT[thread]->adjacentCounter=0;
+        eAPT[thread]->movementCounter=0;
+    }
+
+    int64_t newRootArray[NK];
+    int64_t counter=0, thread=0;
+    for(int64_t m=0; m<movement; m++)
+    {
+        newRootArray[counter++]=moveRootArray[m++];
+    }
+
+    for(int64_t a=0; a<adjacent; a++)
+    {
+        newRootArray[counter++]=adjRootArray[a++];
+    }
+
+    double times[NT];
+    uint64_t r;
+
+    #pragma omp parallel for schedule(dynamic,1)
+//    for(r = 0; r < counter; r++)
+    for(r = 0; r < NK; r++)
+    {
+//        int64_t i=newRootArray[r];
+        int64_t i=rootArrayForApproximation[r];
+        int64_t thread = omp_get_thread_num();
+        extraArraysPerThread* myExtraArrays = eAPT[thread];
+
+        bcTree* tree = forest->forest[i];
+        int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
+        // New edge is connecting vertices in the same level. Nothing needs to be done.
+        //              if(diff==0)
+        //              {
+        //                  eAPT[thread]->samelevelCounter++;
+        //                    continue;
+        //              }
+        // Newly inserted edge is causing movement in the tee
+        if(diff < -1 || diff > 1)
+        {
+            if(diff<-1)
+            {
+                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
             }
+            else
+            {
+                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
+            }
+            eAPT[thread]->movementCounter++;
+        }
+        // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
+        else if(diff == -1 || diff == 1)
+        {
+            if(diff==-1)
+            {
+                addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
+            }
+            else
+            {
+                addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
+            }
+            eAPT[thread]->adjacentCounter++;
         }
 
-        printf("zeroIndex, zeroElement, tallySum, NK, NV: %ld, %ld, %ld, %ld, %ld\n", zeroIndex, zeroElement, tallySum, NK, NV);
-	
-        for(uint64_t thread=0; thread<1; ++thread){
-		//printf("Thread=%ld,", thread);
-		samelevel += eAPT[thread]->samelevelCounter;
-		compConn += eAPT[thread]->compConnCounter;
-		adjacent += eAPT[thread]->adjacentCounter;
-		movement += eAPT[thread]->movementCounter;
+//        #pragma omp barriar
 
-		//		eAPT[thread]->samelevelCounter=0;
-		eAPT[thread]->compConnCounter=0;
-		eAPT[thread]->adjacentCounter=0;
-		eAPT[thread]->movementCounter=0;
-	}
+    }
 
-	int64_t newRootArray[NK];
-	int64_t counter=0, thread=0;
-	for(int64_t m=0; m<movement; m++)
-	{
-		newRootArray[counter++]=moveRootArray[m++];
-	}
+    int64_t tlow=(NV*thread)/NT;
+    int64_t thigh=(NV*(thread+1))/NT-1;
+    for(uint64_t v=tlow;v<thigh;v++){
 
-	for(int64_t a=0; a<adjacent; a++)
-	{
-		newRootArray[counter++]=adjRootArray[a++];
-	}
+        for(uint64_t t=0;t<NT;t++){
+            forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
+        }
+    }
 
-	double times[NT];
-	uint64_t r;
-        
-	#pragma omp parallel for schedule(dynamic,1)
-	for(r = 0; r < counter; r++)
-		//    for(r = 0; r < NK; r++)
-	{
-		int64_t i=newRootArray[r];
-                root[i] = 1;
-		//            int64_t i=rootArrayForApproximation[r];
-		int64_t thread = omp_get_thread_num();
-		extraArraysPerThread* myExtraArrays = eAPT[thread];
 
-		bcTree* tree = forest->forest[i];
-		int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
-		// New edge is connecting vertices in the same level. Nothing needs to be done.
-		//        		if(diff==0)
-		//        		{
-		//        			eAPT[thread]->samelevelCounter++;
-		//                    continue;
-		//        		}
-		// Newly inserted edge is causing movement in the tee
-		if(diff < -1 || diff > 1)
-		{
-			if(diff<-1)
-			{
-				moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
-			}
-			else
-			{
-				moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
-			}
-			eAPT[thread]->movementCounter++;
-		}
-		// Newly inserted edge is connecting vertices that were in adjacent levels before insertions
-		else if(diff == -1 || diff == 1)
-		{
-			if(diff==-1)
-			{
-				addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
-			}
-			else
-			{
-				addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
-			}
-			eAPT[thread]->adjacentCounter++;
-		}
-                /*
-		#pragma omp barrier
 
-		int64_t tlow=(NV*thread)/NT;
-		int64_t thigh=(NV*(thread+1))/NT-1;
-                printf("tlow: %ld\n", tlow);
-                printf("thigh: %ld\n", thigh);
-                printf("NT: %ld\n", NT);
-                printf("before_dynamic: totalBC[newU: %ld]: %ld\n", newU, forest->totalBC[newU]); 
-                printf("before_dynamic: totalBC[newV: %ld]: %ld\n", newV, forest->totalBC[newV]); 
-		fflush(stdout);
-                for(uint64_t v=tlow;v<thigh;v++){
-                        //printf("before_dynamic: totalBC[%ld]: %ld\n", v, forest->totalBC[v]);
-			for(uint64_t t=0;t<NT;t++){
-				forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
-			}
-                        printf("after_dynamic: totalBC[%ld]: %ld\n", v, forest->totalBC[v]);
-		}
-                //printf("eAPT[0]->sV[newU: %ld].totalBC: %ld\n", newU, eAPT[0]->sV[newU].totalBC);
-                printf("after_dynamic: totalBC[newU: %ld]: %ld\n", newU, forest->totalBC[newU]); 
-                printf("after_dynamic: totalBC[newV: %ld]: %ld\n", newV, forest->totalBC[newV]);
-                fflush(stdout); */
-	}
-        #pragma omp barrier
-        	
-        //assert(tallySum == NK);
-        int64_t tlow=(NV*thread)/NT;
-	int64_t thigh=(NV*(thread+1))/NT-1;
-     
-        printf("newU: %ld\n", newU);
-        printf("newV: %ld\n", newV); 
-        
-        //printf("before_dynamic: totalBC[newU: %ld]: %lf\n", newU, forest->totalBC[newU]); 
-        //printf("before_dynamic: totalBC[newV: %ld]: %lf\n", newV, forest->totalBC[newV]); 
-        //printf("%lf\n", forest->totalBC[newU]); 
-        //printf("%lf\n", forest->totalBC[newU]); 
-        #pragma omp parallel 
-        for(uint64_t v=tlow;v<thigh;v++){
-            //printf("before_dynamic: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
-            //printf("%lf\n", forest->totalBC[v]);
-            for(uint64_t t=0;t<NT;t++){
-	        forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
-	    }
-            //printf("after_dynamic: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
-            printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
-	}
-        
-        //printf("after_dynamic: totalBC[newU: %ld]: %lf\n", newU, forest->totalBC[newU]); 
-        //printf("after_dynamic: totalBC[newV: %ld]: %lf\n", newV, forest->totalBC[newV]);
-        
-        StreamingExtraInfo returnSEI={0,0,0,0};
-        returnSEI.sameLevel= samelevel;
-        returnSEI.adjacent = adjacent;
-        returnSEI.movement = movement;
+StreamingExtraInfo returnSEI={0,0,0,0};
+returnSEI.sameLevel= samelevel;
+returnSEI.adjacent = adjacent;
+returnSEI.movement = movement;
 
-        return returnSEI;
+return returnSEI;
 }
 
 StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,

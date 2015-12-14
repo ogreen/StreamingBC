@@ -205,7 +205,8 @@ int main(int argc, char *argv[])
 		uint64_t * rootArrayForApproximation = NULL;
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
 		//assert (NK == NV);
-                if(NK==NV){
+        if(NK==NV){
+        	printf("checking this\n");
 			for(int64_t vr=0;vr<NK;vr++)
 				rootArrayForApproximation[vr] = vr;
 		}
@@ -270,7 +271,7 @@ int main(int argc, char *argv[])
 
 			tic();
 			bfsBrandesForApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
-                        timingStatic[threadCount]=toc();
+            timingStatic[threadCount]=toc();
 			staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
 			staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
 
@@ -350,6 +351,20 @@ int main(int argc, char *argv[])
 		seiDynamicTotal[threadCount].movement =globalSEI.movement; 
 		seiDynamicTotal[threadCount].adjacent =globalSEI.adjacent; 
 		seiDynamicTotal[threadCount].sameLevel =globalSEI.sameLevel; 
+
+		bcForest* afterBCForest=NULL;
+
+		afterBCForest=CreateForestForApproxCase(&afterBCForest, NV, rootArrayForApproximation, NK);
+		extraArraysPerThread** eAPT_perThreadAfter = createExtraArraysForThreads(NT,NV);
+		bfsBrandesForApproxCaseParallel(afterBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThreadAfter,NT);
+
+		for(int a=0; a<beforeBCForest->NV; a++)
+		if((beforeBCForest->totalBC[a]-afterBCForest->totalBC[a]) > 0.001){
+			printf("Error in computation %d, before: %lf  after: %lf\n", a,beforeBCForest->totalBC[a],afterBCForest->totalBC[a]);
+		}
+
+		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
+
                         	
                 //-------Compute static BC - Parallel
                 //-------START
@@ -664,6 +679,8 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 				if(NT<1){
 					NT=1;
 				}
+
+				printf("the number of threads is %d",NT);
 				break;
 			case 'K':
 				errno = 0;
