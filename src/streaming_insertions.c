@@ -80,9 +80,10 @@ void bfsBrandesForApproxCaseParallel(bcForest* forest, struct stinger* sStinger,
 		//printf("%lf\n", forest->totalBC[v]);
 		for(uint64_t t=0;t<NT;t++) {
                 	forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
+                        eAPT[t]->sV[v].totalBC = 0.0;
                 }
 		//printf("after_static: totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
-		printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
+		//printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
         }
 }
 
@@ -190,8 +191,9 @@ uint64_t bfsBrandesPerTree(bcForest* forest, struct stinger* sStinger,
 
 		if(currElement!=currRoot)
 		{
-			//forest->eAPT->sV[currElement].totalBC+=tree->vArr[currElement].delta;
-			eAPT->sV[currElement].totalBC+=tree->vArr[currElement].delta;
+			//printf("currElement, delta: %ld, %lf\n", currElement, tree->vArr[currElement].delta);
+                        //forest->eAPT->sV[currElement].totalBC+=tree->vArr[currElement].delta; 
+                        eAPT->sV[currElement].totalBC+=tree->vArr[currElement].delta;
 		}
 
 		sEnd--;
@@ -355,7 +357,8 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		{
 			uint64_t k = STINGER_EDGE_DEST;
 
-			// Checking that the vertices are in different levels.
+                        //printf("currRoot, currElement, k: %ld, %ld, %ld\n", currRoot, currElement, k);
+    			// Checking that the vertices are in different levels.
 			//if(tree->vArr[k].level == (tree->vArr[currElement].level-1))
 			if(tree->vArr[k].level == levelCurrMinusOne)
 			{
@@ -379,8 +382,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 					((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
 					(bc_t)(eAPT->sV[currElement].newDelta+1);
 
-
-				// For the elements that are touched in the ascent stage it is necessary to
+                                // For the elements that are touched in the ascent stage it is necessary to
 				// to reduce the values that they previously had.
 				// In addition to this, the "parentVertex" that is connected to "vertex", i.e.
 				// the vertices of the new edge, needs to increase its betweenness centrality
@@ -390,7 +392,8 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 					eAPT->sV[k].newDelta -=
 						((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
 						(bc_t)(tree->vArr[currElement].delta+1);
-				}
+
+	                        }
 			}
 
 		}

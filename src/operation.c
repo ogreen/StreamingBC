@@ -90,12 +90,12 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
     int64_t counter=0, thread=0;
     for(int64_t m=0; m<movement; m++)
     {
-        newRootArray[counter++]=moveRootArray[m++];
+        newRootArray[counter++]=moveRootArray[m];
     }
 
     for(int64_t a=0; a<adjacent; a++)
     {
-        newRootArray[counter++]=adjRootArray[a++];
+        newRootArray[counter++]=adjRootArray[a];
     }
 
     double times[NT];
@@ -115,7 +115,7 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
         // New edge is connecting vertices in the same level. Nothing needs to be done.
         //              if(diff==0)
         //              {
-        //                  eAPT[thread]->samelevelCounter++;
+        //                  eAPT[thread]->sameevelCounter++;
         //                    continue;
         //              }
         // Newly inserted edge is causing movement in the tee
@@ -150,9 +150,8 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
     }
 
     int64_t tlow=(NV*thread)/NT;
-    int64_t thigh=(NV*(thread+1))/NT-1;
+    int64_t thigh=(NV*(thread+1))/NT;
     for(uint64_t v=tlow;v<thigh;v++){
-
         for(uint64_t t=0;t<NT;t++){
             forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
         }
@@ -185,84 +184,13 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
     
-    for (currRoot = 0; currRoot < NK; currRoot++)
-    {
-        //printf("currRoot: %ld\n", currRoot);
-        uint64_t i = rootArrayForApproximation[currRoot];
-        int64_t thread = 0;
-        extraArraysPerThread *myExtraArrays = eAPT[thread];
-        bcTree *tree = forest->forest[i];
-        int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
-
-        // Case I: Old edge connected vertices in the same level. Nothing needs to be done.
-        if (diff == 0)
-        {
-            eAPT[thread]->samelevelCounter++;
-            continue;
-        }
-
-        int64_t extraParents = 0;
-        int64_t childVertex = oldU;
-        if (tree->vArr[oldU].level < tree->vArr[oldV].level)
-        {
-            childVertex = oldV;
-        }
-
-        STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, childVertex)
-        {
-            uint64_t neighbor = STINGER_EDGE_DEST;
-            if (tree->vArr[neighbor].level + 1 == tree->vArr[childVertex].level)
-            {
-                extraParents++;
-            }
-        }
-        STINGER_FORALL_EDGES_OF_VTX_END();
-        
-        //printf("oldU, oldV, childVertex, extraParents, root: %ld, %ld, %ld, %ld, %ld\n", oldU, oldV, childVertex, extraParents, i);
-        
-        if (extraParents >= 1)
-        {
-            adjRootArray[eAPT[thread]->adjacentCounter++] = i;
-        }
-        else
-        {
-            moveRootArray[eAPT[thread]->movementCounter++] = i;
-        }
-    }
-
-    for (uint64_t thread = 0; thread < 1; thread++)
-    {
-        samelevel += eAPT[thread]->samelevelCounter;
-        compConn += eAPT[thread]->compConnCounter;
-        adjacent += eAPT[thread]->adjacentCounter;
-        movement += eAPT[thread]->movementCounter;
-
-        eAPT[thread]->compConnCounter = 0;
-        eAPT[thread]->adjacentCounter = 0;
-        eAPT[thread]->movementCounter = 0;
-    }
-
-    int64_t newRootArray[NK];
-    int64_t counter = 0, thread = 0;
-    
-    for (int64_t m = 0; m < movement; m++)
-    {
-        newRootArray[counter++] = moveRootArray[m++]; // Why are there two m++'s?
-    }
-
-    for (int64_t a = 0; a < adjacent; a++)
-    {
-        newRootArray[counter++] = adjRootArray[a++];
-    }
-
-    double times[NT];
     uint64_t r;
+    int64_t thread = 0;
 
     #pragma omp parallel for schedule(dynamic,1)
-    for (r = 0; r < counter; r++)
+    for (r = 0; r < NK; r++)
     { 
-        //printf("before\n");
-        int64_t i = newRootArray[r];
+        int64_t i = rootArrayForApproximation[r];
         int64_t thread = omp_get_thread_num();
         extraArraysPerThread *myExtraArrays = eAPT[thread];
 
@@ -271,6 +199,13 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
         int64_t extraParents = 0;
         int64_t childVertex = oldU;
         int64_t parentVertex = oldV;
+        
+        int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
+        if (diff == 0)
+        { 
+            continue;
+        }
+        
         if (tree->vArr[oldU].level < tree->vArr[oldV].level)
         {
             childVertex = oldV;
@@ -286,59 +221,32 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
-    
-        //printf("oldU, oldV, childVertex, extraParents, root: %ld, %ld, %ld, %ld, %ld\n", oldU, oldV, childVertex, extraParents, i);
-        if (extraParents >= 1)
-        {
-            /*
-            extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT, NV);
-            bfsBrandesForApproxCaseParallel(forest, sStinger, rootArrayForApproximation,NK, eAPT_perThread2, NT);
-            destroyExtraArraysForThreads(eAPT_perThread2, NT, NV);
-            */
-            // Static for debugging.
-            deleteEdgeWithoutMovement(forest, sStinger, i, childVertex, parentVertex, tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
+        
+            
+         if (extraParents >= 1)
+        {                 
+            removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
+                        tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
             eAPT[thread]->adjacentCounter++;
         }
         else
-        {
-            // Static for debugging.
-            /*extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT, NV);
-            bfsBrandesForApproxCaseParallel(forest, sStinger, rootArrayForApproximation,NK, eAPT_perThread2, NT);
-            destroyExtraArraysForThreads(eAPT_perThread2, NT, NV);
-            */
-            moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, 1, myExtraArrays);
+        { 
+            moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
             eAPT[thread]->movementCounter++;
         }
-        
-        /*
-        int64_t tlow = (NV * thread) / NT;
-        int64_t thigh = (NV * (thread + 1)) / NT - 1;
-        
-        #pragma omp barrier
-        for (uint64_t v = tlow; v < thigh; v++)
-        {
-            for (uint64_t t = 0; t < NT; t++)
-            {
-                forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
-            }
-            printf("dynamic: totalBC[%ld]: %ld\n", v, forest->totalBC[v]);
-        } */
     }
-    
+        
     int64_t tlow = (NV * thread) / NT;
-    int64_t thigh = (NV * (thread + 1)) / NT - 1;
+    int64_t thigh = (NV * (thread + 1)) / NT ;
        
-    printf("oldU: %d\n", oldU);
-    printf("oldV: %d\n", oldV);  
-    #pragma omp barrier
     for (uint64_t v = tlow; v < thigh; v++)
     { 
         for (uint64_t t = 0; t < NT; t++)
         {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
         }
-        printf("totalBC[%ld]: %lf\n", v, forest->totalBC[v]);
     } 
+    
     StreamingExtraInfo returnSEI = {0,0,0,0};
 
     returnSEI.sameLevel = samelevel;
