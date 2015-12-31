@@ -305,7 +305,6 @@ int main(int argc, char *argv[])
 
 		for(int64_t count=0; count<COUNT; count++)
 		{
-                        printf("count: %ld\n", count);
                         #if INSERTING==1
 			int64_t src = insertionArraySrc[count];
 			int64_t dest = insertionArrayDest[count];
