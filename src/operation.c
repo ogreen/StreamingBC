@@ -203,6 +203,8 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
         int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
         if (diff == 0)
         { 
+            eAPT[thread]->samelevelCounter++;
+            samelevel++;
             continue;
         }
         
@@ -222,17 +224,18 @@ StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger,
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
         
-            
-         if (extraParents >= 1)
+        if (extraParents >= 1)
         {                 
             removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
                         tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
             eAPT[thread]->adjacentCounter++;
+            adjacent++;
         }
         else
         { 
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
             eAPT[thread]->movementCounter++;
+            movement++;
         }
     }
         

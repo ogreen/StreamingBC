@@ -232,6 +232,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         newLevel[k]=0;
         eAPT->sV[k].newPathsToRoot=tree->vArr[k].pathsToRoot;
         eAPT->sV[k].newDelta=0.0;
+        levelCounter[k] = 0;
         for (uint64_t l = 0; l < NV; l++)
             queueBFSTREE[k][l] = 0;
     }
