@@ -48,7 +48,7 @@ uint64_t*  parentCounter;
 int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 
-#define COUNT 1
+#define COUNT 20
 #define INSERTING 0
 
 int64_t insertionArraySrc[COUNT];
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
 		//assert (NK == NV);
         if(NK==NV){
-        	printf("checking this\n");
+        	//printf("checking this\n");
 			for(int64_t vr=0;vr<NK;vr++)
 				rootArrayForApproximation[vr] = vr;
 		}
@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
 				 */
 				printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
 				printf("%9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
-				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
+				printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
 				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[0]) );
 
 				//				printf("%3ld, %3ld, ",ins,threadArray[threadCount]); // Number of threads used
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
 void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int64_t* insertionArraySrc,
 		int64_t* insertionArrayDest, int64_t insertionCount)
 {
-	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
+	int64_t ins=1,src,dest,srcAdj,destInAdj,destCounter;
 
 	while (ins<insertionCount)
 	{
@@ -527,7 +527,6 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
 	}
-
 }
 
 void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,
@@ -535,6 +534,12 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
 {
     int64_t del = 0, src, dest;
 
+    /*stinger_insert_edge(stingerGraph, 0, 6945, 16642, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 16642, 6945, 0, 0);
+
+    deletionArraySrc[0] = 6945;
+    deletionArrayDest[0] = 16642;
+    */
     while (del < deletionCount)
     {
         src = rand() % NV;
@@ -542,17 +547,22 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         if (src == dest)
             continue;
 
+        if (src == 0 || dest == 0)
+            continue;
+
         int result = stinger_insert_edge(stingerGraph, 0, src, dest, 0, 0);
 
         if (result < 1)
             continue;
 
-        printf("Src: %ld, Dest: %ld\n", src, dest);
+        //printf("Src: %ld, Dest: %ld\n", src, dest);
         stinger_insert_edge(stingerGraph, 0, dest, src, 0, 0);
         deletionArraySrc[del] = src;
         deletionArrayDest[del] = dest;
         del++;
     }
+    
+     
     /*
     int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;
 
@@ -690,7 +700,7 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 					NT=1;
 				}
 
-				printf("the number of threads is %d",NT);
+				//printf("the number of threads is %d\n",NT);
 				break;
 			case 'K':
 				errno = 0;

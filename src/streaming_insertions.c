@@ -534,7 +534,8 @@ append(tree->parentList[startVertex],makeNode(parentVertex));
 			if(eAPT->sV[k].touched == 0 )
 			{
 				// compute distance the adjacent vertex should be moved
-				int64_t computedDelta = eAPT->sV[currElement].movementDelta - (tree->vArr[currElement].level - tree->vArr[k].level + 1);
+				int64_t computedDelta = eAPT->sV[currElement].movementDelta - 
+                                                    (tree->vArr[currElement].level - tree->vArr[k].level + 1);
 				//eAPT->sV[k].touched = eAPT->sV[currElement].touched + 1;
 				eAPT->sV[k].touched = touchedCurrPlusOne;
 				// if the adjacent vertex should be moved, put it in the queue

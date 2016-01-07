@@ -1,4 +1,6 @@
 
+// TODO: Try running BFS from 6945 to see how far it is from some roots.
+// Note: 6945, 6946, and 911 form a triangle disjoint from the reset of the graph.
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -106,7 +108,11 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
-
+        
+#if COUNT_TRAVERSALS==1
+        eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
+        eAPT->dynamicTraverseVerticeCounter++;
+#endif
 	qStart++;
     }
 
@@ -201,6 +207,11 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
             }
             STINGER_FORALL_EDGES_OF_VTX_END();
 
+#if COUNT_TRAVERSALS==1
+            eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
+            eAPT->dynamicTraverseVerticeCounter++;
+#endif
+
 	    if (currElement != currRoot)
             {
                 //forest->totalBC[currElement]+=newDelta[currElement]-tree->delta[currElement];
@@ -257,7 +268,6 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     }
 
 
-
     list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
 
     Queue[0] = startVertex;
@@ -295,8 +305,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newDelta = 0.0;
     }
     STINGER_FORALL_EDGES_OF_VTX_END();
+   
 
-    qStart = 1;
+    qStart = 1; 
+
     while (qStart != qEnd)
     {
         int64_t currElement = Queue[qStart++];
@@ -304,7 +316,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
         {
             int64_t k = STINGER_EDGE_DEST;
-
+               
             if (eAPT->sV[k].touched == 0)
             {
 
@@ -331,11 +343,16 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
 
-    }
+#if COUNT_TRAVERSALS==1
+        eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
+        eAPT->dynamicTraverseVerticeCounter++;
+#endif
 
+    }
 
     qEnd = tqEnd;
     qStart = 0;
+
     for(int64_t t = 0; t < qEnd; t++)
     {
         Queue[t] = topQueue[t];
@@ -351,18 +368,16 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     //queueBFSTREE[stopLevel-1][levelCounter[stopLevel-1]++] = parentVertex;
     append(multiLevelQueues[stopLevel - 1], makeNode(parentVertex));
-
+    
     eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta -
         ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
         (bc_t)(tree->vArr[startVertex].delta + 1);
 
 
-
-
-
     // While queue is not empty
     while (qStart != qEnd)
     {
+
         uint64_t currElement = Queue[qStart++];
 
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -386,6 +401,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
                     //queueBFSTREE[newLevel[k]][levelCounter[newLevel[k]]++] = k;
                     append(multiLevelQueues[newLevel[k]], makeNode(k));
+                
                     if (eAPT->sV[k].touched == 0)
                         printf("AAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH\n");
                 }
@@ -403,8 +419,11 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
-    }
-
+#if COUNT_TRAVERSALS==1
+        eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
+        eAPT->dynamicTraverseVerticeCounter++;
+#endif
+    } 
 
 
     for(int64_t k=0; k<NV;k++)
@@ -416,7 +435,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     }
 
 
-
+    
     // Starting Multi-Level "BFS" ascent.
 
     // The ascent continues going up as long as the root has not been reached and that there
@@ -492,11 +511,16 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
             }
             STINGER_FORALL_EDGES_OF_VTX_END();
+#if COUNT_TRAVERSALS==1
+            eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
+            eAPT->dynamicTraverseVerticeCounter++;
+#endif
 
     	    if(currElement!=currRoot)
             {
                 //forest->totalBC[currElement]+=newDelta[currElement]-tree->delta[currElement];
                 eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
+
             }
 
         }
@@ -524,4 +548,5 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newPathsToRoot = 0;
     }
 }
+
 
