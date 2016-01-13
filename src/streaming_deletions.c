@@ -1,6 +1,8 @@
 
 // TODO: Try running BFS from 6945 to see how far it is from some roots.
 // Note: 6945, 6946, and 911 form a triangle disjoint from the reset of the graph.
+// Note: Edge (6945, 16642) is the one added.
+
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -360,6 +362,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
         //queueBFSTREE[stopLevel][levelCounter[stopLevel]++]=topQueue[t];
         append(multiLevelQueues[stopLevel], makeNode(topQueue[t]));
+
     }
 
     eAPT->sV[parentVertex].touched = -1;
@@ -436,6 +439,9 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
 
     
+    //if (currRoot == 211)
+    //    printf("newLevel[6945, 6946, 9111]: %ld, %ld, %ld\n", newLevel[6945], newLevel[6946], newLevel[9111]);
+    
     // Starting Multi-Level "BFS" ascent.
 
     // The ascent continues going up as long as the root has not been reached and that there
@@ -450,7 +456,9 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     //    placed in the Multi-level queue.
 
 
-
+    //if (currRoot == 211)
+    //    printf("deepestLevel: %ld\n", deepestLevel);
+    
     //while(deepestLevel >=0 && levelCounter[deepestLevel] > 0)
     while (deepestLevel >= 0)
     {
@@ -458,6 +466,19 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
         node_t* temp;
 
+        /*
+        if (currRoot == 211)
+        {
+            node_t *temp2 = getFirst(multiLevelQueues[deepestLevel]);
+            printf("Level %ld: ", deepestLevel);
+            while (temp2 != NULL)
+            {
+                printf("%ld ", temp2->id);
+                temp2 = temp2->next;
+            }
+            printf("\n");
+        }
+        */
         //while(currQueue<levelCounter[deepestLevel])
         while (multiLevelQueues[deepestLevel]->size > 0)
         {
@@ -527,6 +548,44 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         deepestLevel--;
 
     }
+
+    // Handles case where edge deletion creates new connected component.
+    if (tree->vArr[startVertex].level == INFINITY_MY)
+    {
+        int64_t visited[NV];
+        qStart = 0;
+        qEnd = 1;
+        Queue[0] = startVertex;
+        
+        for (uint64_t k = 0; k < NV; k++)
+            visited[k] = 0;
+        visited[startVertex] = 1;
+        while (qStart != qEnd)
+        {
+            int64_t currElement = Queue[qStart++];
+            
+            eAPT->sV[currElement].totalBC -= tree->vArr[currElement].delta;
+
+            STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, currElement)
+            {
+                uint64_t k = STINGER_EDGE_DEST;
+
+                if (!visited[k])
+                {
+                    visited[k] = 1;
+                    Queue[qEnd++] = k;
+                }
+            }
+            STINGER_FORALL_EDGES_OF_VTX_END();
+        }
+    }
+    //if (currRoot == 211)
+    /*
+    printf("currRoot, newDelta[6945], delta[6945], totalBC[6945]: %ld, %lf, %lf, %lf\n", currRoot, 
+                     eAPT->sV[6945].newDelta, tree->vArr[6945].delta, eAPT->sV[6945].totalBC);
+    printf("currRoot, newDelta[6946], delta[6946], totalBC[6946]: %ld, %lf, %lf, %lf\n", currRoot, 
+                     eAPT->sV[6946].newDelta, tree->vArr[6946].delta, eAPT->sV[6946].totalBC);
+   */
 
     for(int64_t k=0; k<NV;k++)
     {

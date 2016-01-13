@@ -52,7 +52,6 @@ void bfsBrandesForApproxCase(bcForest* forest, struct stinger* sStinger, uint64_
 
 	for(uint64_t i = 0; i < rootArraySizeForApproximation; i++) {
 		bfsBrandesPerTree(forest,sStinger,rootArrayForApproximation[i], forest->totalBC,eAPT);
-
 	}
 
 }

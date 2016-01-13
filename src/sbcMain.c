@@ -48,7 +48,7 @@ uint64_t*  parentCounter;
 int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 
-#define COUNT 20
+#define COUNT 50
 #define INSERTING 0
 
 int64_t insertionArraySrc[COUNT];
@@ -68,7 +68,7 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 
 double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 		extraArraysPerThread** eAPT_perThread, uint64_t * rootArrayForApproximation, int64_t NK,
-		bcForest* beforeBCForest,int64_t u_new, int64_t v_new) {
+		bcForest* beforeBCForest,int64_t u_new, int64_t v_new, int64_t totalEdges) {
 	uint64_t iterator;
 	float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti=0;//timeStream = 0, timeSummation = 0;
 	float_t avgComponents = 0;
@@ -81,7 +81,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 
 
 	tic();
-	*oneSEI = insertEdgeBrandes(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,eAPT_perThread);
+	*oneSEI = insertEdgeBrandes(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,eAPT_perThread, totalEdges);
 	timeStreamMulti = toc();
 
 
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
 	int64_t staticTraverseVerticeCounter[threadArraySize];
 	int64_t staticTraverseEdgeCounter[threadArraySize];
-
+        
 	int64_t dynamicTraverseVerticeCounter[threadArraySize][COUNT];
 	int64_t dynamicTraverseEdgeCounter[threadArraySize][COUNT];
 	int64_t dynamicTraverseVerticeCounterTotal[threadArraySize];
@@ -203,7 +203,10 @@ int main(int argc, char *argv[])
 		fclose(fp);
 
 		uint64_t * rootArrayForApproximation = NULL;
+                uint64_t * staticTraverseEdgeCounterRoot = NULL;
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
+                staticTraverseEdgeCounterRoot = (uint64_t *)xmalloc(sizeof(uint64_t) * NV);
+
 		//assert (NK == NV);
         if(NK==NV){
         	//printf("checking this\n");
@@ -225,7 +228,7 @@ int main(int argc, char *argv[])
 				}
 				rootArrayForApproximation[vr] = tempV;
 				flag[tempV]=1;
-				//            printf("%ld,",rootArrayForApproximation[vr]);
+                                //            printf("%ld,",rootArrayForApproximation[vr]);
 			}
 			free(flag);
 
@@ -243,7 +246,7 @@ int main(int argc, char *argv[])
                 CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
                                             deletionArrayDest, COUNT);
                 #endif
-                
+               
 		if(0)
 		{
 			//-------Compute static BC
@@ -312,7 +315,7 @@ int main(int argc, char *argv[])
 			stinger_insert_edge(stingerGraph,0,src,dest,0,0);
 			stinger_insert_edge(stingerGraph,0,dest,src,0,0);
 
-			timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation,NK,beforeBCForest,src, dest);
+			timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation,NK,beforeBCForest,src, dest); 
                         #else
                         int64_t src = deletionArraySrc[count];
                         int64_t dest = deletionArrayDest[count];
@@ -490,7 +493,7 @@ int main(int argc, char *argv[])
 void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int64_t* insertionArraySrc,
 		int64_t* insertionArrayDest, int64_t insertionCount)
 {
-	int64_t ins=1,src,dest,srcAdj,destInAdj,destCounter;
+	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
 
 	while (ins<insertionCount)
 	{
@@ -532,9 +535,11 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,
                 int64_t* deletionArrayDest, int64_t deletionCount)
 {
+    
     int64_t del = 0, src, dest;
 
-    /*stinger_insert_edge(stingerGraph, 0, 6945, 16642, 0, 0);
+    /*
+    stinger_insert_edge(stingerGraph, 0, 6945, 16642, 0, 0);
     stinger_insert_edge(stingerGraph, 0, 16642, 6945, 0, 0);
 
     deletionArraySrc[0] = 6945;

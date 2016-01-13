@@ -17,7 +17,6 @@ void bfsBrandesForApproxCase(bcForest* forest, struct stinger* sStinger, uint64_
 uint64_t bfsBrandesPerTree(bcForest* forest, struct stinger* sStinger,
                             uint64_t currRoot, bc_t* totalBC,extraArraysPerThread* eAPT);
 
-
 void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
                             uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
                             uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT);
