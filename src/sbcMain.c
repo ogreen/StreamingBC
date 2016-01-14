@@ -44,11 +44,6 @@ int64_t* destVerToDelete;
 #define COUNT 50
 #define INSERTING 0
 
-int64_t insertionArraySrc[COUNT];
-int64_t insertionArrayDest[COUNT];
-int64_t deletionArraySrc[COUNT];
-int64_t deletionArrayDest[COUNT];
-
 //int64_t * rootArrayForApproximation;
 
 
@@ -122,6 +117,11 @@ int main(int argc, char *argv[])
         const int64_t threadArraySize = 1;
         int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
         
+        int64_t insertionArraySrc[COUNT];
+        int64_t insertionArrayDest[COUNT];
+        int64_t deletionArraySrc[COUNT];
+        int64_t deletionArrayDest[COUNT];
+
         hostParseArgsVitalUpdate(argc, argv, &NV, &NE, &NK, &NT, &randomSeed, &iterationCount, &initial_graph_name);
    
         printf("NV, NE, NK, NT: %ld, %ld, %ld, %ld\n", NV, NE, NK, NT); 
