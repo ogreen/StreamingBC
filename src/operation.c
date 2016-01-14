@@ -19,7 +19,7 @@
 #include "timer.h"
 
 
-static struct timeval tvBegin, tvEnd, tvDiff;
+//static struct timeval tvBegin, tvEnd, tvDiff;
 int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval *t1)
 {
 	long int diff = (t2->tv_usec + 1000000 * t2->tv_sec) - (t1->tv_usec + 1000000 * t1->tv_sec);
