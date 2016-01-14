@@ -31,7 +31,7 @@ int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval 
 
 StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
-        extraArraysPerThread** eAPT, int64_t totalEdges)
+        extraArraysPerThread** eAPT)
 {
 
     omp_set_num_threads(NT);
@@ -147,7 +147,7 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
             
             //edgeCountValues[i] = edgeCount;
             //printf("%ld\n", edgeCount);
-            printf("Case III: edgeCount: %lf\n", ((double)edgeCount / (double)totalEdges));
+            //printf("Case III: edgeCount: %lf\n", ((double)edgeCount / (double)totalEdges));
             
             eAPT[thread]->movementCounter++;
         }
@@ -170,7 +170,7 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
             uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
                 
             //edgeCountValues[i] = edgeCount;
-            printf("Case II: edgeCount: %lf\n", ((double)edgeCount / (double)totalEdges));
+            //printf("Case II: edgeCount: %lf\n", ((double)edgeCount / (double)totalEdges));
             eAPT[thread]->adjacentCounter++;
         }
 
