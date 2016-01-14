@@ -31,15 +31,8 @@
 
 #define LINE_SIZE 100000
 
-int64_t noComputeDiffComp;
-int64_t NV;
-int64_t NE;
-int64_t NK;
-int64_t NT;
-updateType opType;
-int64_t randomSeed;
-int64_t iterationCount;
-char initial_graph_name[1024];
+int64_t noComputeDiffComp; // Not really used?
+int64_t iterationCount;    // Used only in sbcMain.c
 testCase graphTestCase; // GraphType ER=0,RMAT=1,real graph=2, connec
 int64_t SCALE; // used only for RMAT type graphs
 uint64_t** parentArray;
@@ -61,14 +54,15 @@ int64_t * rootArrayForApproximation;
 int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
 const int64_t threadArraySize = 1;
 
-void hostParseArgsVitalUpdate(int argc, char** argv);
+void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,
+                                        int64_t *randomSeed, char *initial_graph_name[1024]);
 
 void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int64_t* insertionArraySrc,
 		int64_t* insertionArrayDest, int64_t insertionCount);
 
 double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 		extraArraysPerThread** eAPT_perThread, uint64_t * rootArrayForApproximation, int64_t NK,
-		bcForest* beforeBCForest,int64_t u_new, int64_t v_new, int64_t totalEdges) {
+		int64_t NV, int64_t NT, bcForest* beforeBCForest,int64_t u_new, int64_t v_new, int64_t totalEdges) {
 	uint64_t iterator;
 	float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti=0;//timeStream = 0, timeSummation = 0;
 	float_t avgComponents = 0;
@@ -81,7 +75,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 
 
 	tic();
-	*oneSEI = insertEdgeBrandes(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,eAPT_perThread, totalEdges);
+	*oneSEI = insertEdgeBrandes(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,NV,NT,eAPT_perThread, totalEdges);
 	timeStreamMulti = toc();
 
 
@@ -90,7 +84,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 }
 
 double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, extraArraysPerThread **eAPT_perThread,
-                uint64_t *rootArrayForApproximation, int64_t NK, bcForest *beforeBCForest, int64_t u_old, int64_t v_old)
+                uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT, bcForest *beforeBCForest, int64_t u_old, int64_t v_old)
 {
     uint64_t iterator;
     float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti = 0;
@@ -102,7 +96,7 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
     tic();
-    *oneSEI = deleteEdgeBrandes(beforeBCForest, stingerGraph, u_old, v_old, rootArrayForApproximation, NK, eAPT_perThread);
+    *oneSEI = deleteEdgeBrandes(beforeBCForest, stingerGraph, u_old, v_old, rootArrayForApproximation, NK, NV, NT,  eAPT_perThread);
     timeStreamMulti = toc();
 
     return timeStreamMulti;
@@ -117,8 +111,18 @@ int doubleCompareforMinSort (const void * a, const void * b)
 
 int main(int argc, char *argv[])
 {
-	hostParseArgsVitalUpdate(argc, argv);
-    
+	
+        int64_t NV;
+        int64_t NE;
+        int64_t NK;
+        int64_t NT;
+        int64_t randomSeed;
+        char initial_graph_name[1024];
+        
+        hostParseArgsVitalUpdate(argc, argv, &NV, &NE, &NK, &NT, &randomSeed, &initial_graph_name);
+   
+        printf("NV, NE, NK, NT: %ld, %ld, %ld, %ld\n", NV, NE, NK, NT); 
+        printf("initial_graph_name: %s\n", initial_graph_name);
         double timingDynamic[threadArraySize][COUNT];
 	double timingStatic[threadArraySize];
 	double timingDynamicTotal[threadArraySize];
@@ -315,7 +319,7 @@ int main(int argc, char *argv[])
 			stinger_insert_edge(stingerGraph,0,src,dest,0,0);
 			stinger_insert_edge(stingerGraph,0,dest,src,0,0);
 
-			timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation,NK,beforeBCForest,src, dest); 
+			timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation, NK, NV, NT,beforeBCForest,src, dest); 
                         #else
                         int64_t src = deletionArraySrc[count];
                         int64_t dest = deletionArrayDest[count];
@@ -323,7 +327,7 @@ int main(int argc, char *argv[])
                         stinger_remove_edge(stingerGraph, 0, src, dest);
                         stinger_remove_edge(stingerGraph, 0, dest, src);
                             
-                        timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, rootArrayForApproximation, NK, beforeBCForest, src, dest);
+                        timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, rootArrayForApproximation, NK, NV, NT, beforeBCForest, src, dest);
                         #endif
 
 			timingDynamicTotal[threadCount]+=timingDynamic[threadCount][count];
@@ -602,7 +606,9 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     }*/
 }
 
-void hostParseArgsVitalUpdate(int argc, char** argv) {
+void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,
+                                        int64_t *randomSeed, char *initial_graph_name[1024]) {
+        updateType opType;
 	static struct option long_options[] = {
 		{"VCount", optional_argument, 0, 'V'},
 		{"EFactor", optional_argument, 0, 'E'},
@@ -642,7 +648,7 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 					printf("Error - Number of vertices needs to be positive %s\n", optarg);
 					exit(-1);
 				}
-				NV = intout;
+				*NV = intout;
 				break;
 			case 'E':
 				errno = 0;
@@ -651,7 +657,7 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 					printf("Error - Number of edges needs to be positive %s\n", optarg);
 					exit(-1);
 				}
-				NE = intout;
+				*NE = intout;
 				break;
 			case 'R':
 				errno = 0;
@@ -660,7 +666,7 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 					printf("Error - Seed needs to be positive. R=0 uses a random seed based on the time%s\n", optarg);
 					exit(-1);
 				}
-				randomSeed = intout;
+				*randomSeed = intout;
 				break;
 			case 'I':
 				errno = 0;
@@ -700,9 +706,9 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 					printf("Error - Number of threads needs to be positive %s\n", optarg);
 					exit(-1);
 				}
-				NT = intout;
-				if(NT<1){
-					NT=1;
+				*NT = intout;
+				if(*NT<1){
+					*NT=1;
 				}
 
 				//printf("the number of threads is %d\n",NT);
@@ -714,7 +720,7 @@ void hostParseArgsVitalUpdate(int argc, char** argv) {
 					printf("Error - Number of approximate vertices needs to be positive %s\n", optarg);
 					exit(-1);
 				}
-				NK = intout;
+				*NK = intout;
 				break;
 		}
 	}

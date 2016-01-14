@@ -30,8 +30,8 @@ int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval 
 }
 
 StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
-        uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK,extraArraysPerThread** eAPT,
-        int64_t totalEdges)
+        uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
+        extraArraysPerThread** eAPT, int64_t totalEdges)
 {
 
     omp_set_num_threads(NT);
@@ -222,7 +222,8 @@ return returnSEI;
 }
 
 StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
-                            uint64_t *rootArrayForApproximation, int64_t NK, extraArraysPerThread **eAPT)
+                            uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
+                            extraArraysPerThread **eAPT)
 {
     omp_set_num_threads(NT);
 
