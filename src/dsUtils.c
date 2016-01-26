@@ -3,99 +3,6 @@
 #include "xmalloc.h"
 #include "streaming_insertions.h"
 
-// Creates the parent array needed for the computation of BC.
-// The output of this function is an array of arrays. Each vertex is allocated an array based on it's adjaency.
-uint64_t** createParentArray(csrGraph* graph,uint64_t NV)
-{
-    uint64_t** parentArray = (uint64_t**)malloc(NV*sizeof(uint64_t*));
-    for(uint64_t v=0; v<NV;v++)
-    {
-        uint64_t edgeCount=graph->vertexPointerArray[v+1]-graph->vertexPointerArray[v];
-        parentArray[v]=(uint64_t*)malloc(edgeCount*sizeof(uint64_t));
-    }
-
-    return parentArray;
-}
-
-// Destroys the parent array
-void destroyParentArray(uint64_t** parentArray,uint64_t NV)
-{
-
-    for(uint64_t v=0; v<NV;v++)
-    {
-        free(parentArray[v]);
-    }
-
-    free(parentArray);
-}
-
-// Creates a parent array for each thread/core.
-uint64_t*** createParallelParentArray(csrGraph* graph,uint64_t NV, uint64_t threadCount)
-{
-    uint64_t*** parallelParentArray = (uint64_t***)malloc(threadCount*sizeof(uint64_t**));
-
-    for(uint64_t t=0; t<threadCount;t++)
-    {
-        parallelParentArray[t]=createParentArray(graph,NV);
-        if(parallelParentArray[t]==NULL)
-            printf("Failed to allocated memory for parallel parent array\n");
-    }
-
-    return parallelParentArray;
-}
-
-// Destroys the parent array of each thread/core.
-void destroyParallelParentArray(uint64_t*** parallelParentArray,uint64_t NV,uint64_t threadCount)
-{
-
-    for(uint64_t t=0; t<threadCount;t++)
-    {
-        destroyParentArray(parallelParentArray[t],NV);
-    }
-
-    free(parallelParentArray);
-}
-
-
- // Creates the parent array needed for the computation of BC.
-// The output of this function is an array of arrays. Each vertex is allocated an array based on it's adjaency.
-uint64_t** createParentArrayStinger(struct stinger* S,uint64_t NV)
-{
-    uint64_t** parentArray = (uint64_t**)malloc(NV*sizeof(uint64_t*));
-	for(uint64_t v=0; v<NV;v++)
-    {
-        uint64_t edgeCount=stinger_outdegree(S,v);
-        parentArray[v]=(uint64_t*)malloc(edgeCount*sizeof(uint64_t));
-    }
-
-    return parentArray;
-}
-
-
-// Creates a parent array for each thread/core.
-uint64_t*** createParallelParentArrayStinger(struct stinger* S,uint64_t NV, uint64_t threadCount)
-{
-    uint64_t*** parallelParentArray = (uint64_t***)malloc(threadCount*sizeof(uint64_t**));
-
- //   	printf("thread count %d   %d \n", threadCount,NV);
-
-	for(uint64_t t=0; t<threadCount;t++)
-    {
-//		printf("thread count %d\n", threadCount);
-        parallelParentArray[t]=createParentArrayStinger(S,NV);
-        if(parallelParentArray[t]==NULL)
-            printf("Failed to allocated memory for parallel parent array\n");
-    }
-
-    return parallelParentArray;
-}
-
-
-
-
-
-
-
 
 // Creates the multi-level queue for the computation of BC. In this case O(NV^2) is allocated.
 uint64_t** createMultiLevelQueue(uint64_t NV)
@@ -177,8 +84,7 @@ float** createParallelBetweennessArray(int64_t threadCount,int64_t NV)
 {
     float** totalBC = (float**)malloc((threadCount)*sizeof(float*));
 
-    for(int64_t i=0;i<threadCount;i++)
-    {
+    for(int64_t i=0;i<threadCount;i++){
         totalBC[i] = malloc(sizeof(float)*NV);
     }
     return totalBC;
@@ -186,9 +92,7 @@ float** createParallelBetweennessArray(int64_t threadCount,int64_t NV)
 
 void destroyParallelBetweennessArray(float** parallelScore, int64_t threadCount)
 {
-    for(int64_t i=0; i<threadCount;i++)
-    {
-//        print64_tf("destroying %d\n",i); fflush(stdout);
+    for(int64_t i=0; i<threadCount;i++){
         free(parallelScore[i]);
     }
 //        printf("destroying last\n"); fflush(stdout);
@@ -201,9 +105,7 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV)
 
     eapt->sV = (sbcV*)malloc(NV*sizeof(sbcV));
 	
-	for(int64_t v=0; v<NV; v++)
-	{
-        	
+	for(int64_t v=0; v<NV; v++){
 		eapt->sV[v].diffPath=0;
 		eapt->sV[v].touched=0;
 		eapt->sV[v].newPathsToRoot=0;

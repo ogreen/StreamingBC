@@ -8,10 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "streaming_utils.h"
-//#include "streaming_utils_brandes.h"
+#include "streamingbc_aux.h"
 
-#include "bcTreeDS.h"
+//#include "streaming_utils_brandes.h"
 
 #include "dsUtils.h"
 

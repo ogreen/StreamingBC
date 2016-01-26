@@ -21,8 +21,6 @@ extern int64_t iterationCount;
 char initial_graph_name[1024];
 extern updateType opType;
 
-
-
 typedef struct
 {
     uint64_t movement;

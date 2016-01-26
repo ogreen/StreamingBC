@@ -1,9 +1,7 @@
 
 #pragma once
 
-
 #include "stinger.h"
-
 
 typedef struct{
     int64_t NV;

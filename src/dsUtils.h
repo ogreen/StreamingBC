@@ -2,19 +2,9 @@
 
 
 #include "stinger.h"
-#include "bcTreeDS.h"
+
 #include "streamingbc_aux.h"
 #include "csr.h"
-
-uint64_t** createParentArray(csrGraph* graph,uint64_t NV);
-void destroyParentArray(uint64_t** parentArray,uint64_t NV);
-
-uint64_t*** createParallelParentArray(csrGraph* graph,uint64_t NV, uint64_t threadCount);
-void destroyParallelParentArray(uint64_t*** parallelParentArray,uint64_t NV,uint64_t threadCount);
-
-uint64_t** createParentArrayStinger(struct stinger* s,uint64_t NV);
-uint64_t*** createParallelParentArrayStinger(struct stinger* S,uint64_t NV, uint64_t threadCount);
-
 
 uint64_t** createMultiLevelQueue(uint64_t NV);
 void destroyMultiLevelQueue(uint64_t** multiLevelQueue,uint64_t NV);
@@ -23,7 +13,6 @@ void destroyParallelMultiLevelQueue(uint64_t*** parallelMultiLevelQueue,uint64_t
 
 bcTree** createParallelForest(int64_t threadCount,int64_t NV);
 void destroyParallelForest(bcTree** parallelForest, int64_t threadCount);
-
 
 list_ptr** createParallelList(int64_t threadCount,int64_t NV);
 void destroyParallelList(list_ptr** parallelList, int64_t threadCount,int64_t NV);
@@ -60,10 +49,8 @@ typedef struct {
 
     uint64_t staticTraverseVerticeCounter;
     uint64_t staticTraverseEdgeCounter;
-
     uint64_t dynamicTraverseVerticeCounter;
     uint64_t dynamicTraverseEdgeCounter;
-
 
     list_ptr* multiLevelQueues;
 

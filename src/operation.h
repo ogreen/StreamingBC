@@ -1,7 +1,9 @@
 #pragma once
 
+
 #include "stinger.h"
-#include "bcTreeDS.h"
+#include "streamingbc_aux.h"
+
 
 #include "dsUtils.h"
 
