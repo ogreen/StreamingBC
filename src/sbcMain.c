@@ -14,7 +14,6 @@
 #include "streaming_insertions.h"
 #include "streaming_deletions.h"
 #include "operation.h"
-#include "graphGen.h"
 
 #include "timer.h"
 #include "stinger-utils.h"
@@ -729,7 +728,7 @@ void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, i
 				break;
 		}
 	}
-	STREAMING_INFO("Vertix count : %d , Edge count : %d\n", NV,NE);
-	STREAMING_INFO("NT : %d\n", NT);
+//	printf("Vertix count : %d , Edge count : %d\n", NV,NE);
+//	printf("NT : %d\n", NT);
 }
 

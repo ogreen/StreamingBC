@@ -10,7 +10,6 @@
 
 #include "streaming_utils.h"
 //#include "streaming_utils_brandes.h"
-#include "timing_util.h"
 
 #include "bcTreeDS.h"
 

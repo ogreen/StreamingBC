@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <stdint.h> 
 
 typedef enum{
     TC_ER = 0,

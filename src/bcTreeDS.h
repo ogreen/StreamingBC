@@ -2,9 +2,7 @@
 
 #include "streaming_utils.h"
 
-#if PARENT_INFO_ON
-#include "list.h"
-#endif
+#include <stdint.h> 
 
 typedef struct{
     int64_t level;

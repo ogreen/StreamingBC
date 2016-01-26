@@ -5,7 +5,6 @@
 
 #include "streaming_utils.h"
 #include "streaming_insertions.h"
-#include "timing_util.h"
 
 #include "bcTreeDS.h"
 

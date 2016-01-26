@@ -13,7 +13,6 @@ typedef struct{
 } csrGraph;
 
 
-
 // NE number of undirected edges.
 csrGraph* CreateCSRFromStinger(struct stinger* stingerGraph,int64_t NV,int64_t NE);
 void CreateStingerFromCSR(csrGraph* csr,struct stinger** stingerGraph);
