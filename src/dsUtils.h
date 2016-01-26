@@ -3,7 +3,7 @@
 
 #include "stinger.h"
 #include "bcTreeDS.h"
-#include "list.h"
+#include "streamingbc_aux.h"
 #include "csr.h"
 
 uint64_t** createParentArray(csrGraph* graph,uint64_t NV);

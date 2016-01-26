@@ -13,7 +13,6 @@
 
 #include "bcTreeDS.h"
 
-#include "list.h"
 #include "dsUtils.h"
 
 // Case 2

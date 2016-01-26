@@ -1,8 +1,9 @@
 #pragma once
 
+#include "streamingbc_aux.h"
 #include "stinger.h"
 #include "bcTreeDS.h"
-#include "list.h"
+
 
 #include "dsUtils.h"
 
@@ -11,7 +12,7 @@ void bfsBrandes(bcForest* forest, struct stinger* sStinger,extraArraysPerThread*
 
 void bfsBrandesForApproxCase(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation, 
 		uint64_t rootArraySizeForApproximation,extraArraysPerThread* eAPT);
- void bfsBrandesForApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation,
+void bfsBrandesForApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation,
 		uint64_t rootArraySizeForApproximation,extraArraysPerThread** eAPT,int64_t NT);
 
 uint64_t bfsBrandesPerTree(bcForest* forest, struct stinger* sStinger,

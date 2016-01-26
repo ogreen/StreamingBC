@@ -1,3 +1,4 @@
+
 #pragma once
 
 #define INFINITY_MY 1073741824

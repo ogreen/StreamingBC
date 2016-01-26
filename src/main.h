@@ -3,14 +3,6 @@
 
 #include <stdint.h> 
 
-typedef enum{
-    TC_ER = 0,
-    TC_RMAT,
-    TC_REAL_DATA,       // DOES NOT USE ADJACENCY MATRIX
-    TC_CC_ER,
-    TC_SAME_GRAPH_ER,
-    TC_SAME_GRAPH_RMAT,
-} testCase;
 
 typedef enum{
     UP_INSERT = 0,
@@ -30,8 +22,6 @@ char initial_graph_name[1024];
 extern updateType opType;
 
 
-
-extern testCase graphTestCase; // GraphType ER=0,RMAT=1,real graph=2, connec
 
 typedef struct
 {

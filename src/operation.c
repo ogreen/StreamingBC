@@ -11,7 +11,9 @@
 #include "streaming_deletions.h"
 #include "streaming_insertions.h"
 #include "xmalloc.h"
-#include "list.h"
+
+#include "streamingbc_aux.h"
+
 #include "dsUtils.h"
 #include <sys/time.h>
 #include <math.h>
