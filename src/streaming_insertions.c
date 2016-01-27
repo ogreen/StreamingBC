@@ -6,8 +6,6 @@
 #include "streamingbc_aux.h"
 #include "streaming_insertions.h"
 
-#include "dsUtils.h"
-
 #include "timer.h"
 
 #ifdef COUNTING_INFO_ON

@@ -12,9 +12,7 @@
 
 #include "streamingbc_aux.h"
 
-#include "dsUtils.h"
 #include <math.h>
-//#define IS_PARALLEL
 #include "timer.h"
 
 

@@ -14,7 +14,7 @@ CFLAGS+=-g -O2 -I$(PREFIX) -fopenmp -g -w
 
 SRC = streaming_insertions.c streaming_deletions.c operation.c streamingbc_aux.c
 
-SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC) dsUtils.c
+SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC)
 
 
 main: $(SRCSBC)
@@ -24,5 +24,4 @@ main: $(SRCSBC)
 
 .PHONY:	clean
 clean:
-	rm -f main \
-		$(MAINPL) $(GENSTREAMSPL)
+	rm -f main

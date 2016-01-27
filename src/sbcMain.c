@@ -20,7 +20,6 @@
 #include "xmalloc.h"
 
 #include "omp.h"
-#include "dsUtils.h"
 
 #define PRINT_NEIGHBORS(u) printf("Neighbors of %ld : ",u);{for(uint64_t k = 0; k < NV; k++) { if(graphAfter[u][k] == 1) printf("%ld ,",k);}  printf("\n");}
 #define PRINT_NEIGHBORS_GRAPH(u) printf("Neighbors of %ld : ",u);{for(uint64_t k = 0; k < NV; k++) { if(graphAfter[u][k] == 1) printf("%ld ,",k);}  printf("\n");}

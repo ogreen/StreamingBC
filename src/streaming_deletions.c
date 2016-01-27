@@ -10,10 +10,6 @@
 
 #include "streamingbc_aux.h"
 
-//#include "streaming_utils_brandes.h"
-
-#include "dsUtils.h"
-
 // Case 2
 void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                         uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
