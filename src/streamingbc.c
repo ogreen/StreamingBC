@@ -5,7 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
-#include "operation.h"
+#include "streamingbc.h"
+
 #include "streaming_insertions.h"
 #include "xmalloc.h"
 

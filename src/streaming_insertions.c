@@ -8,17 +8,6 @@
 
 #include "timer.h"
 
-#ifdef COUNTING_INFO_ON
-uint64_t countFullVertex = 0;
-uint64_t countFullEdgeUp = 0;
-uint64_t countStreamVertexDown = 0;
-uint64_t countStreamVertexUp = 0;
-uint64_t countStreamEdgeDown = 0;
-uint64_t countStreamEdgeUp = 0;
-
-#endif
-
-
 
 
 void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,

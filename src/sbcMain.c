@@ -8,10 +8,10 @@
 #include <time.h>
 #include <math.h>
 
-#include "streamingbc_aux.h"
+#include "streamingbc.h"
+// #include "streamingbc_aux.h"
 
 #include "streaming_insertions.h"
-#include "operation.h"
 
 #include "timer.h"
 #include "stinger-utils.h"
