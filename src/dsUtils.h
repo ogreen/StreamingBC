@@ -4,7 +4,6 @@
 #include "stinger.h"
 
 #include "streamingbc_aux.h"
-#include "csr.h"
 
 uint64_t** createMultiLevelQueue(uint64_t NV);
 void destroyMultiLevelQueue(uint64_t** multiLevelQueue,uint64_t NV);

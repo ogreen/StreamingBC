@@ -14,7 +14,7 @@ CFLAGS+=-g -O2 -I$(PREFIX) -fopenmp -g -w
 
 SRC = streaming_insertions.c streaming_deletions.c operation.c streamingbc_aux.c
 
-SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC) dsUtils.c csr.c
+SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC) dsUtils.c
 
 
 main: $(SRCSBC)
