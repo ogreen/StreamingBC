@@ -8,8 +8,6 @@
 #include <time.h>
 #include <math.h>
 
-#include "main.h"
-
 #include "streamingbc_aux.h"
 
 #include "streaming_insertions.h"
@@ -30,7 +28,6 @@
 #define PRINT_LEVEL_TREE(r) {int64_t s; for(s=0;s<NV;s++){printf("%ld,",level[r][s]);} printf("\n");}
 
 #define LINE_SIZE 100000
-
 /*int64_t noComputeDiffComp; // Not really used?
 testCase graphTestCase; // GraphType ER=0,RMAT=1,real graph=2, connec
 int64_t SCALE; // used only for RMAT type graphs
@@ -45,6 +42,12 @@ int64_t* destVerToDelete;
 #define INSERTING 0
 
 //int64_t * rootArrayForApproximation;
+
+typedef enum{
+    UP_INSERT = 0,
+    UP_DELETE,
+} updateType;
+
 
 
 void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,

@@ -5,7 +5,6 @@
 #include <string.h>
 #include <assert.h>
 
-#include "main.h"
 #include "operation.h"
 #include "streaming_deletions.h"
 #include "streaming_insertions.h"
