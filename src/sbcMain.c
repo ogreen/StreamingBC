@@ -84,7 +84,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	double  timeFullBefore = 0, timeFullAfter = 0, timeStream=0;//timeStream = 0, timeSummation = 0;
 
 	tic();
-	*oneSEI = insertEdgeBrandes(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,NV,NT,eAPT_perThread);
+	*oneSEI = insertEdgeStreamingBC(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,NV,NT,eAPT_perThread);
 	timeStreamMulti = toc();
 
 	return timeStreamMulti;
@@ -104,7 +104,7 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
     tic();
-    *oneSEI = deleteEdgeBrandes(beforeBCForest, stingerGraph, u_old, v_old, rootArrayForApproximation, NK, NV, NT,  eAPT_perThread);
+    *oneSEI = deleteEdgeStreamingBC(beforeBCForest, stingerGraph, u_old, v_old, rootArrayForApproximation, NK, NV, NT,  eAPT_perThread);
     timeStreamMulti = toc();
 
     return timeStreamMulti;

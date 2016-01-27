@@ -15,7 +15,7 @@
 #include "timer.h"
 
 
-StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
+StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
         extraArraysPerThread** eAPT){
     omp_set_num_threads(NT);
@@ -179,7 +179,7 @@ StreamingExtraInfo insertEdgeBrandes(bcForest* forest, struct stinger* sStinger,
 return returnSEI;
 }
 
-StreamingExtraInfo deleteEdgeBrandes(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
+StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
                             uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
                             extraArraysPerThread **eAPT){
     omp_set_num_threads(NT);

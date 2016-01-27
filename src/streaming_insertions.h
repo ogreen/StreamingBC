@@ -9,6 +9,7 @@
 
 
 void BrandesExact(bcForest* forest, struct stinger* sStinger,extraArraysPerThread* eAPT);
+void BrandesExactParallel(bcForest* forest, struct stinger* sStinger,extraArraysPerThread** eAPT,int64_t NT);
 
 void BrandesApproxCase(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation, 
 		uint64_t rootArraySizeForApproximation,extraArraysPerThread* eAPT);
@@ -36,16 +37,10 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 //----------------------------------------------
 // Dynamic Graph Deletion
 
-// void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
-//                             uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
-//                             uint64_t deletedPathsFromRoot, bc_t* totalBC);
 void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                         uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
                         extraArraysPerThread *eAPT);
 
-
-// void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger,
-//                             uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex, bc_t* totalBC);
 void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                 uint64_t startVertex, uint64_t parentVertex, extraArraysPerThread *eAPT);
 

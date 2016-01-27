@@ -13,8 +13,6 @@ void BrandesExact(bcForest* forest, struct stinger* sStinger,extraArraysPerThrea
 	for(int64_t i=0; i<forest->NV; i++)
 		forest->totalBC[i]=0.0;
 
-	//  ODED-WARNING - USING OMP ON THIS ALGORITHM W/O ADDING ATOMICS/CRITICAL SECTIONS IS DANERGOUS TO YOUR HEALTH
-	//	#pragma omp parallel for
 	for(uint64_t i = 0; i < forest->NV; i++) {
 		//		VB("\tTree[%ld]...\n",i)
 		BrandesSingleTree(forest,sStinger,i, forest->totalBC,eAPT);
@@ -22,6 +20,24 @@ void BrandesExact(bcForest* forest, struct stinger* sStinger,extraArraysPerThrea
 	//	printf("bfsBrandes completed, forest=%ld\n",forest);
 }
 
+
+void BrandesExactParallel(bcForest* forest, struct stinger* sStinger,extraArraysPerThread** eAPT,int64_t NT){
+	for(int64_t i=0; i<forest->NV; i++)
+		forest->totalBC[i]=0.0;
+
+	#pragma omp parallel for schedule(dynamic,1)
+	for(uint64_t i = 0; i < forest->NV; i++) {
+		BrandesSingleTree(forest,sStinger,i, forest->totalBC,eAPT);
+	}
+
+	#pragma omp parallel for
+	for(uint64_t v=0;v<forest->NV;v++) {
+		for(uint64_t t=0;t<NT;t++) {
+			forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
+			eAPT[t]->sV[v].totalBC = 0.0;
+        }
+    }
+}
 
 void BrandesApproxCase(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation,
 		uint64_t rootArraySizeForApproximation,extraArraysPerThread* eAPT){
