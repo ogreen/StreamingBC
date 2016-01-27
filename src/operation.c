@@ -6,7 +6,6 @@
 #include <assert.h>
 
 #include "operation.h"
-#include "streaming_deletions.h"
 #include "streaming_insertions.h"
 #include "xmalloc.h"
 

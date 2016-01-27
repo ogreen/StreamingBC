@@ -13,28 +13,19 @@
 // Case 2
 void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                         uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
-                        extraArraysPerThread *eAPT)
-{
+                        extraArraysPerThread *eAPT){
     bcTree* tree = forest->forest[currRoot];
 
     int64_t NV = forest->NV;
     uint64_t Queue[NV];
 
-    //uint64_t queueBFSTREE[NV][NV];
-    //int64_t levelCounter[NV];
-
-    for(uint64_t k = 0; k < NV; k++)
-    {
+    for(uint64_t k = 0; k < NV; k++){
         eAPT->sV[k].touched = 0;
         eAPT->sV[k].diffPath = 0;
         eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
         eAPT->sV[k].newDelta = 0.0;
         //levelCounter[k] = 0;
-        
-        //for (uint64_t l = 0; l < NV; l++)
-        //    queueBFSTREE[k][l] = 0;
     }
-
 
     eAPT->sV[startVertex].touched = 1;
     eAPT->sV[startVertex].newPathsToRoot -= deletedPathsFromRoot;
@@ -42,12 +33,8 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
     Queue[0] = startVertex;
     int64_t qStart=0,qEnd=1;
-
     int64_t deepestLevel = tree->vArr[startVertex].level;
     
-    //queueBFSTREE[tree->vArr[startVertex].level][levelCounter[tree->vArr[startVertex].level]]=startVertex;
-    //levelCounter[tree->vArr[startVertex].level]++;
-
     list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
     append(multiLevelQueues[tree->vArr[startVertex].level], makeNode(startVertex));
 
@@ -57,8 +44,7 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     // Each level in the tree(max depth NV) has a queue and a counter specifiying how deep a specific deepth-queue is.
     // For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
     // for the BFS traversal.
-    while(qStart!=qEnd)
-    {
+    while(qStart!=qEnd){
         uint64_t currElement = Queue[qStart];
 
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -66,41 +52,32 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
             uint64_t k = STINGER_EDGE_DEST;
 
 	    // if this vertex has not been added yet
-            if ((tree->vArr[currElement].level + 1) == (tree->vArr[k].level))
-            {
-	        if(eAPT->sV[k].touched == 0)
-		{
-		    // Checking if a "deeper level" has been reached.
-		    if(deepestLevel < tree->vArr[k].level)
+            if ((tree->vArr[currElement].level + 1) == (tree->vArr[k].level)){
+    	        if(eAPT->sV[k].touched == 0){
+        		    // Checking if a "deeper level" has been reached.
+        		    if(deepestLevel < tree->vArr[k].level)
                         deepestLevel = tree->vArr[k].level;
 
-		    // insert this vertex into the BFS queue
-		    Queue[qEnd++] = k;
-                    
-                    //queueBFSTREE[tree->vArr[k].level][levelCounter[tree->vArr[k].level]] = k;
-                    //levelCounter[tree->vArr[k].level]++;
+        		    // insert this vertex into the BFS queue
+        		    Queue[qEnd++] = k;
                     
                     append(multiLevelQueues[tree->vArr[k].level], makeNode(k));
-		    // indicate that it is in the next level of the BFS
-		    eAPT->sV[k].touched = eAPT->sV[currElement].touched + 1;
-		    // add new paths to root that go through current BFS Vertex
-		    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
-		    // pass on my new paths to root for its search
-		    eAPT->sV[k].diffPath = eAPT->sV[currElement].diffPath;
-
-		}
-	        
+        		    // indicate that it is in the next level of the BFS
+        		    eAPT->sV[k].touched = eAPT->sV[currElement].touched + 1;
+        		    // add new paths to root that go through current BFS Vertex
+        		    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
+        		    // pass on my new paths to root for its search
+        		    eAPT->sV[k].diffPath = eAPT->sV[currElement].diffPath;
+                }        
                 // otherwise if it has been touched, but is specifically in the next level
-		// of the search (meaning it has more than one edge to the current level)
-		else if(eAPT->sV[k].touched == eAPT->sV[currElement].touched + 1)
-		{
-		    // add new paths to root that go through current BFS Vertex
-		    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
-		    // pass on my new paths to root for its search
-		    eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
-		}     
+        		// of the search (meaning it has more than one edge to the current level)
+        		else if(eAPT->sV[k].touched == eAPT->sV[currElement].touched + 1){
+        		    // add new paths to root that go through current BFS Vertex
+        		    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
+        		    // pass on my new paths to root for its search
+        		    eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
+        		}     
             }
-
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
         
@@ -114,11 +91,7 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     // The parent vertex needs to be placed in the queue for the dependency accumulation stage.
     // Also, it no longer has a child and so the delta from the child needs to be removed.
     
-    //queueBFSTREE[tree->vArr[parentVertex].level][levelCounter[tree->vArr[parentVertex].level]]=parentVertex;
-    //levelCounter[tree->vArr[parentVertex].level]++;
-    
     append(multiLevelQueues[tree->vArr[parentVertex].level], makeNode(parentVertex));
-
     eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta -
                 ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
                 (bc_t)(tree->vArr[startVertex].delta + 1);
@@ -139,20 +112,13 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     //    placed in the Multi-level queue.
     
     //while (deepestLevel >=0 && levelCounter[deepestLevel] > 0)
-    while (deepestLevel >= 0)
-    {
-        //int64_t currQueue = 0;
-
+    while (deepestLevel >= 0){
         node_t* temp;
 
         //while (currQueue < levelCounter[deepestLevel])
-        while (multiLevelQueues[deepestLevel]->size > 0)
-        {
+        while (multiLevelQueues[deepestLevel]->size > 0){
             // Removing last element from the queue
             
-            //uint64_t currElement = queueBFSTREE[deepestLevel][currQueue];
-            //currQueue++;
-
             temp = getFirst(multiLevelQueues[deepestLevel]);
             uint64_t currElement = temp->id;
             deleteFirst(multiLevelQueues[deepestLevel]);
@@ -163,19 +129,12 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
 
                 // Checking that the vertices are in different levels.
-                if (tree->vArr[k].level == (tree->vArr[currElement].level - 1))
-                {
+                if (tree->vArr[k].level == (tree->vArr[currElement].level - 1)){
                     // Checking to see if "k" has been touched before.
-                    if (eAPT->sV[k].touched == 0)
-                    {
+                    if (eAPT->sV[k].touched == 0){
                         eAPT->sV[k].newDelta=tree->vArr[k].delta;
-
                         // Marking element as touched in the ascent stage.
                         eAPT->sV[k].touched=-1;
-                        
-                        //queueBFSTREE[tree->vArr[k].level][levelCounter[tree->vArr[k].level]] = k;
-                        //levelCounter[tree->vArr[k].level]++;
-
                         append(multiLevelQueues[tree->vArr[k].level], makeNode(k));
                     }
 
@@ -183,22 +142,17 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
                         ((bc_t)eAPT->sV[k].newPathsToRoot / (bc_t)eAPT->sV[currElement].newPathsToRoot) *
                         (bc_t)(eAPT->sV[currElement].newDelta + 1);
 
-
-
                     // For the elements that are touched in the ascent stage it is necessary to
                     // to reduce the values that they previously had.
                     // In addition to this, the "parentVertex" that is connected to "vertex", i.e.
                     // the vertices of the new edge, needs to increase its betweenness centrality
                     // following the new connection, without removing the old delta value.
-                    if (eAPT->sV[k].touched < 0 && ( k != parentVertex  || currElement != startVertex))
-                    {
+                    if (eAPT->sV[k].touched < 0 && ( k != parentVertex  || currElement != startVertex)){
                         eAPT->sV[k].newDelta -=
                             ((bc_t)tree->vArr[k].pathsToRoot / (bc_t)tree->vArr[currElement].pathsToRoot) * 
                             (bc_t)(tree->vArr[currElement].delta + 1);
-
                     }
                 }
-
             }
             STINGER_FORALL_EDGES_OF_VTX_END();
 
@@ -206,29 +160,22 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
             eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
             eAPT->dynamicTraverseVerticeCounter++;
 #endif
-
-	    if (currElement != currRoot)
-            {
+    	    if (currElement != currRoot){
                 //forest->totalBC[currElement]+=newDelta[currElement]-tree->delta[currElement];
                 eAPT->sV[currElement].totalBC += eAPT->sV[currElement].newDelta - tree->vArr[currElement].delta;
             }
-
         }
         deepestLevel--;
-
     }
 
-    for(uint64_t k = 0; k < NV; k++)
-    {
-        if(eAPT->sV[k].touched != 0)
-        {
+    for(uint64_t k = 0; k < NV; k++){
+        if(eAPT->sV[k].touched != 0){
             tree->vArr[k].delta = eAPT->sV[k].newDelta;
             tree->vArr[k].pathsToRoot = eAPT->sV[k].newPathsToRoot;
         }
     }
 
-    for (uint64_t k = 0; k < NV; k++)
-    {
+    for (uint64_t k = 0; k < NV; k++){
         eAPT->sV[k].diffPath = 0;
         eAPT->sV[k].touched = 0;
         eAPT->sV[k].newDelta = 0.0;
@@ -243,13 +190,8 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     bcTree* tree = forest->forest[currRoot];
 
     int64_t NV = forest->NV;
-
     int64_t Queue[NV], topQueue[NV];
-
     int64_t newLevel[NV];
-
-    //int64_t levelCounter[NV];
-    //uint64_t queueBFSTREE[NV][NV];
 
     for(uint64_t k = 0; k < NV; k++) 
     {
@@ -257,18 +199,12 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         newLevel[k]=0;
         eAPT->sV[k].newPathsToRoot=tree->vArr[k].pathsToRoot;
         eAPT->sV[k].newDelta=0.0;
-        //levelCounter[k] = 0;
-        //for (uint64_t l = 0; l < NV; l++)
-        //    queueBFSTREE[k][l] = 0;
     }
 
 
     list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
-
     Queue[0] = startVertex;
     int64_t qStart=0,qEnd=1, tqStart=0, tqEnd=0;
-
-
     int64_t stopLevel = tree->vArr[startVertex].level;
 
     newLevel[startVertex] = INFINITY_MY;
@@ -282,14 +218,12 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     {
         int64_t k = STINGER_EDGE_DEST;
 
-        if (tree->vArr[k].level == tree->vArr[startVertex].level)
-        {
+        if (tree->vArr[k].level == tree->vArr[startVertex].level){
             newLevel[k] = tree->vArr[k].level;
             eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
             topQueue[tqEnd++] = k;
         }
-        else
-        {
+        else{
             newLevel[k] = INFINITY_MY;
             eAPT->sV[k].newPathsToRoot = INFINITY_MY;
             if(deepestLevel < tree->vArr[k].level)
@@ -300,23 +234,17 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newDelta = 0.0;
     }
     STINGER_FORALL_EDGES_OF_VTX_END();
-   
 
     qStart = 1; 
-
-    while (qStart != qEnd)
-    {
+    while (qStart != qEnd){
         int64_t currElement = Queue[qStart++];
 
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
         {
             int64_t k = STINGER_EDGE_DEST;
                
-            if (eAPT->sV[k].touched == 0)
-            {
-
-                if (tree->vArr[k].level == stopLevel && tree->vArr[currElement].level == (stopLevel + 1))
-                {
+            if (eAPT->sV[k].touched == 0){
+                if (tree->vArr[k].level == stopLevel && tree->vArr[currElement].level == (stopLevel + 1)){
                     newLevel[k]=tree->vArr[k].level;
                     eAPT->sV[k].newPathsToRoot=tree->vArr[k].pathsToRoot;
                     topQueue[tqEnd++]=k;
@@ -324,17 +252,14 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                     Queue[qEnd++]=k;
                     eAPT->sV[k].newDelta=0.0;
                 }
-                else if (tree->vArr[k].level>stopLevel)
-                {
+                else if (tree->vArr[k].level>stopLevel){
                     newLevel[k] = INFINITY_MY;
                     eAPT->sV[k].newPathsToRoot = INFINITY_MY;
                     eAPT->sV[k].touched = 1;
                     Queue[qEnd++] = k;
                     eAPT->sV[k].newDelta = 0.0;
                 }
-
             }
-
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
 
@@ -342,57 +267,43 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
         eAPT->dynamicTraverseVerticeCounter++;
 #endif
-
     }
 
     qEnd = tqEnd;
     qStart = 0;
-
-    for(int64_t t = 0; t < qEnd; t++)
-    {
+    for(int64_t t = 0; t < qEnd; t++){
         Queue[t] = topQueue[t];
         eAPT->sV[t].newDelta=0.0;
 
-        //queueBFSTREE[stopLevel][levelCounter[stopLevel]++]=topQueue[t];
         append(multiLevelQueues[stopLevel], makeNode(topQueue[t]));
-
     }
 
     eAPT->sV[parentVertex].touched = -1;
     newLevel[parentVertex] = tree->vArr[parentVertex].level;
     eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
 
-    //queueBFSTREE[stopLevel-1][levelCounter[stopLevel-1]++] = parentVertex;
     append(multiLevelQueues[stopLevel - 1], makeNode(parentVertex));
     
     eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta -
         ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
         (bc_t)(tree->vArr[startVertex].delta + 1);
 
-
     // While queue is not empty
-    while (qStart != qEnd)
-    {
-
+    while (qStart != qEnd){
         uint64_t currElement = Queue[qStart++];
 
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
         {
             uint64_t k = STINGER_EDGE_DEST;
-
-
             // If this is a neighbor and has not been found
-            if (newLevel[k] > newLevel[currElement])
-            {
-
+            if (newLevel[k] > newLevel[currElement]){
                 // Checking if "k" has been found.
-                if (newLevel[k] == INFINITY_MY)
-                {
+                if (newLevel[k] == INFINITY_MY){
                     newLevel[k] = newLevel[currElement] + 1;
                     Queue[qEnd++] = k;
                     eAPT->sV[k].newDelta = 0.0;
 
-		    if(deepestLevel < newLevel[k])
+        		    if(deepestLevel < newLevel[k])
                         deepestLevel = newLevel[k];
 
                     //queueBFSTREE[newLevel[k]][levelCounter[newLevel[k]]++] = k;
@@ -401,14 +312,11 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                     if (eAPT->sV[k].touched == 0)
                         printf("AAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH\n");
                 }
-
-                if (eAPT->sV[k].newPathsToRoot == INFINITY_MY)
-                {
+                if (eAPT->sV[k].newPathsToRoot == INFINITY_MY){
                     // k has not been found and therefore its paths to the roots are through its parent.
                     eAPT->sV[k].newPathsToRoot = eAPT->sV[currElement].newPathsToRoot;
                 }
-                else
-                {
+                else{
                     // k has been found and has multiple paths to the root as it has multiple parents.
                     eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].newPathsToRoot;
                 }
@@ -420,21 +328,13 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->dynamicTraverseVerticeCounter++;
 #endif
     } 
-
-
-    for(int64_t k=0; k<NV;k++)
-    {
+    for(int64_t k=0; k<NV;k++){
         if(eAPT->sV[k].touched!=0)// && k!=parentVertex)
         {
             tree->vArr[k].level=newLevel[k];
         }
     }
 
-
-    
-    //if (currRoot == 211)
-    //    printf("newLevel[6945, 6946, 9111]: %ld, %ld, %ld\n", newLevel[6945], newLevel[6946], newLevel[9111]);
-    
     // Starting Multi-Level "BFS" ascent.
 
     // The ascent continues going up as long as the root has not been reached and that there
@@ -448,38 +348,11 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     //    values have changed due to the changes occuring below them. Because of this, they are
     //    placed in the Multi-level queue.
 
-
-    //if (currRoot == 211)
-    //    printf("deepestLevel: %ld\n", deepestLevel);
-    
-    //while(deepestLevel >=0 && levelCounter[deepestLevel] > 0)
-    while (deepestLevel >= 0)
-    {
-        //int64_t currQueue = 0;
-
+    while (deepestLevel >= 0){
         node_t* temp;
 
-        /*
-        if (currRoot == 211)
-        {
-            node_t *temp2 = getFirst(multiLevelQueues[deepestLevel]);
-            printf("Level %ld: ", deepestLevel);
-            while (temp2 != NULL)
-            {
-                printf("%ld ", temp2->id);
-                temp2 = temp2->next;
-            }
-            printf("\n");
-        }
-        */
-        //while(currQueue<levelCounter[deepestLevel])
-        while (multiLevelQueues[deepestLevel]->size > 0)
-        {
+        while (multiLevelQueues[deepestLevel]->size > 0){
             // Removing last element from the queue
-            
-            //uint64_t currElement = queueBFSTREE[deepestLevel][currQueue];
-            //currQueue++;
-
             temp = getFirst(multiLevelQueues[deepestLevel]);
             uint64_t currElement = temp->id;
             deleteFirst(multiLevelQueues[deepestLevel]);
@@ -487,26 +360,20 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
             {
                 uint64_t k = STINGER_EDGE_DEST;
-
                 // Checking that the vertices are in different levels.
-                if(tree->vArr[k].level == (tree->vArr[currElement].level-1))
-                {
+                if(tree->vArr[k].level == (tree->vArr[currElement].level-1)){
 
                     // Checking to see if "k" has been touched before.
-                    if(eAPT->sV[k].touched==0)
-                    {
+                    if(eAPT->sV[k].touched==0){
                         eAPT->sV[k].newDelta=tree->vArr[k].delta;
 
                         // Marking element as touched in the ascent stage.
                         eAPT->sV[k].touched=-1;
-                    	//queueBFSTREE[tree->vArr[k].level][levelCounter[tree->vArr[k].level]++]=k;
                         append(multiLevelQueues[tree->vArr[k].level], makeNode(k));
                     }
-
                     eAPT->sV[k].newDelta +=
                         ((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
                         (bc_t)(eAPT->sV[currElement].newDelta+1);
-
 
                     // For the elements that are touched in the ascent stage it is necessary to
                     // to reduce the values that they previously had.
@@ -518,33 +385,23 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                         eAPT->sV[k].newDelta -=
                         ((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
                         (bc_t)(tree->vArr[currElement].delta+1);
-
                     }
-
                 }
-
             }
             STINGER_FORALL_EDGES_OF_VTX_END();
 #if COUNT_TRAVERSALS==1
             eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
             eAPT->dynamicTraverseVerticeCounter++;
 #endif
-
-    	    if(currElement!=currRoot)
-            {
-                //forest->totalBC[currElement]+=newDelta[currElement]-tree->delta[currElement];
+    	    if(currElement!=currRoot){
                 eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
-
             }
-
         }
         deepestLevel--;
-
     }
 
     // Handles case where edge deletion creates new connected component.
-    if (tree->vArr[startVertex].level == INFINITY_MY)
-    {
+    if (tree->vArr[startVertex].level == INFINITY_MY){
         int64_t visited[NV];
         qStart = 0;
         qEnd = 1;
@@ -553,8 +410,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         for (uint64_t k = 0; k < NV; k++)
             visited[k] = 0;
         visited[startVertex] = 1;
-        while (qStart != qEnd)
-        {
+        while (qStart != qEnd){
             int64_t currElement = Queue[qStart++];
             
             eAPT->sV[currElement].totalBC -= tree->vArr[currElement].delta;
@@ -563,8 +419,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             {
                 uint64_t k = STINGER_EDGE_DEST;
 
-                if (!visited[k])
-                {
+                if (!visited[k]){
                     visited[k] = 1;
                     Queue[qEnd++] = k;
                 }
@@ -580,20 +435,16 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                      eAPT->sV[6946].newDelta, tree->vArr[6946].delta, eAPT->sV[6946].totalBC);
    */
 
-    for(int64_t k=0; k<NV;k++)
-    {
-        if(eAPT->sV[k].touched>0)
-        {
+    for(int64_t k=0; k<NV;k++){
+        if(eAPT->sV[k].touched>0){
             tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
         }
-        if(eAPT->sV[k].touched!=0)
-        {
+        if(eAPT->sV[k].touched!=0){
             tree->vArr[k].delta=eAPT->sV[k].newDelta;
         }
     }
 
-    for (uint64_t k = 0; k < NV; k++)
-    {
+    for (uint64_t k = 0; k < NV; k++){
         eAPT->sV[k].diffPath = 0;
         eAPT->sV[k].touched = 0;
         eAPT->sV[k].newDelta = 0.0;

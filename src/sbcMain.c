@@ -11,7 +11,6 @@
 #include "streamingbc_aux.h"
 
 #include "streaming_insertions.h"
-#include "streaming_deletions.h"
 #include "operation.h"
 
 #include "timer.h"
