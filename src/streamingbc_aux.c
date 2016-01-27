@@ -46,8 +46,8 @@ void DestroyTree(bcTreePtr deadTree){
 *
 * @return None (see parameter newForest)
 */
-bcForest* CreateForestForApproxCase(bcForestPtr* newForest, int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize){
-	bcForest* temp;//=*newForest;
+bcForest* CreateForestForApproxCase(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize){
+	bcForest* temp;;
     temp = (bcForest*)xmalloc(sizeof(bcForest));
     temp->NV = numVertices;
     temp->forest = (bcTreePtr*)xmalloc(numVertices*sizeof(bcTreePtr));

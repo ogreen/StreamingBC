@@ -11,8 +11,6 @@
 #include "streamingbc.h"
 // #include "streamingbc_aux.h"
 
-#include "streaming_insertions.h"
-
 #include "timer.h"
 #include "stinger-utils.h"
 #include "stinger-traversal.h"
@@ -271,7 +269,7 @@ int main(int argc, char *argv[])
 			//-------Compute static BC
 			//-------START
 
-			beforeBCForest=CreateForestForApproxCase(&beforeBCForest, NV, rootArrayForApproximation, NK);
+			beforeBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
 
 			extraArraysPerThread* eAPT = createExtraArraysPerThread(NV);
 
@@ -288,7 +286,7 @@ int main(int argc, char *argv[])
 			//-------Compute static BC - Parallel
 			//-------START
 
-			beforeBCForest=CreateForestForApproxCase(&beforeBCForest, NV, rootArrayForApproximation, NK);
+			beforeBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
 			extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
 
 			tic();
@@ -378,7 +376,7 @@ int main(int argc, char *argv[])
 
 		bcForest* afterBCForest=NULL;
 
-		afterBCForest=CreateForestForApproxCase(&afterBCForest, NV, rootArrayForApproximation, NK);
+		afterBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
 		extraArraysPerThread** eAPT_perThreadAfter = createExtraArraysForThreads(NT,NV);
 		BrandesApproxCaseParallel(afterBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThreadAfter,NT);
 
@@ -398,7 +396,7 @@ int main(int argc, char *argv[])
                 //-------Compute static BC - Parallel
                 //-------START
 
-                beforeBCForest=CreateForestForApproxCase(&beforeBCForest, NV, rootArrayForApproximation, NK);
+                beforeBCForest=CreateForestForApproxCase( NV, rootArrayForApproximation, NK);
                 extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
 
                 tic();

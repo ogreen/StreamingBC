@@ -4,11 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <limits.h>
 #include "stinger.h"
 #include "xmalloc.h"
 
-#define INFINITY_MY 1073741824
+#define INFINITY_MY LONG_MAX
 typedef double bc_t;
 
 //------------------------------------------------
@@ -44,7 +44,7 @@ typedef struct
     uint64_t connectedComponents;
 }StreamingExtraInfo;
 
-bcForest* CreateForestForApproxCase(bcForest** newForest, int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize);
+bcForest* CreateForestForApproxCase(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize);
 void DestroyForestForApproxCase(bcForest** deadForest, uint64_t* rootArray, uint64_t rootArraySize);
 
 

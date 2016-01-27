@@ -4,10 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "streamingbc_internal.h"
 #include "streamingbc_aux.h"
-#include "streaming_insertions.h"
-
-
 
 void BrandesExact(bcForest* forest, struct stinger* sStinger,extraArraysPerThread* eAPT){
 	for(int64_t i=0; i<forest->NV; i++)

@@ -4,9 +4,8 @@
 #include <stdio.h>
 
 #include "streamingbc_aux.h"
-#include "streaming_insertions.h"
 
-#include "timer.h"
+//#include "timer.h"
 
 
 

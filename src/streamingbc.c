@@ -1,19 +1,13 @@
-#include "omp.h"
+#include <omp.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 #include "streamingbc.h"
-
-#include "streaming_insertions.h"
-#include "xmalloc.h"
-
 #include "streamingbc_aux.h"
-
-#include <math.h>
-#include "timer.h"
 
 
 StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
