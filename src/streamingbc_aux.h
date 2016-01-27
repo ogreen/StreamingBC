@@ -44,8 +44,11 @@ typedef struct
     uint64_t connectedComponents;
 }StreamingExtraInfo;
 
-bcForest* CreateForestForApproxCase(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize);
-void DestroyForestForApproxCase(bcForest** deadForest, uint64_t* rootArray, uint64_t rootArraySize);
+bcForest* CreateForestExact(int64_t numVertices);
+void DestroyForestExact(bcForest** deadForest);
+
+bcForest* CreateForestApproximate(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize);
+void DestroyForestForApproximate(bcForest** deadForest, uint64_t* rootArray, uint64_t rootArraySize);
 
 
 //------------------------------------------------

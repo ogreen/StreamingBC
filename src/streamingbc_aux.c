@@ -36,17 +36,65 @@ void DestroyTree(bcTreePtr deadTree){
     free(deadTree);
 }
 
+
 /**
-* @brief Creates a tree for each vertex in the rootArray. Thus, a total of rootArraySize trees are created.
+* @brief Creates a tree for each vertex in the graph.
 *
-* @param newForest This is an OUT parameter that contains the forest for approximate case.
 * @param numVertices The number of vertices in the graph
 * @param rootArray The array containing vertex id's to be considered for approximate case
 * @param rootArraySize The number of vertices in the graph to be considered for approximate case
 *
 * @return None (see parameter newForest)
 */
-bcForest* CreateForestForApproxCase(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize){
+bcForest* CreateForestExact(int64_t numVertices){
+    bcForest* temp;
+    temp = (bcForest*)xmalloc(sizeof(bcForest));
+    temp->NV = numVertices;
+    temp->forest = (bcTreePtr*)xmalloc(numVertices*sizeof(bcTreePtr));
+    temp->totalBC = (bc_t*)xmalloc(numVertices*sizeof(bc_t));
+
+    int64_t i;
+    for(i=0;i<numVertices;i++)
+    {
+      temp->forest[i] = CreateTree(numVertices);
+    }
+    return temp;
+}
+
+/**
+* @brief Destroys the allocated forest for exact computation.
+*
+* @param deadForest The forest that needs to be unallocated.
+* @param rootArray The array containing vertex id's to be considered for approximate case
+* @param rootArraySize The number of vertices in the graph to be considered for approximate case
+*
+* @return None
+*/
+void DestroyForestExact(bcForestPtr* deadForest){
+    bcForest* temp=*deadForest;
+    int64_t i;
+    for(i=0;i<(temp->NV);i++)
+    {
+        DestroyTree(temp->forest[i]);
+    }
+   free(temp->totalBC);
+   free(temp->forest);
+   free(temp);
+    return;
+}
+
+
+
+/**
+* @brief Creates a tree for each vertex in the rootArray. Thus, a total of rootArraySize trees are created.
+*
+* @param numVertices The number of vertices in the graph
+* @param rootArray The array containing vertex id's to be considered for approximate case
+* @param rootArraySize The number of vertices in the graph to be considered for approximate case
+*
+* @return None (see parameter newForest)
+*/
+bcForest* CreateForestApproximate(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize){
 	bcForest* temp;;
     temp = (bcForest*)xmalloc(sizeof(bcForest));
     temp->NV = numVertices;
@@ -70,7 +118,7 @@ bcForest* CreateForestForApproxCase(int64_t numVertices, uint64_t* rootArray, ui
 *
 * @return None
 */
-void DestroyForestForApproxCase(bcForestPtr* deadForest, uint64_t* rootArray, uint64_t rootArraySize){
+void DestroyForestApproximate(bcForestPtr* deadForest, uint64_t* rootArray, uint64_t rootArraySize){
 	bcForest* temp=*deadForest;
     int64_t i;
     for(i=0;i<(rootArraySize);i++)

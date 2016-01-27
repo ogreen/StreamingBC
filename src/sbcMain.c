@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
 			//-------Compute static BC - Parallel
 			//-------START
 
-			beforeBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
+			beforeBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
 			extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
 
 			tic();
@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
 
 		bcForest* afterBCForest=NULL;
 
-		afterBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
+		afterBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
 		extraArraysPerThread** eAPT_perThreadAfter = createExtraArraysForThreads(NT,NV);
 		BrandesApproxCaseParallel(afterBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThreadAfter,NT);
 
@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
                 
 
 
-		DestroyForestForApproxCase(&beforeBCForest,rootArrayForApproximation, NK);
+		DestroyForestApproximate(&beforeBCForest,rootArrayForApproximation, NK);
 
 		//-------END
 

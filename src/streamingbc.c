@@ -9,6 +9,39 @@
 #include "streamingbc.h"
 #include "streamingbc_aux.h"
 
+bcForest* streamingBCCreateForestExact(uint64_t NV){
+    return CreateForestExact(NV);
+}
+
+bcForest* streamingBCCreateForestApproximate(uint64_t NV, uint64_t NK, uint64_t *rootArray){
+    return CreateForestApproximate(NV, rootArray, NK);
+}
+
+extraArraysPerThread** streamingBCCreateAuxilary(int64_t threadCount,int64_t NV){
+    return createExtraArraysForThreads(threadCount,NV);
+}
+
+void streamingBCInitStaticExact(bcForest* forest, struct stinger*stingerGraph, uint64_t NT,extraArraysPerThread** auxilary){
+    BrandesExactParallel(forest,stingerGraph,NT, auxilary);
+}
+
+void streamingBCInitStaticApproximate(bcForest* forest, struct stinger*stingerGraph, uint64_t NT,extraArraysPerThread** auxilary,uint64_t NK, uint64_t *rootArray){
+    BrandesApproxCaseParallel(forest, stingerGraph, rootArray, NK,auxilary,NT);
+}
+
+void streamingBCDeleteAuxilary(extraArraysPerThread** parallelExtra, int64_t threadCount, int64_t NV){
+    destroyExtraArraysForThreads(parallelExtra,threadCount,NV);
+}
+
+
+void streamingBCDeleteForestExact(bcForestPtr* deadForest){
+    DestroyForestExact(deadForest);
+}
+void streamingBCDeleteForestApproximate(bcForestPtr* deadForest, uint64_t rootArraySize,uint64_t* rootArray){
+    DestroyForestApproximate(deadForest,rootArray, rootArraySize);
+}
+
+
 
 StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
