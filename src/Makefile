@@ -12,7 +12,7 @@ STINGER_SRC=$(PREFIX)/stinger.c $(PREFIX)/stinger-utils.c $(PREFIX)/timer.c $(PR
 CFLAGS+=-g -O2 -I$(PREFIX) -fopenmp -g -w
 
 
-SRC = streaming_insertions.c operation.c streamingbc_aux.c
+SRC = streaming_insertions.c operation.c streamingbc_aux.c streamingbc_init.c
 
 SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC)
 

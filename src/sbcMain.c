@@ -79,19 +79,13 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	uint64_t iterator;
 	float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti=0;//timeStream = 0, timeSummation = 0;
 	float_t avgComponents = 0;
-
 	fflush(stdout);
 	iterationCount=1;
-
 	double  timeFullBefore = 0, timeFullAfter = 0, timeStream=0;//timeStream = 0, timeSummation = 0;
-
-
 
 	tic();
 	*oneSEI = insertEdgeBrandes(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,NV,NT,eAPT_perThread);
 	timeStreamMulti = toc();
-
-
 
 	return timeStreamMulti;
 }
@@ -116,8 +110,7 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     return timeStreamMulti;
 }
 
-int doubleCompareforMinSort (const void * a, const void * b)
-{
+int doubleCompareforMinSort (const void * a, const void * b){
 	if ( *(double*)a <  *(double*)b ) return 1;
 	if ( *(double*)a == *(double*)b ) return 0;
 	if ( *(double*)a >  *(double*)b ) return -1;
@@ -267,7 +260,7 @@ int main(int argc, char *argv[])
 		bcForest* beforeBCForest=NULL;
                               
                 #if INSERTING==1 
-		CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
+				CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
                 #else
                 CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
                                             deletionArrayDest, COUNT);
@@ -283,7 +276,7 @@ int main(int argc, char *argv[])
 			extraArraysPerThread* eAPT = createExtraArraysPerThread(NV);
 
 			tic();
-			bfsBrandesForApproxCase(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT);
+			BrandesApproxCase(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT);
 			timeFullBeforeMulti=toc();
 
 			destroyExtraArraysPerThread(eAPT,NV);
@@ -299,7 +292,7 @@ int main(int argc, char *argv[])
 			extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
 
 			tic();
-			bfsBrandesForApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
+			BrandesApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
                         timingStatic[threadCount]=toc();
 			staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
 			staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
@@ -387,7 +380,7 @@ int main(int argc, char *argv[])
 
 		afterBCForest=CreateForestForApproxCase(&afterBCForest, NV, rootArrayForApproximation, NK);
 		extraArraysPerThread** eAPT_perThreadAfter = createExtraArraysForThreads(NT,NV);
-		bfsBrandesForApproxCaseParallel(afterBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThreadAfter,NT);
+		BrandesApproxCaseParallel(afterBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThreadAfter,NT);
 
 		for(int a=0; a<beforeBCForest->NV; a++)
                 {

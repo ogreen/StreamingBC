@@ -8,14 +8,14 @@
 // Static Graph BC
 
 
-void bfsBrandes(bcForest* forest, struct stinger* sStinger,extraArraysPerThread* eAPT);
+void BrandesExact(bcForest* forest, struct stinger* sStinger,extraArraysPerThread* eAPT);
 
-void bfsBrandesForApproxCase(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation, 
+void BrandesApproxCase(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation, 
 		uint64_t rootArraySizeForApproximation,extraArraysPerThread* eAPT);
-void bfsBrandesForApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation,
+void BrandesApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint64_t* rootArrayForApproximation,
 		uint64_t rootArraySizeForApproximation,extraArraysPerThread** eAPT,int64_t NT);
 
-uint64_t bfsBrandesPerTree(bcForest* forest, struct stinger* sStinger,
+uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
                             uint64_t currRoot, bc_t* totalBC,extraArraysPerThread* eAPT);
 
 //----------------------------------------------
