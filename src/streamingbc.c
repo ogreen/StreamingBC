@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "stinger.h"
 #include "streamingbc.h"
 #include "streamingbc_aux.h"
 
@@ -41,6 +42,21 @@ void streamingBCDeleteForestApproximate(bcForestPtr* deadForest, uint64_t rootAr
     DestroyForestApproximate(deadForest,rootArray, rootArraySize);
 }
 
+
+StreamingExtraInfo insertVertexStreamingBC(bcForest* forest, struct stinger* sStinger, uint64_t src,
+                       uint64_t* adjacencyArray,uint64_t adjacencySize, uint64_t * rootArrayForApproximation, 
+                       int64_t NK, int64_t NV, int64_t NT, extraArraysPerThread** eAPT){
+    StreamingExtraInfo oneSEI,returnsei;
+    returnsei.adjacent=0; returnsei.movement=0; returnsei.sameLevel=0;
+    for(uint64_t d=0; d<adjacencySize; d++){
+        uint64_t dest = adjacencyArray[d];
+        stinger_insert_edge(sStinger,0,src,dest,0,0);
+        stinger_insert_edge(sStinger,0,dest,src,0,0);
+        oneSEI=insertEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT);
+        returnsei.adjacent += oneSEI.adjacent; returnsei.movement += oneSEI.movement; returnsei.sameLevel += oneSEI.sameLevel;
+    }
+    return returnsei;    
+}
 
 
 StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
@@ -206,6 +222,30 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
 return returnSEI;
 }
+
+
+StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sStinger, uint64_t src,
+                       uint64_t* adjacencyArray,uint64_t* adjacencySize, uint64_t * rootArrayForApproximation, 
+                       int64_t NK, int64_t NV, int64_t NT, extraArraysPerThread** eAPT){
+    StreamingExtraInfo oneSEI,returnsei;
+    returnsei.adjacent=0; returnsei.movement=0; returnsei.sameLevel=0;
+
+    int64_t d=0;
+    STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,src)
+    {
+        uint64_t dest = STINGER_EDGE_DEST;
+        adjacencyArray[d]=dest;
+        stinger_remove_edge(sStinger, 0, src, dest);
+        stinger_remove_edge(sStinger, 0, dest, src);
+
+        oneSEI=deleteEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT);
+        returnsei.adjacent += oneSEI.adjacent; returnsei.movement += oneSEI.movement; returnsei.sameLevel += oneSEI.sameLevel;
+    }
+    STINGER_FORALL_EDGES_OF_VTX_END();        
+    *adjacencySize=d;
+    return returnsei;
+}
+
 
 StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
                             uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
