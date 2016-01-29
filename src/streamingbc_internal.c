@@ -7,6 +7,7 @@
 
 //#include "timer.h"
 
+//#define COUNT_TRAVERSALS 1
 
 
 void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,

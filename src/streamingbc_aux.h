@@ -9,6 +9,8 @@
 #include "xmalloc.h"
 
 #define INFINITY_MY LONG_MAX
+#define COUNT_TRAVERSALS 1
+
 typedef double bc_t;
 
 //------------------------------------------------
