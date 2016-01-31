@@ -464,20 +464,21 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 // Case 2
 void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                         uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
-                        extraArraysPerThread *eAPT){
+                        extraArraysPerThread *eAPT) {
     bcTree* tree = forest->forest[currRoot];
 
     int64_t NV = forest->NV;
     uint64_t Queue[NV];
 
-    for(uint64_t k = 0; k < NV; k++){
+    /*for(uint64_t k = 0; k < NV; k++){
         eAPT->sV[k].touched = 0;
         eAPT->sV[k].diffPath = 0;
         eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
         eAPT->sV[k].newDelta = 0.0;
         //levelCounter[k] = 0;
-    }
+    }*/
 
+    eAPT->sV[startVertex].newPathsToRoot = tree->vArr[startVertex].pathsToRoot;
     eAPT->sV[startVertex].touched = 1;
     eAPT->sV[startVertex].newPathsToRoot -= deletedPathsFromRoot;
     eAPT->sV[startVertex].diffPath = deletedPathsFromRoot;
@@ -503,31 +504,32 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
             uint64_t k = STINGER_EDGE_DEST;
 
 	    // if this vertex has not been added yet
-            if ((tree->vArr[currElement].level + 1) == (tree->vArr[k].level)){
-    	        if(eAPT->sV[k].touched == 0){
-        		    // Checking if a "deeper level" has been reached.
-        		    if(deepestLevel < tree->vArr[k].level)
+            if ((tree->vArr[currElement].level + 1) == (tree->vArr[k].level)) {
+    	        if(eAPT->sV[k].touched == 0) {
+        	    // Checking if a "deeper level" has been reached.
+        	    if(deepestLevel < tree->vArr[k].level)
                         deepestLevel = tree->vArr[k].level;
 
-        		    // insert this vertex into the BFS queue
-        		    Queue[qEnd++] = k;
-                    
+        	    // insert this vertex into the BFS queue
+        	    Queue[qEnd++] = k;
+                   
+                    eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot; 
                     append(multiLevelQueues[tree->vArr[k].level], makeNode(k));
-        		    // indicate that it is in the next level of the BFS
-        		    eAPT->sV[k].touched = eAPT->sV[currElement].touched + 1;
-        		    // add new paths to root that go through current BFS Vertex
-        		    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
-        		    // pass on my new paths to root for its search
-        		    eAPT->sV[k].diffPath = eAPT->sV[currElement].diffPath;
+                    // indicate that it is in the next level of the BFS
+                    eAPT->sV[k].touched = eAPT->sV[currElement].touched + 1;
+                    // add new paths to root that go through current BFS Vertex
+                    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
+                    // pass on my new paths to root for its search
+                    eAPT->sV[k].diffPath = eAPT->sV[currElement].diffPath;
                 }        
                 // otherwise if it has been touched, but is specifically in the next level
-        		// of the search (meaning it has more than one edge to the current level)
-        		else if(eAPT->sV[k].touched == eAPT->sV[currElement].touched + 1){
-        		    // add new paths to root that go through current BFS Vertex
-        		    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
-        		    // pass on my new paths to root for its search
-        		    eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
-        		}     
+                // of the search (meaning it has more than one edge to the current level)
+                else if(eAPT->sV[k].touched == eAPT->sV[currElement].touched + 1){
+                    // add new paths to root that go through current BFS Vertex
+                    eAPT->sV[k].newPathsToRoot -= eAPT->sV[currElement].diffPath;
+                    // pass on my new paths to root for its search
+                    eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
+                }     
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
@@ -542,6 +544,8 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     // The parent vertex needs to be placed in the queue for the dependency accumulation stage.
     // Also, it no longer has a child and so the delta from the child needs to be removed.
     
+    Queue[qEnd++] = parentVertex;
+    eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
     append(multiLevelQueues[tree->vArr[parentVertex].level], makeNode(parentVertex));
     eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta -
                 ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
@@ -586,6 +590,8 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
                         eAPT->sV[k].newDelta=tree->vArr[k].delta;
                         // Marking element as touched in the ascent stage.
                         eAPT->sV[k].touched=-1;
+                        eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
+                        Queue[qEnd++] = k;
                         append(multiLevelQueues[tree->vArr[k].level], makeNode(k));
                     }
 
@@ -619,19 +625,25 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
         deepestLevel--;
     }
 
-    for(uint64_t k = 0; k < NV; k++){
+    for (uint64_t q = 0; q < qEnd; q++) {
+        uint64_t k = Queue[q];
         if(eAPT->sV[k].touched != 0){
             tree->vArr[k].delta = eAPT->sV[k].newDelta;
             tree->vArr[k].pathsToRoot = eAPT->sV[k].newPathsToRoot;
         }
-    }
-
-    for (uint64_t k = 0; k < NV; k++){
         eAPT->sV[k].diffPath = 0;
         eAPT->sV[k].touched = 0;
         eAPT->sV[k].newDelta = 0.0;
         eAPT->sV[k].newPathsToRoot = 0;
+
     }
+
+    /*for (uint64_t k = 0; k < NV; k++){
+        eAPT->sV[k].diffPath = 0;
+        eAPT->sV[k].touched = 0;
+        eAPT->sV[k].newDelta = 0.0;
+        eAPT->sV[k].newPathsToRoot = 0;
+    }*/
 }
 
 // Case 3
