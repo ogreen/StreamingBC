@@ -315,6 +315,7 @@ int main(int argc, char *argv[])
 		StreamingExtraInfo oneSEI;
 		StreamingExtraInfo globalSEI = {0,0,0,0};
 
+                printf("NV: %ld\n", NV);
 		extraArraysPerThread** eAPT_perThread = createExtraArraysForThreads(NT,NV);
 
 		double streamingTimeTotal=0.0,minTime=10000000000.0,maxTime=0.0,itTime=0.0;
@@ -557,13 +558,13 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     
     int64_t del = 0, src, dest;
 
-    /*
-    stinger_insert_edge(stingerGraph, 0, 6945, 16642, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 16642, 6945, 0, 0);
+    
+    /*stinger_insert_edge(stingerGraph, 0, 6, 16, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 16, 6, 0, 0);
 
-    deletionArraySrc[0] = 6945;
-    deletionArrayDest[0] = 16642;
-    */
+    deletionArraySrc[0] = 6;
+    deletionArrayDest[0] = 16;*/
+    
     while (del < deletionCount)
     {
         src = rand() % NV;

@@ -109,6 +109,7 @@ void destroyParallelBetweennessArray(float** parallelList, int64_t threadCount);
     int64_t touched;
     int64_t newPathsToRoot;
     int64_t movementDelta;
+    int64_t newLevel;
     bc_t newDelta;
     bc_t totalBC;
 
