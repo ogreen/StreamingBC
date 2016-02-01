@@ -841,7 +841,6 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             temp = getFirst(multiLevelQueues[deepestLevel]);
             uint64_t currElement = temp->id;
             deleteFirst(multiLevelQueues[deepestLevel]);
-        
             STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
             {
                 uint64_t k = STINGER_EDGE_DEST;

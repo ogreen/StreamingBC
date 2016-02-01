@@ -81,6 +81,8 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		tree->vArr[j].level = INFINITY_MY;
 		tree->vArr[j].pathsToRoot = INFINITY_MY;
 		tree->vArr[j].delta = 0;
+                tree->vArr[j].edgesBelow = 0;
+                tree->vArr[j].edgesAbove = 0;
 	}
 	tree->vArr[currRoot].level = 0;
 	tree->vArr[currRoot].pathsToRoot = 1;
@@ -146,6 +148,9 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 					((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
 					(bc_t)(tree->vArr[currElement].delta+1);
 			}
+                        else if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+                            tree->vArr[currElement].edgesBelow += tree->vArr[k].edgesBelow + 1;
+                        }
 		}
 		STINGER_FORALL_EDGES_OF_VTX_END();
 #if COUNT_TRAVERSALS==1
@@ -157,5 +162,11 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		}
 		sEnd--;
 	}
+
+        /*if (currRoot == 4) {
+            for (uint64_t k = 0; k < tree->NV; k++) {
+                printf("static: vertex, belowEdges: %ld, %ld\n", k, tree->vArr[k].edgesBelow);
+            }
+        }*/
 	return -1;
 }

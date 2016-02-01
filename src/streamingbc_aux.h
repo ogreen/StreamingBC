@@ -21,6 +21,8 @@ typedef double bc_t;
 typedef struct{
     int64_t level;
     int64_t pathsToRoot;
+    int64_t edgesBelow;
+    int64_t edgesAbove;
     bc_t delta;
 }bcV;
 
@@ -113,8 +115,8 @@ void destroyParallelBetweennessArray(float** parallelList, int64_t threadCount);
     bc_t newDelta;
     bc_t totalBC;
 
-    int64_t edgesBelow;
-    int64_t edgesAbove;
+    int64_t diffEdgesBelow;
+    int64_t diffEdgesAbove;
     int64_t IMoved;
 }sbcV;
 
