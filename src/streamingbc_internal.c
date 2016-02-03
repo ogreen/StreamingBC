@@ -701,6 +701,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     //for (uint64_t k = 0; k < NV; k++)
     //    newLevel[k] = 0;
     int64_t touchedVertices[NV];
+    
+    for (uint64_t k = 0; k < NV; k++)
+        eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+
     /*for(uint64_t k = 0; k < NV; k++) 
     {
         eAPT->sV[k].touched = 0;
@@ -876,14 +880,19 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     while (deepestLevel >= 0){
         node_t* temp;
 
-        while (multiLevelQueues[deepestLevel]->size > 0){
+        while (multiLevelQueues[deepestLevel]->size > 0) {
             // Removing last element from the queue
             temp = getFirst(multiLevelQueues[deepestLevel]);
             uint64_t currElement = temp->id;
             deleteFirst(multiLevelQueues[deepestLevel]);
+            eAPT->sV[currElement].newEdgesBelow = 0;
             STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
             {
                 uint64_t k = STINGER_EDGE_DEST;
+                
+                if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+                    eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
+                }
                 // Checking that the vertices are in different levels.
                 if(tree->vArr[k].level == (tree->vArr[currElement].level-1)){
 
@@ -943,6 +952,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             
             eAPT->sV[currElement].totalBC -= tree->vArr[currElement].delta;
 
+            eAPT->sV[currElement].newEdgesBelow = 0;
             STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, currElement)
             {
                 uint64_t k = STINGER_EDGE_DEST;
@@ -976,6 +986,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         if(eAPT->sV[k].touched!=0){
             tree->vArr[k].delta=eAPT->sV[k].newDelta;
         }
+        tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
         eAPT->sV[k].diffPath = 0;
         eAPT->sV[k].touched = 0;
         eAPT->sV[k].newDelta = 0.0;
