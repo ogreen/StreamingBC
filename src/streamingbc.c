@@ -134,6 +134,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
         bcTree* tree = forest->forest[i];
         int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
+        if (currRoot == 1)
+            printf("diff, newU_level, newV_level: %ld, %ld, %ld\n", diff, tree->vArr[newU].level, tree->vArr[newV].level);
         // New edge is connecting vertices in the same level. Nothing needs to be done.
         //              if(diff==0)
         //              {
@@ -164,6 +166,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
             uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
+            //printf("root: %ld\n", i);
             if(diff==-1){
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
             }

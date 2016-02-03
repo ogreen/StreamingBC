@@ -35,7 +35,7 @@ int64_t* destVerToDelete;
 */
 
 #define COUNT 1
-#define INSERTING 0
+#define INSERTING 1
 
 //int64_t * rootArrayForApproximation;
 
@@ -389,6 +389,19 @@ int main(int argc, char *argv[])
 			printf("Error in computation %d, before: %lf  after: %lf\n", a,beforeBCForest->totalBC[a],afterBCForest->totalBC[a]);
 	    	    }
                 }
+
+                for (int i = 0; i < NK; i++) {
+                    int root = rootArrayForApproximation[i];
+                    bcTree *beforeTree = beforeBCForest->forest[root];
+                    bcTree *afterTree  = afterBCForest->forest[root];
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if (beforeTree->vArr[j].edgesBelow != afterTree->vArr[j].edgesBelow) {
+                            printf("Error in edges below value - root: %ld, vertex: %ld, before: %ld, after %ld\n",
+                                                root, j, beforeTree->vArr[j].edgesBelow, afterTree->vArr[j].edgesBelow);
+                        }
+                    }
+                } 
+
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
 
                 
@@ -514,7 +527,13 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 {
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
 
-	while (ins<insertionCount)
+	
+        /*stinger_remove_edge(stingerGraph, 0, 2, 3);
+        stinger_remove_edge(stingerGraph, 0, 3, 2);
+
+        insertionArraySrc[0] = 2;
+        insertionArrayDest[0] = 3;*/
+        while (ins<insertionCount)
 	{
 		src = rand() % NV;
 
@@ -558,11 +577,11 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     int64_t del = 0, src, dest;
 
     
-    stinger_insert_edge(stingerGraph, 0, 3, 4, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 4, 3, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 1, 5, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 5, 1, 0, 0);
 
-    deletionArraySrc[0] = 3;
-    deletionArrayDest[0] = 4;
+    deletionArraySrc[0] = 1;
+    deletionArrayDest[0] = 5;
     
     /*while (del < deletionCount)
     {
