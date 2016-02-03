@@ -528,12 +528,13 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
 
 	
-        /*stinger_remove_edge(stingerGraph, 0, 2, 3);
-        stinger_remove_edge(stingerGraph, 0, 3, 2);
+        stinger_remove_edge(stingerGraph, 0, 1, 5);
+        stinger_remove_edge(stingerGraph, 0, 5, 1);
 
-        insertionArraySrc[0] = 2;
-        insertionArrayDest[0] = 3;*/
-        while (ins<insertionCount)
+        insertionArraySrc[0] = 1;
+        insertionArrayDest[0] = 5;
+
+        /*while (ins<insertionCount)
 	{
 		src = rand() % NV;
 
@@ -567,7 +568,7 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		insertionArrayDest[ins]=dest;
 		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
-	}
+	}*/
 }
 
 void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,

@@ -211,6 +211,10 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 	list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
 
+        // Will steamline later.
+        for (uint64_t k = 0; k < NV; k++)
+            eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+
 	//NEW
 	eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
 	eAPT->sV[startVertex].newPathsToRoot = tree->vArr[startVertex].pathsToRoot;
@@ -237,6 +241,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		int64_t currElement = QueueDown[qStart];
 
 		int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
+                //int64_t hasChild = 0;
 		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
 		{
 			uint64_t k = STINGER_EDGE_DEST;
@@ -254,6 +259,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 					eAPT->sV[k].movementDelta = computedDelta;
 					eAPT->sV[k].IMoved=1;
 					QueueDown[qEnd++] = k;
+                                        //hasChild = 1;
 				}
 				// Vertex that will not be moved has been found.
 				else if(computedDelta == 0){      
@@ -264,6 +270,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 					eAPT->sV[k].movementDelta = computedDelta;
 					eAPT->sV[k].IMoved=0;
 					QueueDown[qEnd++] = k;
+                                        //hasChild = 1;
 				}
 				// Vertex that the number of shortest path to the root does not change has been found.
 				// This vertex is not marked as it might be touched on the way up.
@@ -284,6 +291,9 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 		}
 		STINGER_FORALL_EDGES_OF_VTX_END();
+                
+                //if (hasChild == 0)
+                //    eAPT->sV[currElement].newEdgesBelow = 0;
 
 #if COUNT_TRAVERSALS==1
 		eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
@@ -364,11 +374,16 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 
 		int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
+                eAPT->sV[currElement].newEdgesBelow = 0;
 		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
 		{
 			uint64_t k = STINGER_EDGE_DEST;
 			// Checking that the vertices are in different levels.
 			//if(tree->vArr[k].level == (tree->vArr[currElement].level-1))
+                        if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+                            eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
+                        }
+
 			if(tree->vArr[k].level == levelCurrMinusOne){
 				// Checking to see if "k" has been touched before.
 				if(eAPT->sV[k].touched==0){
@@ -439,6 +454,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t k=QueueDown[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
 		tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
+                tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
@@ -451,6 +467,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	for(uint64_t c = 0; c < QSameEnd; c++){
 		uint64_t k=QueueSame[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
+                tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
@@ -461,6 +478,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	for(uint64_t c = 0; c < QUpEnd; c++){
 		uint64_t k=QueueUp[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
+                tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
