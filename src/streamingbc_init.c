@@ -107,6 +107,7 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 
 			// If this is a neighbor and has not been found
 			if(tree->vArr[k].level > tree->vArr[currElement].level){
+                                tree->vArr[k].edgesAbove += tree->vArr[currElement].edgesAbove + 1; 
 				// Checking if "k" has been found.
 				if(tree->vArr[k].level==INFINITY_MY){
 					tree->vArr[k].level = tree->vArr[currElement].level+1;
@@ -163,10 +164,10 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		sEnd--;
 	}
 
-        /*if (currRoot == 1) {
+        if (currRoot == 1) {
             for (uint64_t k = 0; k < tree->NV; k++) {
-                printf("static: vertex, belowEdges: %ld, %ld\n", k, tree->vArr[k].edgesBelow);
+                printf("static: vertex, afterEdges: %ld, %ld\n", k, tree->vArr[k].edgesAbove);
             }
-        }*/
+        }
 	return -1;
 }

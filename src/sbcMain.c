@@ -34,8 +34,8 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 20
-#define INSERTING 1
+#define COUNT 10
+#define INSERTING 0
 
 //int64_t * rootArrayForApproximation;
 
@@ -395,11 +395,17 @@ int main(int argc, char *argv[])
                     bcTree *beforeTree = beforeBCForest->forest[root];
                     bcTree *afterTree  = afterBCForest->forest[root];
                     for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if (beforeTree->vArr[j].edgesAbove != afterTree->vArr[j].edgesAbove) {
+                            printf("Error in edges above value - root: %ld, vertex: %ld, before: %ld, above: %ld\n",
+                                                root, j, beforeTree->vArr[j].edgesAbove, afterTree->vArr[j].edgesAbove);
+                        }
+                    }
+                    /*for (int j = 0; j < beforeBCForest->NV; j++) {
                         if (beforeTree->vArr[j].edgesBelow != afterTree->vArr[j].edgesBelow) {
                             printf("Error in edges below value - root: %ld, vertex: %ld, before: %ld, after %ld\n",
                                                 root, j, beforeTree->vArr[j].edgesBelow, afterTree->vArr[j].edgesBelow);
                         }
-                    }
+                    }*/
                 } 
 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
