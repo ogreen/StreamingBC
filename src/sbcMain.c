@@ -34,8 +34,8 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 10
-#define INSERTING 0
+#define COUNT 1
+#define INSERTING 1
 
 //int64_t * rootArrayForApproximation;
 
@@ -396,16 +396,16 @@ int main(int argc, char *argv[])
                     bcTree *afterTree  = afterBCForest->forest[root];
                     for (int j = 0; j < beforeBCForest->NV; j++) {
                         if (beforeTree->vArr[j].edgesAbove != afterTree->vArr[j].edgesAbove) {
-                            printf("Error in edges above value - root: %ld, vertex: %ld, before: %ld, above: %ld\n",
+                            printf("Error in edges above value - root: %ld, vertex: %ld, before: %ld, after: %ld\n",
                                                 root, j, beforeTree->vArr[j].edgesAbove, afterTree->vArr[j].edgesAbove);
                         }
                     }
-                    /*for (int j = 0; j < beforeBCForest->NV; j++) {
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
                         if (beforeTree->vArr[j].edgesBelow != afterTree->vArr[j].edgesBelow) {
                             printf("Error in edges below value - root: %ld, vertex: %ld, before: %ld, after %ld\n",
                                                 root, j, beforeTree->vArr[j].edgesBelow, afterTree->vArr[j].edgesBelow);
                         }
-                    }*/
+                    }
                 } 
 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
@@ -534,10 +534,10 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
 
 	
-        /*stinger_remove_edge(stingerGraph, 0, 1, 5);
-        stinger_remove_edge(stingerGraph, 0, 5, 1);
+        /*stinger_remove_edge(stingerGraph, 0, 2, 5);
+        stinger_remove_edge(stingerGraph, 0, 5, 2);
 
-        insertionArraySrc[0] = 1;
+        insertionArraySrc[0] = 2;
         insertionArrayDest[0] = 5;*/
 
         while (ins<insertionCount)

@@ -164,10 +164,10 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		sEnd--;
 	}
 
-        if (currRoot == 1) {
+        /*if (currRoot == 1) {
             for (uint64_t k = 0; k < tree->NV; k++) {
                 printf("static: vertex, afterEdges: %ld, %ld\n", k, tree->vArr[k].edgesAbove);
             }
-        }
+        }*/
 	return -1;
 }
