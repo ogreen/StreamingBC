@@ -83,7 +83,6 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         bcTree* tree = forest->forest[i];
 
         workPerVertex[0][workIndex]   = i;
-        workPerVertex[1][workIndex++] = 2 * tree->vArr[i].edgesBelow + tree->vArr[i].edgesAbove;
 
         int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
         // New edge is connecting vertices in the same level. Nothing needs to be done.
@@ -98,6 +97,12 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
         else if(diff == -1 || diff == 1){
             adjRootArray[ eAPT[thread]->adjacentCounter++]=i;
+        }
+
+        if (diff < 0) {
+            workPerVertex[1][workIndex++] = 2 * tree->vArr[newV].edgesBelow + tree->vArr[newV].edgesAbove;
+        } else if (diff > 0) {
+            workPerVertex[1][workIndex++] = 2 * tree->vArr[newU].edgesBelow + tree->vArr[newU].edgesAbove;
         }
     }
 
