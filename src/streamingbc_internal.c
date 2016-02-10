@@ -222,8 +222,10 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
 
         // Will steamline later.
-        for (uint64_t k = 0; k < NV; k++)
+        for (uint64_t k = 0; k < NV; k++) {
             eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+            eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
+        }
 
 	//NEW
 	eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
@@ -239,6 +241,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	eAPT->sV[startVertex].movementDelta = prevDist;
 	eAPT->sV[startVertex].IMoved = 1;
 
+        eAPT->sV[startVertex].newEdgesAbove = eAPT->sV[parentVertex].newEdgesAbove + 1;
 	int64_t deepestLevel = tree->vArr[parentVertex].level+1;
 
 	// Starting BFS decent from "startVertex", down to all the vertices that have shortest paths through "startVertex"
@@ -252,9 +255,26 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 		int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
                 //int64_t hasChild = 0;
+                eAPT->sV[currElement].newEdgesAbove = 0;
 		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
 		{
 			uint64_t k = STINGER_EDGE_DEST;
+
+                        int64_t computedDelta = eAPT->sV[currElement].movementDelta -
+                                            (tree->vArr[currElement].level - tree->vArr[k].level + 1);
+
+                        int64_t newCurrLevel = tree->vArr[currElement].level - eAPT->sV[currElement].movementDelta;
+                        int64_t newKLevel = tree->vArr[k].level - computedDelta;
+
+                        //if (currRoot == 2)
+                        //    printf("currElement, k, newCurrLevel, newKLevel, computedDelta: %ld, %ld, %ld, %ld, %ld\n",
+                        //                        currElement, k, newCurrLevel, newKLevel, computedDelta);
+
+                        if (computedDelta >= 0 && newKLevel < newCurrLevel) {
+                            eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
+                        } else if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
+                            eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
+                        }
 
 			if(eAPT->sV[k].touched == 0 ){
 				// compute distance the adjacent vertex should be moved
@@ -465,6 +485,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
 		tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
+                tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
@@ -478,6 +499,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t k=QueueSame[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
+                tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
@@ -489,6 +511,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t k=QueueUp[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
+                tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;

@@ -166,7 +166,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
             uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
-            printf("root: %ld\n", i);
+            //printf("root: %ld\n", i);
             if(diff==-1){
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
             }
