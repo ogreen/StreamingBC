@@ -68,17 +68,23 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
     int64_t adjRootArray[NK];
     int64_t moveRootArray[NK];
+    int64_t workPerVertex[2][NK]; // First row has vertex ids, second row has work values per id.
 
     for(int64_t tk=0; tk<NK; tk++) {adjRootArray[tk]=0; moveRootArray[tk]=0;}
 
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent=0, movement=0;
+    uint64_t workIndex = 0;
 
     for(currRoot = 0; currRoot < NK; currRoot++){
         uint64_t i = rootArrayForApproximation[currRoot];
         int64_t thread = 0;
         extraArraysPerThread* myExtraArrays = eAPT[thread];
         bcTree* tree = forest->forest[i];
+
+        workPerVertex[0][workIndex]   = i;
+        workPerVertex[1][workIndex++] = 2 * tree->vArr[i].edgesBelow + tree->vArr[i].edgesAbove;
+
         int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
         // New edge is connecting vertices in the same level. Nothing needs to be done.
         if(diff==0){
