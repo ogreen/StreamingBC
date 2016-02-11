@@ -117,9 +117,9 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
     //printf("workIndex, NK: %ld, %ld\n", workIndex, NK);
     qsort((const int*)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
 
-    for (int64_t k = 0; k < NK; k++) {
-        printf("root, work: %ld, %ld\n", workPerVertex[k][0], workPerVertex[k][1]);
-    }
+    //for (int64_t k = 0; k < NK; k++) {
+    //    printf("root, work: %ld, %ld\n", workPerVertex[k][0], workPerVertex[k][1]);
+    //}
 
     for(uint64_t thread=0; thread<1; ++thread){
         samelevel += eAPT[thread]->samelevelCounter;

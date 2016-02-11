@@ -21,11 +21,13 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 
         // Will streamline later.
         for (uint64_t k = 0; k < NV; k++) {
-            eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+            //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
             eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
         }
 
 	eAPT->sV[startVertex].newPathsToRoot = tree->vArr[startVertex].pathsToRoot;
+        eAPT->sV[parentVertex].newEdgesBelow = tree->vArr[parentVertex].edgesBelow;
+        eAPT->sV[startVertex].newEdgesBelow = tree->vArr[startVertex].edgesBelow;
 	eAPT->sV[startVertex].touched = 1;
 	eAPT->sV[startVertex].newPathsToRoot += addedPathsToRoot;
 	eAPT->sV[startVertex].diffPath = addedPathsToRoot;
@@ -134,11 +136,26 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 			printf("should never be here\n");
 		}
 		int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
+                //if (currRoot == 2)
+                //    printf("currElement: %ld\n", currElement);
+                if (currElement != parentVertex)
+                    eAPT->sV[currElement].newEdgesBelow = tree->vArr[currElement].edgesBelow;
 		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
 		{
 			uint64_t k = STINGER_EDGE_DEST;
 
-			if(tree->vArr[k].level == levelCurrMinusOne){
+			if (currElement != parentVertex 
+                                && tree->vArr[currElement].level <= tree->vArr[parentVertex].level
+                                && tree->vArr[k].level > tree->vArr[currElement].level) {
+                            
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+                            
+                            eAPT->sV[currElement].newEdgesBelow -= tree->vArr[k].edgesBelow;
+                            eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow;
+                        }
+                        
+                        if(tree->vArr[k].level == levelCurrMinusOne){
 				// Checking to see if "k" has been touched before.
 				if(eAPT->sV[k].touched==0){
 					eAPT->sV[k].newDelta=tree->vArr[k].delta;
@@ -149,12 +166,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 					eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
                                         //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
 				}
-
-                                if (k != parentVertex && tree->vArr[k].level <= tree->vArr[parentVertex].level) {
-                                    eAPT->sV[k].newEdgesBelow -= tree->vArr[currElement].edgesBelow;
-                                    eAPT->sV[k].newEdgesBelow += eAPT->sV[currElement].newEdgesBelow;
-                                }
-
+ 
 				eAPT->sV[k].newDelta +=
 					((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
 					(bc_t)(eAPT->sV[currElement].newDelta+1);
@@ -187,7 +199,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t k=QueueDown[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
 		tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
-		tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
+	        //tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
                 tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
                 eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
@@ -203,6 +215,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
+                eAPT->sV[k].newEdgesBelow = 0;
 		eAPT->sV[k].newPathsToRoot=0;
 	}
 	return;
