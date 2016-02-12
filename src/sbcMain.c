@@ -34,7 +34,7 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 50
+#define COUNT 20
 #define INSERTING 1
 
 //int64_t * rootArrayForApproximation;

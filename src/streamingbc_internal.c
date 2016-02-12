@@ -247,10 +247,10 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
 
         // Will steamline later.
-        for (uint64_t k = 0; k < NV; k++) {
+        //for (uint64_t k = 0; k < NV; k++) {
             //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
             //eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
-        }
+        //}
 
 	//NEW
 	eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
@@ -831,7 +831,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     int64_t touchedVertices[NV];
     
     for (uint64_t k = 0; k < NV; k++) {
-        eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+        //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
         eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
     }
 
@@ -1030,6 +1030,8 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                 uint64_t k = STINGER_EDGE_DEST;
                 
                 if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+                    if (eAPT->sV[k].touched == 0)
+                        eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
                     eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
                 }
                 // Checking that the vertices are in different levels.
