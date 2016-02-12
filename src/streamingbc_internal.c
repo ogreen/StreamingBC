@@ -570,11 +570,13 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
     for (uint64_t k = 0; k < NV; k++) {
         //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
-        eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
+        //eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
     }
 
     eAPT->sV[startVertex].newEdgesBelow = tree->vArr[startVertex].edgesBelow;
     eAPT->sV[parentVertex].newEdgesBelow = tree->vArr[parentVertex].edgesBelow;
+    eAPT->sV[startVertex].newEdgesAbove = tree->vArr[startVertex].edgesAbove;
+    eAPT->sV[parentVertex].newEdgesAbove = tree->vArr[parentVertex].edgesAbove;
     eAPT->sV[startVertex].newPathsToRoot = tree->vArr[startVertex].pathsToRoot;
     eAPT->sV[startVertex].touched = 1;
     eAPT->sV[startVertex].newPathsToRoot -= deletedPathsFromRoot;
@@ -598,11 +600,20 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     while(qDownStart!=qDownEnd){
         uint64_t currElement = QueueDown[qDownStart];
 
+        if (currElement != startVertex)
+            eAPT->sV[currElement].newEdgesAbove = tree->vArr[currElement].edgesAbove;
+
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
         {
             uint64_t k = STINGER_EDGE_DEST;
 
-            if (currElement != startVertex && tree->vArr[currElement].level - 1 == tree->vArr[k].level) {
+            if (currElement != startVertex 
+                    && tree->vArr[currElement].level - 1 == tree->vArr[k].level
+                    && tree->vArr[currElement].level >= tree->vArr[startVertex].level) {
+
+                if (eAPT->sV[k].touched == 0)
+                    eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
+
                 eAPT->sV[currElement].newEdgesAbove -= tree->vArr[k].edgesAbove;
                 eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove;
             }
