@@ -249,7 +249,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
         // Will steamline later.
         for (uint64_t k = 0; k < NV; k++) {
             //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
-            eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
+            //eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
         }
 
 	//NEW
@@ -296,8 +296,12 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                         //                        currElement, k, newCurrLevel, newKLevel, computedDelta);
 
                         if (computedDelta >= 0 && newKLevel < newCurrLevel) {
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
                             eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
                         } else if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
                             eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
                         }
 
@@ -528,7 +532,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t k=QueueSame[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
-                tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
+                //tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
@@ -540,7 +544,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t k=QueueUp[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
-                tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
+                //tree->vArr[k].edgesAbove = eAPT->sV[k].newEdgesAbove;
 		eAPT->sV[k].diffPath=0;
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
