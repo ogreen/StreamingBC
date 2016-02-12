@@ -248,7 +248,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
         // Will steamline later.
         for (uint64_t k = 0; k < NV; k++) {
-            eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+            //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
             eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
         }
 
@@ -435,7 +435,11 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 			uint64_t k = STINGER_EDGE_DEST;
 			// Checking that the vertices are in different levels.
 			//if(tree->vArr[k].level == (tree->vArr[currElement].level-1))
+
                         if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
                             eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
                         }
 
@@ -568,10 +572,10 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
         //levelCounter[k] = 0;
     }*/
 
-    for (uint64_t k = 0; k < NV; k++) {
+    //for (uint64_t k = 0; k < NV; k++) {
         //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
         //eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
-    }
+    //}
 
     eAPT->sV[startVertex].newEdgesBelow = tree->vArr[startVertex].edgesBelow;
     eAPT->sV[parentVertex].newEdgesBelow = tree->vArr[parentVertex].edgesBelow;
