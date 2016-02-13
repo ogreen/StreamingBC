@@ -34,8 +34,8 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 20
-#define INSERTING 1
+#define COUNT 50
+#define INSERTING 0
 
 //int64_t * rootArrayForApproximation;
 
@@ -570,7 +570,6 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		stinger_remove_edge(stingerGraph,0,src,dest);
 		stinger_remove_edge(stingerGraph,0,dest,src);
 
-                //printf("Src, Dest: %ld, %ld\n", src, dest);
 		insertionArraySrc[ins]=src;
 		insertionArrayDest[ins]=dest;
 		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
@@ -585,11 +584,11 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     int64_t del = 0, src, dest;
 
     
-    /*stinger_insert_edge(stingerGraph, 0, 6, 16, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 16, 6, 0, 0);
+    /*stinger_insert_edge(stingerGraph, 0, 15, 13, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 13, 15, 0, 0);
 
-    deletionArraySrc[0] = 6;
-    deletionArrayDest[0] = 16;*/
+    deletionArraySrc[0] = 15;
+    deletionArrayDest[0] = 13;*/
     
     while (del < deletionCount)
     {
@@ -606,6 +605,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         if (result < 1)
             continue;
 
+        //printf("Src, Dest: %ld, %ld\n", src, dest);
         stinger_insert_edge(stingerGraph, 0, dest, src, 0, 0);
         deletionArraySrc[del] = src;
         deletionArrayDest[del] = dest;

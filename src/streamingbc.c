@@ -364,6 +364,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             //uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
             //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
             
+            //printf("Case II root: %ld\n", i);
             removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
                         tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
 
@@ -380,7 +381,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             //uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
             //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
             
-            //printf("root: %ld\n", i);
+            //printf("Case III root: %ld\n", i);
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
             
             //uint64_t edgeCount = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
