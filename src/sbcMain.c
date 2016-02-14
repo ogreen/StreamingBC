@@ -584,11 +584,11 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     int64_t del = 0, src, dest;
 
     
-    /*stinger_insert_edge(stingerGraph, 0, 15, 13, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 13, 15, 0, 0);
+    /*stinger_insert_edge(stingerGraph, 0, 5, 18, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 18, 5, 0, 0);
 
-    deletionArraySrc[0] = 15;
-    deletionArrayDest[0] = 13;*/
+    deletionArraySrc[0] = 18;
+    deletionArrayDest[0] = 5;*/
     
     while (del < deletionCount)
     {

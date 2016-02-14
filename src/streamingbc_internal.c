@@ -1100,9 +1100,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         qEnd = 1;
         Queue[0] = startVertex;
         
-        for (uint64_t k = 0; k < NV; k++)
-            visited[k] = 0;
-        visited[startVertex] = 1;
+        //for (uint64_t k = 0; k < NV; k++)
+        //    visited[k] = 0;
+        //visited[startVertex] = 1;
+        eAPT->sV[startVertex].touched = -2;
         while (qStart != qEnd){
             int64_t currElement = Queue[qStart++];
             
@@ -1116,25 +1117,17 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             {
                 uint64_t k = STINGER_EDGE_DEST;
 
-                if (!visited[k]){
-                    visited[k] = 1;
-                    //if (currRoot == 1)
-                    //    printf("touched?: %ld\n", k);
+                //if (!visited[k]){
+                //    visited[k] = 1;
+                if (eAPT->sV[k].touched != -2) {
+                    eAPT->sV[k].touched = -2;
                     touchedVerticesUp[tvUpEnd++] = k;
-                    //printf("qEnd: %ld\n", qEnd); fflush(stdout);
                     Queue[qEnd++] = k;
                 }
             }
             STINGER_FORALL_EDGES_OF_VTX_END();
         }
     }
-    //if (currRoot == 211)
-    /*
-    printf("currRoot, newDelta[6945], delta[6945], totalBC[6945]: %ld, %lf, %lf, %lf\n", currRoot, 
-                     eAPT->sV[6945].newDelta, tree->vArr[6945].delta, eAPT->sV[6945].totalBC);
-    printf("currRoot, newDelta[6946], delta[6946], totalBC[6946]: %ld, %lf, %lf, %lf\n", currRoot, 
-                     eAPT->sV[6946].newDelta, tree->vArr[6946].delta, eAPT->sV[6946].totalBC);
-   */
 
     for (int64_t q = 0; q < tvDownEnd; q++) {
         int64_t k = touchedVerticesDown[q];
