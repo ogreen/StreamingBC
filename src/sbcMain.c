@@ -35,7 +35,7 @@ int64_t* destVerToDelete;
 */
 
 #define COUNT 50
-#define INSERTING 0
+#define INSERTING 1
 
 //int64_t * rootArrayForApproximation;
 
@@ -526,7 +526,7 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 			continue;
 		destInAdj=rand()%srcAdj;
 		destCounter=0;dest=0;
-		STINGER_FORALL_EDGES_OF_VTX_BEGIN(stingerGraph,srcAdj)
+		STINGER_FORALL_EDGES_OF_VTX_BEGIN(stingerGraph,src)
                 {
 			dest=STINGER_EDGE_DEST;
 		    if (destInAdj==destCounter)
