@@ -26,7 +26,7 @@
 #define LINE_SIZE 100000
 
 #define COUNT 50
-#define INSERTING 1
+#define INSERTING 0
 
 
 typedef enum{
@@ -198,7 +198,6 @@ int main(int argc, char *argv[])
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
                 staticTraverseEdgeCounterRoot = (uint64_t *)xmalloc(sizeof(uint64_t) * NV);
 
-		//assert (NK == NV);
         if(NK==NV){
         	//printf("checking this\n");
 			for(int64_t vr=0;vr<NK;vr++)
@@ -492,7 +491,6 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 
 		insertionArraySrc[ins]=src;
 		insertionArrayDest[ins]=dest;
-		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
 	}
 }
@@ -501,14 +499,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
                 int64_t* deletionArrayDest, int64_t deletionCount)
 {
     
-    int64_t del = 0, src, dest;
-
-    
-    /*stinger_insert_edge(stingerGraph, 0, 6, 16, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 16, 6, 0, 0);
-
-    deletionArraySrc[0] = 6;
-    deletionArrayDest[0] = 16;*/
+    int64_t del = 0, src, dest; 
     
     while (del < deletionCount)
     {
