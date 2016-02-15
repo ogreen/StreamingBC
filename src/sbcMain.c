@@ -24,20 +24,10 @@
 #define PRINT_LEVEL_TREE(r) {int64_t s; for(s=0;s<NV;s++){printf("%ld,",level[r][s]);} printf("\n");}
 
 #define LINE_SIZE 100000
-/*int64_t noComputeDiffComp; // Not really used?
-testCase graphTestCase; // GraphType ER=0,RMAT=1,real graph=2, connec
-int64_t SCALE; // used only for RMAT type graphs
-uint64_t** parentArray;
-uint64_t*  parentCounter;
-// To be used on real graphs only
-int64_t* srcVerToDelete;
-int64_t* destVerToDelete;
-*/
 
 #define COUNT 50
-#define INSERTING 0
+#define INSERTING 1
 
-//int64_t * rootArrayForApproximation;
 
 typedef enum{
     UP_INSERT = 0,
@@ -151,24 +141,8 @@ int main(int argc, char *argv[])
 	int64_t dynamicTraverseVerticeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterMax[threadArraySize][COUNT];
-/*
-        double timingDynamicDeleting[threadArraySize][DEL_COUNT];
-        double timingStaticDeleting[threadArraySize];
-        double timingDynamicTotalDeleting[threadArraySize];
-
-        StreamingExtraInfo seiDynamicDeleting[threadArraySize][DEL_COUNT];
-        StreamingExtraInfo seiDynamicTotalDeleting[threadArraySize];
-
-        int64_t staticTraverseVerticeCounterDeleting[threadArraySize];
-        int64_t staticTraverseEdgeCounterDeleting[threadArraySize];
-
-        int64_t dynamicTraverseVerticeCounterDeleting[threadArraySize][DEL_COUNT];
-        int64_t dynamicTraverseEdgeCounterDeleting[threadArraySize][DEL_COUNT];
-        int64_t dynamicTraverseVerticeCounterTotalDeleting[threadArraySize];
-        int64_t dynamicTraverseEdgeCounterTotalDeleting[threadArraySize];
-        int64_t dynamicTraverseEdgeCounterMaxDeleting[threadArraySize][DEL_COUNT];
-*/
-	for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
+	
+        for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 	{
 		NT = threadArray[threadCount];
 		if(randomSeed==0)
@@ -245,7 +219,6 @@ int main(int argc, char *argv[])
 				}
 				rootArrayForApproximation[vr] = tempV;
 				flag[tempV]=1;
-                                //            printf("%ld,",rootArrayForApproximation[vr]);
 			}
 			free(flag);
 
@@ -383,8 +356,6 @@ int main(int argc, char *argv[])
 
 		for(int a=0; a<beforeBCForest->NV; a++)
                 {
-                    //printf("before totalBC[%ld]: %lf\n", a, beforeBCForest->totalBC[a]);
-                    //printf("after  totalBC[%ld]: %lf\n", a, afterBCForest->totalBC[a]);
                     if(beforeBCForest->totalBC[a]-afterBCForest->totalBC[a] > 0.001 ||
                         afterBCForest->totalBC[a] - beforeBCForest->totalBC[a] > 0.001) {
 			printf("Error in computation %d, before: %lf  after: %lf\n", a,beforeBCForest->totalBC[a],afterBCForest->totalBC[a]);
@@ -393,33 +364,7 @@ int main(int argc, char *argv[])
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
 
                 
-                /*        	
-                //-------Compute static BC - Parallel
-                //-------START
-
-                beforeBCForest=CreateForestForApproxCase( NV, rootArrayForApproximation, NK);
-                extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
-
-                tic();
-                bfsBrandesForApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
-                timingStatic[threadCount]=toc();
-                staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
-                staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
-
-                //   printf("********* %ld %ld  *********", staticTraverseVerticeCounter[threadCount], staticTraverseEdgeCounter[threadCount]);
-
-                *
-                   printf("---------------------\n---------------------\n");
-                   for(int64_t t=0;t<NT;t++)
-                   printf("%ld %ld %ld\n", t,
-                   eAPT_perThread2[t]->staticTraverseVerticeCounter,eAPT_perThread2[t]->staticTraverseEdgeCounter);
-                   printf("---------------------\n---------------------\n");
-                 *
-                
-                destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
-                */
                 destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
-		//-------END
                 
 
 
@@ -586,40 +531,6 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         deletionArrayDest[del] = dest;
         del++;
     }
-    
-     
-    /*
-    int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;
-
-    while (del < deletionCount)
-    {
-        src = rand() % NV;
-
-        srcAdj = stinger_typed_outdegree(stingerGraph, src, 0);
-
-        // No adjacencies
-        if (srcAdj == 0)
-            continue;
-
-        destInAdj = rand() % srcAdj;
-        destCounter = 0;
-        dest = 0;
-        STINGER_FORALL_EDGES_OF_VTX_BEGIN(stingerGraph, srcAdj)
-            dest = STINGER_EDGE_DEST;
-            if (destInAdj == destCounter)
-                break;
-            destCounter++;
-        STINGER_FORALL_EDGES_OF_VTX_END();
-
-        if (src == dest)
-            continue;
-        if (src > NV || dest > NV)
-            printf("Oops %ld\n", del);
-
-        deletionArraySrc[del] = src;
-        deletionArrayDest[del] = dest;
-        del++;
-    }*/
 }
 
 void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,

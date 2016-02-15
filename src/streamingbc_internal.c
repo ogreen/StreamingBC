@@ -158,7 +158,6 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 #if COUNT_TRAVERSALS==1
 		eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
 		eAPT->dynamicTraverseVerticeCounter++;
-		//printf("%ld,", eAPT->dynamicTraverseVerticeCounter);
 #endif
 		if(currElement!=currRoot){
 			eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta - tree->vArr[currElement].delta;
@@ -233,7 +232,6 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 				// compute distance the adjacent vertex should be moved
 				int64_t computedDelta = eAPT->sV[currElement].movementDelta - 
                                                     (tree->vArr[currElement].level - tree->vArr[k].level + 1);
-				//eAPT->sV[k].touched = eAPT->sV[currElement].touched + 1;
 				eAPT->sV[k].touched = touchedCurrPlusOne;
 				// if the adjacent vertex should be moved, put it in the queue
 				if(computedDelta > 0){
@@ -470,13 +468,6 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     int64_t NV = forest->NV;
     uint64_t Queue[NV];
 
-    /*for(uint64_t k = 0; k < NV; k++){
-        eAPT->sV[k].touched = 0;
-        eAPT->sV[k].diffPath = 0;
-        eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
-        eAPT->sV[k].newDelta = 0.0;
-        //levelCounter[k] = 0;
-    }*/
 
     eAPT->sV[startVertex].newPathsToRoot = tree->vArr[startVertex].pathsToRoot;
     eAPT->sV[startVertex].touched = 1;
@@ -566,11 +557,9 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     //    values have changed due to the changes occuring below them. Because of this, they are
     //    placed in the Multi-level queue.
     
-    //while (deepestLevel >=0 && levelCounter[deepestLevel] > 0)
     while (deepestLevel >= 0){
         node_t* temp;
 
-        //while (currQueue < levelCounter[deepestLevel])
         while (multiLevelQueues[deepestLevel]->size > 0){
             // Removing last element from the queue
             
@@ -618,7 +607,6 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
             eAPT->dynamicTraverseVerticeCounter++;
 #endif
     	    if (currElement != currRoot){
-                //forest->totalBC[currElement]+=newDelta[currElement]-tree->delta[currElement];
                 eAPT->sV[currElement].totalBC += eAPT->sV[currElement].newDelta - tree->vArr[currElement].delta;
             }
         }
@@ -638,12 +626,6 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
     }
 
-    /*for (uint64_t k = 0; k < NV; k++){
-        eAPT->sV[k].diffPath = 0;
-        eAPT->sV[k].touched = 0;
-        eAPT->sV[k].newDelta = 0.0;
-        eAPT->sV[k].newPathsToRoot = 0;
-    }*/
 }
 
 // Case 3
@@ -654,28 +636,14 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     int64_t NV = forest->NV;
     int64_t Queue[NV], topQueue[NV];
-    //int64_t *Queue = eAPT->QueueDown;
-    //int64_t *topQueue = eAPT->QueueSame;
 
-    //int64_t newLevel[NV];
-    //for (uint64_t k = 0; k < NV; k++)
-    //    newLevel[k] = 0;
     int64_t touchedVertices[NV];
-    /*for(uint64_t k = 0; k < NV; k++) 
-    {
-        eAPT->sV[k].touched = 0;
-        newLevel[k]=0;
-        eAPT->sV[k].newPathsToRoot=tree->vArr[k].pathsToRoot;
-        eAPT->sV[k].newDelta=0.0;
-    }*/
-
 
     list_ptr* multiLevelQueues = eAPT->multiLevelQueues;
     Queue[0] = startVertex;
     int64_t qStart=0,qEnd=1, tqStart=0, tqEnd=0, tvEnd = 0;
     int64_t stopLevel = tree->vArr[startVertex].level;
 
-    //newLevel[startVertex] = INFINITY_MY;
     eAPT->sV[startVertex].newLevel = INFINITY_MY;
     eAPT->sV[startVertex].newPathsToRoot = INFINITY_MY;
     eAPT->sV[startVertex].newDelta = 0.0;
@@ -687,21 +655,18 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     {
         int64_t k = STINGER_EDGE_DEST;
 
-        if (tree->vArr[k].level == tree->vArr[startVertex].level){
-            //newLevel[k] = tree->vArr[k].level;
+        if (tree->vArr[k].level == tree->vArr[startVertex].level) {
             eAPT->sV[k].newLevel = tree->vArr[k].level;
             eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
             topQueue[tqEnd++] = k;
         }
-        else{
-            //newLevel[k] = INFINITY_MY;
+        else {
             eAPT->sV[k].newLevel = INFINITY_MY;
             eAPT->sV[k].newPathsToRoot = INFINITY_MY;
             if(deepestLevel < tree->vArr[k].level)
                 deepestLevel = tree->vArr[k].level;
         }
         Queue[qEnd++] = k;
-        //touchedVertices[tvEnd++] = k;
         eAPT->sV[k].touched = 1;
         eAPT->sV[k].newDelta = 0.0;
     }
@@ -717,7 +682,6 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                
             if (eAPT->sV[k].touched == 0){
                 if (tree->vArr[k].level == stopLevel && tree->vArr[currElement].level == (stopLevel + 1)){
-                    //newLevel[k]=tree->vArr[k].level;
                     eAPT->sV[k].newLevel = tree->vArr[k].level;
                     eAPT->sV[k].newPathsToRoot=tree->vArr[k].pathsToRoot;
                     topQueue[tqEnd++]=k;
@@ -726,14 +690,12 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                     eAPT->sV[k].newDelta=0.0;
                 }
                 else if (tree->vArr[k].level>stopLevel){
-                    //newLevel[k] = INFINITY_MY;
                     eAPT->sV[k].newLevel = INFINITY_MY;
                     eAPT->sV[k].newPathsToRoot = INFINITY_MY;
                     eAPT->sV[k].touched = 1;
                     Queue[qEnd++] = k;
                     eAPT->sV[k].newDelta = 0.0;
                 }
-                //touchedVertices[tvEnd++] = k;
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
@@ -754,7 +716,6 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     }
 
     eAPT->sV[parentVertex].touched = -1;
-    //newLevel[parentVertex] = tree->vArr[parentVertex].level;
     eAPT->sV[parentVertex].newLevel = tree->vArr[parentVertex].level;
     eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
 
@@ -773,22 +734,15 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         {
             uint64_t k = STINGER_EDGE_DEST;
             // If this is a neighbor and has not been found
-            //if (newLevel[k] > newLevel[currElement]){
             if (eAPT->sV[k].newLevel > eAPT->sV[currElement].newLevel) {
                 // Checking if "k" has been found.
-                //if (newLevel[k] == INFINITY_MY){
-                //    newLevel[k] = newLevel[currElement] + 1;
                 if (eAPT->sV[k].newLevel == INFINITY_MY) {
                     eAPT->sV[k].newLevel = eAPT->sV[currElement].newLevel + 1;
                     Queue[qEnd++] = k;
                     eAPT->sV[k].newDelta = 0.0;
 
-                    //if(deepestLevel < newLevel[k])
-                    //    deepestLevel = newLevel[k];
                     if (deepestLevel < eAPT->sV[k].newLevel)
                         deepestLevel = eAPT->sV[k].newLevel;
-                    //queueBFSTREE[newLevel[k]][levelCounter[newLevel[k]]++] = k;
-                    //append(multiLevelQueues[newLevel[k]], makeNode(k));
                     append(multiLevelQueues[eAPT->sV[k].newLevel], makeNode(k));
                     if (eAPT->sV[k].touched == 0)
                         printf("AAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH\n");
@@ -812,10 +766,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     for(int64_t k=0; k<NV;k++){
         if(eAPT->sV[k].touched!=0)// && k!=parentVertex)
         {
-            //if (currRoot == 1)
-            //    printf("touched: %ld\n", k);
             touchedVertices[tvEnd++] = k;
-            //tree->vArr[k].level=newLevel[k];
             tree->vArr[k].level = eAPT->sV[k].newLevel;
         }
     }
@@ -855,8 +806,6 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                         // Marking element as touched in the ascent stage.
                         eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
                         eAPT->sV[k].touched=-1;
-                        //if (currRoot == 1)
-                        //    printf("touched: %ld\n", k);
                         touchedVertices[tvEnd++] = k;
                         append(multiLevelQueues[tree->vArr[k].level], makeNode(k));
                     }
@@ -891,14 +840,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     // Handles case where edge deletion creates new connected component.
     if (tree->vArr[startVertex].level == INFINITY_MY){
-        //int64_t visited[NV];
         qStart = 0;
         qEnd = 1;
         Queue[0] = startVertex;
         
-        //for (uint64_t k = 0; k < NV; k++)
-        //    visited[k] = 0;
-        //visited[startVertex] = 1;
         eAPT->sV[startVertex].touched = -2;
         while (qStart != qEnd){
             int64_t currElement = Queue[qStart++];
@@ -909,31 +854,19 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             {
                 uint64_t k = STINGER_EDGE_DEST;
 
-                //if (!visited[k]){
-                //    visited[k] = 1;
                 if (eAPT->sV[k].touched != -2) {
                     eAPT->sV[k].touched = -2;
-                    //if (currRoot == 1)
-                    //    printf("touched?: %ld\n", k);
                     touchedVertices[tvEnd++] = k;
-                    //printf("qEnd: %ld\n", qEnd); fflush(stdout);
                     Queue[qEnd++] = k;
                 }
             }
             STINGER_FORALL_EDGES_OF_VTX_END();
         }
     }
-    //if (currRoot == 211)
-    /*
-    printf("currRoot, newDelta[6945], delta[6945], totalBC[6945]: %ld, %lf, %lf, %lf\n", currRoot, 
-                     eAPT->sV[6945].newDelta, tree->vArr[6945].delta, eAPT->sV[6945].totalBC);
-    printf("currRoot, newDelta[6946], delta[6946], totalBC[6946]: %ld, %lf, %lf, %lf\n", currRoot, 
-                     eAPT->sV[6946].newDelta, tree->vArr[6946].delta, eAPT->sV[6946].totalBC);
-   */
+    
 
     for (int64_t q = 0; q < tvEnd; q++) {
         int64_t k = touchedVertices[q];
-    //for(int64_t k=0; k<NV;k++){
         if(eAPT->sV[k].touched>0){
             tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
         }
@@ -947,11 +880,5 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newLevel = 0; 
     }
 
-    /*for (uint64_t k = 0; k < NV; k++){
-        eAPT->sV[k].diffPath = 0;
-        eAPT->sV[k].touched = 0;
-        eAPT->sV[k].newDelta = 0.0;
-        eAPT->sV[k].newPathsToRoot = 0;
-    }*/
 }
 
