@@ -4,25 +4,19 @@ CXX=g++
 LDLIBS=-lm -lrt
 
 PREFIX=stinger
-OBJ_PREFIX=stinger
 
 STINGER_SRC=$(PREFIX)/stinger.c $(PREFIX)/stinger-utils.c $(PREFIX)/timer.c $(PREFIX)/xmalloc.c $(PREFIX)/x86-full-empty.c
 
-
 CFLAGS+=-g -O2 -I$(PREFIX) -fopenmp -g -w
 
+SRC = streamingbc.c streamingbc_init.c streamingbc_internal.c streamingbc_aux.c
 
-SRC = streaming_utils.c timing_util.c streaming_insertions.c bcTreeDS.c list.c operation.c graphGen.c
-
-SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC) dsUtils.c csr.c
-
+SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC)
 
 main: $(SRCSBC)
 	$(CC) $(MAINPLFLAG) $(CPPFLAGS) $(CFLAGS) -o $@ $^ \
 		$(LDFLAGS) $(LDLIBS)
 
-
 .PHONY:	clean
 clean:
-	rm -f main \
-		$(MAINPL) $(GENSTREAMSPL)
+	rm -f main
