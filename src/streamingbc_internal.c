@@ -891,14 +891,15 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     // Handles case where edge deletion creates new connected component.
     if (tree->vArr[startVertex].level == INFINITY_MY){
-        int64_t visited[NV];
+        //int64_t visited[NV];
         qStart = 0;
         qEnd = 1;
         Queue[0] = startVertex;
         
-        for (uint64_t k = 0; k < NV; k++)
-            visited[k] = 0;
-        visited[startVertex] = 1;
+        //for (uint64_t k = 0; k < NV; k++)
+        //    visited[k] = 0;
+        //visited[startVertex] = 1;
+        eAPT->sV[startVertex].touched = -2;
         while (qStart != qEnd){
             int64_t currElement = Queue[qStart++];
             
@@ -908,8 +909,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             {
                 uint64_t k = STINGER_EDGE_DEST;
 
-                if (!visited[k]){
-                    visited[k] = 1;
+                //if (!visited[k]){
+                //    visited[k] = 1;
+                if (eAPT->sV[k].touched != -2) {
+                    eAPT->sV[k].touched = -2;
                     //if (currRoot == 1)
                     //    printf("touched?: %ld\n", k);
                     touchedVertices[tvEnd++] = k;
