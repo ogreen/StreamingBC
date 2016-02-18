@@ -35,7 +35,7 @@ int64_t* destVerToDelete;
 */
 
 #define COUNT 50
-#define INSERTING 0
+#define INSERTING 1
 
 //int64_t * rootArrayForApproximation;
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         char initial_graph_name[1024];
         int64_t iterationCount;
         const int64_t threadArraySize = 1;
-        int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
+        int64_t threadArray[] = {4};//{1,5,10,15,20,25,30,35,40}; 
         
         int64_t insertionArraySrc[COUNT];
         int64_t insertionArrayDest[COUNT];
@@ -151,23 +151,7 @@ int main(int argc, char *argv[])
 	int64_t dynamicTraverseVerticeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterMax[threadArraySize][COUNT];
-/*
-        double timingDynamicDeleting[threadArraySize][DEL_COUNT];
-        double timingStaticDeleting[threadArraySize];
-        double timingDynamicTotalDeleting[threadArraySize];
 
-        StreamingExtraInfo seiDynamicDeleting[threadArraySize][DEL_COUNT];
-        StreamingExtraInfo seiDynamicTotalDeleting[threadArraySize];
-
-        int64_t staticTraverseVerticeCounterDeleting[threadArraySize];
-        int64_t staticTraverseEdgeCounterDeleting[threadArraySize];
-
-        int64_t dynamicTraverseVerticeCounterDeleting[threadArraySize][DEL_COUNT];
-        int64_t dynamicTraverseEdgeCounterDeleting[threadArraySize][DEL_COUNT];
-        int64_t dynamicTraverseVerticeCounterTotalDeleting[threadArraySize];
-        int64_t dynamicTraverseEdgeCounterTotalDeleting[threadArraySize];
-        int64_t dynamicTraverseEdgeCounterMaxDeleting[threadArraySize][DEL_COUNT];
-*/
 	for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 	{
 		NT = threadArray[threadCount];
@@ -456,10 +440,10 @@ int main(int argc, char *argv[])
 		for(int64_t count=0; count<COUNT;count++)
 		{
 			printf("%ld,",count);
-			printf("%ld,",seiDynamic[0][count].sameLevel);
-			printf("%ld,",seiDynamic[0][count].adjacent);  
-			printf("%ld,", seiDynamic[0][count].movement); 
-			printf("%9lf, ",(double)(timingStatic[0])); // Min speedup 
+			//printf("%ld,",seiDynamic[0][count].sameLevel);
+			//printf("%ld,",seiDynamic[0][count].adjacent);  
+			//printf("%ld,", seiDynamic[0][count].movement); 
+			//printf("%9lf, ",(double)(timingStatic[0])); // Min speedup 
 			for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 			{	
 				/*				printf("%ld,%lf,%ld, %ld, %ld, %lf, %lf, %lf\n", 
@@ -469,10 +453,10 @@ int main(int argc, char *argv[])
 				 (double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounter[0][ins]);
 				 printf("%9lf, ",(double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounterMax[threadCount]);
 				 */
-				printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
-				printf("%9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
-				printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
-				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[0]) );
+				//printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
+				printf("%9lf",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
+				//printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
+				//printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[0]) );
 
 				//				printf("%3ld, %3ld, ",ins,threadArray[threadCount]); // Number of threads used
 				//				printf("%9lf, ",(double)timingStatic[threadCount]/(double)(timingDynamic[threadCount][ins])); // Min speedup 

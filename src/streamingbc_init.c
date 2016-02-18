@@ -57,6 +57,7 @@ void BrandesApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint6
 	for(int64_t i=0; i<forest->NV; i++)
 		forest->totalBC[i]=0.0;
 
+        //printf("static threads here: %ld\n", NT);
 	#pragma omp parallel for schedule(dynamic,1)
 	for(uint64_t i = 0; i < NK; i++) {
 		int64_t thread = omp_get_thread_num();
