@@ -219,7 +219,8 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     eapt->QueueUp = (int64_t*)malloc(NV*sizeof(int64_t));
     eapt->QueueSame = (int64_t*)malloc(NV*sizeof(int64_t));
     eapt->Stack = (int64_t*)malloc(NV*sizeof(int64_t));
-
+    eapt->touchedVerticesUp = (int64_t*) malloc(NV * sizeof(int64_t));
+    eapt->touchedVerticesDown = (int64_t*) malloc(NV * sizeof(int64_t));
     makeArrayOfLists(&eapt->multiLevelQueues,NV);
 
     eapt->samelevelCounter=0;

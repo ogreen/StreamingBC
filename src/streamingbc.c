@@ -52,7 +52,7 @@ StreamingExtraInfo insertVertexStreamingBC(bcForest* forest, struct stinger* sSt
         uint64_t dest = adjacencyArray[d];
         stinger_insert_edge(sStinger,0,src,dest,0,0);
         stinger_insert_edge(sStinger,0,dest,src,0,0);
-        oneSEI=insertEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT);
+        oneSEI=insertEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT, 1);
         returnsei.adjacent += oneSEI.adjacent; returnsei.movement += oneSEI.movement; returnsei.sameLevel += oneSEI.sameLevel;
     }
     return returnsei;    
@@ -68,23 +68,22 @@ int64_t compareArrays(const void *arr1, const void *arr2) {
 
 StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
-        extraArraysPerThread** eAPT){
+        extraArraysPerThread** eAPT, uint32_t loadBalancing){
     omp_set_num_threads(NT);
-    //printf("threads: %ld\n", NT);
     //printf("newU: %ld\n", newU);
     //printf("newV: %ld\n", newV);
 
-    int64_t adjRootArray[NK];
-    int64_t moveRootArray[NK];
+    //int64_t adjRootArray[NK];
+    //int64_t moveRootArray[NK];
     int64_t workPerVertex[NK][2]; // First column has vertex ids, second col has work values per id.
 
-    for(int64_t tk=0; tk<NK; tk++) {adjRootArray[tk]=0; moveRootArray[tk]=0;}
+    //for(int64_t tk=0; tk<NK; tk++) {adjRootArray[tk]=0; moveRootArray[tk]=0;}
 
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent=0, movement=0;
     int64_t workIndex = 0;
-    uint64_t loadBalancing = 1;
 
+    //printf("loadBalancing: %d\n", loadBalancing);
     for(currRoot = 0; currRoot < NK; currRoot++){
         uint64_t i = rootArrayForApproximation[currRoot];
         int64_t thread = 0;
@@ -96,25 +95,27 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
         int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
         // New edge is connecting vertices in the same level. Nothing needs to be done.
-        if(diff==0){
+        /*if(diff==0){
             eAPT[thread]->samelevelCounter++;
             workPerVertex[workIndex++][1] = 0;
             continue;
-        }
+        }*/
         // Newly inserted edge is causing movement in the tee
-        if(diff < -1 || diff > 1){
+        /*if(diff < -1 || diff > 1){
             moveRootArray[ eAPT[thread]->movementCounter++]=i;
         }
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
         else if(diff == -1 || diff == 1){
             adjRootArray[ eAPT[thread]->adjacentCounter++]=i;
-        }
+        }*/
 
         if (loadBalancing == 1) {
             if (diff < 0) {
                 workPerVertex[workIndex++][1] = 2 * tree->vArr[newV].edgesBelow + tree->vArr[newV].edgesAbove;
             } else if (diff > 0) {
                 workPerVertex[workIndex++][1] = 2 * tree->vArr[newU].edgesBelow + tree->vArr[newU].edgesAbove;
+            } else {
+                workPerVertex[workIndex++][1] = 0;
             }
         }
     }
@@ -124,10 +125,11 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         qsort((const int*)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
 
     //for (int64_t k = 0; k < NK; k++) {
-    //    printf("root, work: %ld, %ld\n", workPerVertex[k][0], workPerVertex[k][1]);
+    //   printf("root, work: %ld, %ld\n", workPerVertex[k][0], workPerVertex[k][1]);
     //}
 
-    for(uint64_t thread=0; thread<1; ++thread){
+    //fflush(stdout);
+    /*for(uint64_t thread=0; thread<1; ++thread){
         samelevel += eAPT[thread]->samelevelCounter;
         compConn += eAPT[thread]->compConnCounter;
         adjacent += eAPT[thread]->adjacentCounter;
@@ -147,9 +149,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         newRootArray[counter++]=adjRootArray[a];
     }
 
-    double times[NT];
+    double times[NT];*/
     uint64_t r;
-
 
     //for (uint64_t k = 0; k < NV; k++)
     //    edgeCountValues[k] = -1;
@@ -166,6 +167,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         }
 
         int64_t thread = omp_get_thread_num();
+        //printf("root, thread: %ld, %ld\n", i, thread);
         extraArraysPerThread* myExtraArrays = eAPT[thread];
 
         bcTree* tree = forest->forest[i];
@@ -180,8 +182,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         //              }
         // Newly inserted edge is causing movement in the tee
         if(diff < -1 || diff > 1){
-            uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
-            uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
+            //uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
+            //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
             if(diff<-1){
                 moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
@@ -190,8 +192,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
                 moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
             }
 
-            uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
-            uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;            
+            //uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
+            //uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;            
             //edgeCountValues[i] = edgeCount;
             //printf("%ld\n", edgeCount);
             //printf("Case III: edgeCount: %lf\n", ((double)edgeCount / (double)totalEdges));
@@ -199,8 +201,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         }
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
         else if(diff == -1 || diff == 1){
-            uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
-            uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
+            //uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
+            //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
             //printf("root: %ld\n", i);
             if(diff==-1){
@@ -210,8 +212,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
             }
              
-            uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
-            uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
+            //uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
+            //uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
                 
             //edgeCountValues[i] = edgeCount;
             //printf("Case II: edgeCount: %lf\n", ((double)edgeCount / (double)totalEdges));
@@ -221,20 +223,11 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
     }
     
- 
-    //#pragma omp barriar
 
-    for(uint64_t v=0;v<NV;v++){
-        for(uint64_t t=0;t<NT;t++){
-            forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
-            eAPT[t]->sV[v].totalBC = 0.0;
-        }
-//        printf("%ld\n", v);
-    }
-    double tmp =  3.1231231231212;// toc();
-    printf("%.10lf ", tmp);
-    tic();
-    #pragma omp parallel
+    //double tmp =  3.1231231231212;// toc();
+    //printf("%.10lf ", tmp);
+    //tic();
+    /*#pragma omp parallel
     {
         int64_t thread = omp_get_thread_num();
         int64_t tlow = (NV * thread) / NT;
@@ -245,32 +238,19 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
                 eAPT[t]->sV[v].totalBC = 0.0;
             }
         }
-    }
-    printf("%lf ", toc());
-    /*#pragma omp parallel
-    {
-        int64_t thread = omp_get_thread_num();
-        printf("thread: %ld\n", thread);
-        for (uint64_t v = 0; v < NV; v++) {
-            forest->totalBC[v] += eAPT[thread]->sV[v].totalBC;
-            eAPT[thread]->sV[v].totalBC = 0.0;
-        }
     }*/
+    //printf("%lf ", toc());
 
-    //#pragma omp barrier
-
-    //int64_t tlow=(NV*thread)/NT;
-    //;int64_t thigh=(NV*(thread+1))/NT;
    
-    tic();
-    #pragma omp parallel for
+    //tic();
+    /*#pragma omp parallel for
     for(uint64_t v=0;v<NV;v++){
         for(uint64_t t=0;t<NT;t++){
             forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
-    }
-    printf("%lf\n", toc());
+    }*/
+    //printf("%.20lf\n", toc());
 
 
 
@@ -297,7 +277,7 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sSt
         stinger_remove_edge(sStinger, 0, src, dest);
         stinger_remove_edge(sStinger, 0, dest, src);
 
-        oneSEI=deleteEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT);
+        oneSEI=deleteEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT, 1);
         returnsei.adjacent += oneSEI.adjacent; returnsei.movement += oneSEI.movement; returnsei.sameLevel += oneSEI.sameLevel;
     }
     STINGER_FORALL_EDGES_OF_VTX_END();        
@@ -308,9 +288,10 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sSt
 
 StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
                             uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
-                            extraArraysPerThread **eAPT){
+                            extraArraysPerThread **eAPT, uint32_t loadBalancing) {
     omp_set_num_threads(NT);
 
+    //printf("threads %ld\n", NT);
     int64_t adjRootArray[NK];
     int64_t moveRootArray[NK];
 
@@ -328,38 +309,45 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
     uint64_t r;
     int64_t thread = 0;
 
-    
     int64_t workPerVertex[NK][2];
     int64_t workIndex = 0;
     //for (uint64_t k = 0; k < NV; k++)
     //    edgeCountValues[k] = -1;
 
 
-    for (r = 0; r < NK; r++) {
-        int64_t i = rootArrayForApproximation[r];
-        bcTree *tree = forest->forest[i];
-        int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
-        workPerVertex[workIndex][0] = i;
-        if (diff < 0) {
-            workPerVertex[workIndex++][1] = 2 * tree->vArr[oldV].edgesBelow + tree->vArr[oldV].edgesAbove;
-        } else if (diff > 0) {
-            workPerVertex[workIndex++][1] = 2 * tree->vArr[oldU].edgesBelow + tree->vArr[oldU].edgesAbove;
-        } else {
-            workPerVertex[workIndex++][1] = 0;
+
+    if (loadBalancing == 1) {
+        for (r = 0; r < NK; r++) {
+            int64_t i = rootArrayForApproximation[r];
+            bcTree *tree = forest->forest[i];
+            int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
+            workPerVertex[workIndex][0] = i;
+            if (diff < 0) {
+                workPerVertex[workIndex++][1] = 2 * tree->vArr[oldV].edgesBelow + tree->vArr[oldV].edgesAbove;
+            } else if (diff > 0) {
+                workPerVertex[workIndex++][1] = 2 * tree->vArr[oldU].edgesBelow + tree->vArr[oldU].edgesAbove;
+            } else {
+                workPerVertex[workIndex++][1] = 0;
+            }
         }
     }
     
-    qsort((const int*)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
 
-    //for (int64_t k = 0; k < NK; k++) {
-    //    printf("root, work: %ld, %ld\n", workPerVertex[k][0], workPerVertex[k][1]);
-    //}
+    if (loadBalancing == 1)
+        qsort((const int*)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
 
+        
+    //fflush(stdout);
     #pragma omp parallel for schedule(dynamic,1)
     for (r = 0; r < NK; r++){ 
         //int64_t i = rootArrayForApproximation[r];
         int64_t i = workPerVertex[r][0];
+        if (loadBalancing == 0)
+            i = rootArrayForApproximation[r];
+
         int64_t thread = omp_get_thread_num();
+        //printf("root, thread: %ld, %ld\n", i, thread);
+        //fflush(stdout);
         extraArraysPerThread *myExtraArrays = eAPT[thread];
 
         bcTree *tree = forest->forest[i];
@@ -426,6 +414,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
         }
     }
     
+    
     //printf("workIndex, NK: %ld, %ld\n", workIndex, NK);
     /* Edge counting.
     for (uint64_t u = 0; u < NV; u++)
@@ -453,10 +442,9 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
     }*/
  
     
-    int64_t tlow = (NV * thread) / NT;
+    /*int64_t tlow = (NV * thread) / NT;
     int64_t thigh = (NV * (thread + 1)) / NT ;
        
-    printf("thread: %ld\n", thread);
     for (uint64_t v = tlow; v < NV; v++)
     { 
         for (uint64_t t = 0; t < NT; t++)
@@ -464,7 +452,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
-    } 
+    }*/
     
     //printf("movement: %ld\n", movement);    
     StreamingExtraInfo returnSEI = {0,0,0,0};

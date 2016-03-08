@@ -565,8 +565,11 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
     int64_t NV = forest->NV;
     //uint64_t Queue[NV];
-    uint64_t QueueDown[NV];
-    uint64_t QueueUp[NV];
+    //uint64_t QueueDown[NV];
+    //uint64_t QueueUp[NV];
+    int64_t *Queue = eAPT->QueueSame; 
+    int64_t *QueueDown = eAPT->QueueDown;
+    int64_t *QueueUp = eAPT->QueueUp;
 
     /*for(uint64_t k = 0; k < NV; k++){
         eAPT->sV[k].touched = 0;
@@ -825,15 +828,17 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     bcTree* tree = forest->forest[currRoot];
 
     int64_t NV = forest->NV;
-    int64_t Queue[NV], topQueue[NV];
-    //int64_t *Queue = eAPT->QueueDown;
-    //int64_t *topQueue = eAPT->QueueSame;
+    //int64_t Queue[NV], topQueue[NV];
+    int64_t *Queue = eAPT->QueueDown;
+    int64_t *topQueue = eAPT->QueueSame;
 
     //int64_t newLevel[NV];
     //for (uint64_t k = 0; k < NV; k++)
     //    newLevel[k] = 0;
-    int64_t touchedVerticesDown[NV];
-    int64_t touchedVerticesUp[NV];
+    int64_t *touchedVerticesDown = eAPT->touchedVerticesDown;
+    int64_t *touchedVerticesUp = eAPT->touchedVerticesUp;
+    //int64_t touchedVerticesDown[NV];
+    //int64_t touchedVerticesUp[NV];
     
     for (uint64_t k = 0; k < NV; k++) {
         //eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
@@ -982,8 +987,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                     //queueBFSTREE[newLevel[k]][levelCounter[newLevel[k]]++] = k;
                     //append(multiLevelQueues[newLevel[k]], makeNode(k));
                     append(multiLevelQueues[eAPT->sV[k].newLevel], makeNode(k));
-                    if (eAPT->sV[k].touched == 0)
+                    if (eAPT->sV[k].touched == 0) {
+                        printf("currRoot, currElement, k: %ld, %ld, %ld\n", currRoot, currElement, k);
                         printf("AAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHH\n");
+                    }
                 }
                 if (eAPT->sV[k].newPathsToRoot == INFINITY_MY){
                     // k has not been found and therefore its paths to the roots are through its parent.

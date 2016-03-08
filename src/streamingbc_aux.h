@@ -129,6 +129,8 @@ typedef struct {
     int64_t* QueueUp;
     int64_t* QueueSame;
     int64_t* Stack;
+    int64_t* touchedVerticesUp;
+    int64_t* touchedVerticesDown;
 
 	uint64_t samelevelCounter;
 	uint64_t compConnCounter;
