@@ -34,7 +34,7 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 5
+#define COUNT 50
 //#define INSERTING 0
 
 //int64_t * rootArrayForApproximation;
@@ -130,8 +130,8 @@ int main(int argc, char *argv[])
         int64_t iterationCount;
         uint32_t operation = -1; // 1 for inserting, 0 for deleting.
         uint32_t loadBalancing = -1; // 1 to use load balancing, 0 otherwise.
-        const int64_t threadArraySize = 7;
-        int64_t threadArray[] = {1, 2, 3, 4, 5, 6, 7};//{1,5,10,15,20,25,30,35,40}; 
+        const int64_t threadArraySize = 1;
+        int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
         
         int64_t insertionArraySrc[COUNT];
         int64_t insertionArrayDest[COUNT];
