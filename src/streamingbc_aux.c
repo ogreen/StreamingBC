@@ -221,8 +221,15 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     eapt->Stack = (int64_t*)malloc(NV*sizeof(int64_t));
     eapt->touchedVerticesUp = (int64_t*) malloc(NV * sizeof(int64_t));
     eapt->touchedVerticesDown = (int64_t*) malloc(NV * sizeof(int64_t));
-    makeArrayOfLists(&eapt->multiLevelQueues,NV);
-
+    //makeArrayOfLists(&eapt->multiLevelQueues,NV);
+    eapt->queue = (queue_t*) malloc(sizeof(queue_t));
+    eapt->queue->size = 0;
+    eapt->queue->nodes = (queue_node_t*) malloc(NV * sizeof(queue_node_t));
+    eapt->levelIndices = (level_node_t*) malloc(NV * sizeof(level_node_t));
+    for (int64_t i = 0; i < NV; i++) {
+        eapt->levelIndices[i].front = -1;
+        eapt->levelIndices[i].back = -1;
+    }
     eapt->samelevelCounter=0;
     eapt->compConnCounter=0;
     eapt->adjacentCounter=0;
@@ -253,8 +260,10 @@ void destroyExtraArraysPerThread(extraArraysPerThread* eapt,int64_t NV){
     free(eapt->QueueUp);
     free(eapt->QueueSame);
     free(eapt->Stack);
-
-    destroyArrayOfLists(&eapt->multiLevelQueues,NV);
+    free(eapt->queue->nodes);
+    free(eapt->queue);
+    free(eapt->levelIndices);
+    //destroyArrayOfLists(&eapt->multiLevelQueues,NV);
     free(eapt);
 }
 
@@ -299,7 +308,56 @@ node_t* makeNode(int64_t id)
     return newnode;
 }
 
-/* note append will append at the last. */
+/* note will be appended at the end. */
+void appendDS(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_t data) {
+    int64_t next = queue->size;
+    queue_node_t* list = queue->nodes;
+
+    if (levelIndices[level].back == -1) {
+        levelIndices[level].front = next;
+        levelIndices[level].back = next;
+        list[next].data = data;
+        list[next].next = -1;
+        queue->size++;
+    } else {
+        list[levelIndices[level].back].next = next;
+        levelIndices[level].back = next;
+        list[next].data = data;
+        list[next].next = -1;
+        queue->size++;
+    }
+}
+
+queue_node_t* getFirstDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
+    int64_t index = levelIndices[level].front;
+    if (index == -1) {
+        return NULL;
+    }
+    return &queue->nodes[index];
+}
+
+void deleteFirstDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
+    int64_t front = levelIndices[level].front;
+    int64_t back = levelIndices[level].back;
+    if (front == back) {
+        levelIndices[level].front = -1;
+        levelIndices[level].back = -1;
+    } else {
+        int64_t next = queue->nodes[front].next;
+        levelIndices[level].front = next;
+    } 
+}
+
+void printListDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
+    int64_t index = levelIndices[level].front;    
+    printf("DS: ");
+    while (index != -1) {
+        printf("%ld ", queue->nodes[index].data);
+        index = queue->nodes[index].next;
+    }    
+    printf("\n");
+}
+
 void append(list_t *L, node_t *n)
 {
     if(L->size==0)
@@ -329,17 +387,42 @@ void deleteFirst(list_t *L)
     L->size--;
 }
 
+
+void compareLists(list_t *L, queue_t* queue, level_node_t* levelIndices, int64_t level) {
+    int64_t index = levelIndices[level].front;
+    if (index == -1 && L->size == 0) return;
+    if (index == -1 && L->size != 0) {
+        printf("Error: DS is empty when LL is of size: %ld\n", L->size);
+    }
+    if (index != -1 && L->size == 0) {
+        printf("Error: LL is empty when DS is not.\n");
+    }
+
+    node_t *n = L->head;
+    while (index != -1 && n != NULL) {
+        int64_t dsElem = queue->nodes[index].data;
+        int64_t listElem = n->id;
+        if (dsElem != listElem) {
+            printf("Error: lists differ at level: %ld, DS: %ld, List; %ld\n", level, dsElem, listElem);
+            return;
+        }
+        n = n->next;
+        index = queue->nodes[index].next;
+    }    
+}
+
 void printList(list_t *L)
 {
     node_t *n;
-    printf("Printing list of size:%ld\n",L->size);
+    //printf("Printing list of size:%ld\n",L->size);
+    printf("LL: ");
     if(L->size==0) return;
     for(n=L->head; n!=L->tail; n=n->next)
     {
         printf("%ld,",n->id);
     }
     printf("%ld,",n->id);
-    printf("\n\n\n\n");
+    printf("\n");
 }
 
 
@@ -378,4 +461,5 @@ void destroyArrayOfLists(list_ptr** aL,int64_t numberOfLists)
 
     free(*aL);
 }
+
 

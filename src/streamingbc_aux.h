@@ -71,15 +71,36 @@ typedef struct{
     int64_t size;
 } list_t;
 
+
+typedef struct struct_queue_node {
+    int64_t data;
+    int64_t next;
+} queue_node_t;
+
+typedef struct queue {
+    int64_t size;
+    queue_node_t* nodes;
+} queue_t;
+
+typedef struct struct_level_node_t {
+    int64_t front;
+    int64_t back;
+} level_node_t;
+
+
 typedef list_t* list_ptr;
 
 list_t* makeList(void);
 node_t* makeNode(int64_t);
 void append(list_t*,node_t*);
+void appendDS(queue_t*, level_node_t*, int64_t, int64_t);
 node_t *getFirst(list_t*);
+queue_node_t* getFirstDS(queue_t*, level_node_t*, int64_t);
 void deleteFirst(list_t*);
+void deleteFirstDS(queue_t*, level_node_t*, int64_t);
 void printList(list_t*);
-
+void printListDS(queue_t*, level_node_t*, int64_t);
+void compareLists(list_t*, queue_t*, level_node_t*, int64_t);
 void emptyList(list_t*);
 
 void makeArrayOfLists(list_ptr** aL,int64_t numberOfLists);
@@ -143,7 +164,8 @@ typedef struct {
     uint64_t dynamicTraverseEdgeCounter;
 
     list_ptr* multiLevelQueues;
-
+    queue_t* queue;
+    level_node_t* levelIndices;
 	uint64_t dummy[8];
 
 } extraArraysPerThread;

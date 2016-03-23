@@ -1,6 +1,5 @@
 import sys
 import os
-import subprocess
 
 if len(sys.argv) != 2:
     print "Usage: python run_deletion_experiments.py <shell_script>"
@@ -9,9 +8,9 @@ if len(sys.argv) != 2:
 
 shell_script = sys.argv[1]
 #NT = 16
-NT = 4
+NT = 1
 #threadArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40]
-threadArray = [0, 1, 2, 3, 4]
+threadArray = [0, 1, 2]
 
 os.system("sed -i 's/{[0-9]*}/{0}/g' ../sbcMain.c")
 os.system("rm tmp*")
