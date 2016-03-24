@@ -380,16 +380,22 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                 //printListDS(queue, levelIndices, lev);
                 //compareLists(multiLevelQueues[lev], queue, levelIndices, lev);
 		//while (multiLevelQueues[lev]->size >0){
-                temp_node = getFirstDS(queue, levelIndices, lev);
-                while (temp_node != NULL) {
+                //temp_node = getFirstDS(queue, levelIndices, lev);
+                int64_t index = levelIndices[lev].front;
+                while (index != -1) {
 			//temp_node = getFirst(multiLevelQueues[lev]);
 			//QueueDown[qEnd++] = temp_node->id;
+                        temp_node = queue->nodes + index;
                         QueueDown[qEnd++] = temp_node->data;
 			//deleteFirst(multiLevelQueues[lev]);
-                        deleteFirstDS(queue, levelIndices, lev);
-                        temp_node = getFirstDS(queue, levelIndices, lev);
+                        //deleteFirstDS(queue, levelIndices, lev);
+                        //temp_node = getFirstDS(queue, levelIndices, lev);
+                        index = temp_node->next;
 		}
+                levelIndices[lev].front = -1;
+                levelIndices[lev].back = -1;
 	}
+        queue->size = 0;	
 	qEnd--;
 	//NEW 
 	int64_t qDownEndMarker= qEnd;

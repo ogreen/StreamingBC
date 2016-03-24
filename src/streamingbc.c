@@ -189,10 +189,10 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             //clock_t begin, end;
             //begin = clock();
             if(diff<-1){
-                //moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
+                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
             }
             else{
-                //moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
+                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
             }
             //end = clock();
             //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
