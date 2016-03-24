@@ -1187,6 +1187,8 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             //deleteFirstDS(queue, levelIndices, lev);
             //temp_node = getFirstDS(queue, levelIndices, lev);
         }
+        levelIndices[lev].front = -1;
+        levelIndices[lev].back = -1;
     }
     queue->size = 0; 
 
