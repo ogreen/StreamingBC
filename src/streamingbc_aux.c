@@ -262,7 +262,7 @@ void destroyExtraArraysPerThread(extraArraysPerThread* eapt,int64_t NV){
     free(eapt->Stack);
     free(eapt->queue->nodes);
     free(eapt->queue);
-    free(eapt->levelIndices);
+    free(eapt->levelIndices); 
     //destroyArrayOfLists(&eapt->multiLevelQueues,NV);
     free(eapt);
 }
@@ -461,5 +461,4 @@ void destroyArrayOfLists(list_ptr** aL,int64_t numberOfLists)
 
     free(*aL);
 }
-
 

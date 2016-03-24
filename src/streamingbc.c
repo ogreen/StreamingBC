@@ -70,6 +70,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
         extraArraysPerThread** eAPT, uint32_t loadBalancing){
     omp_set_num_threads(NT);
+    //printf("NT: %ld\n", NT);
     //printf("newU: %ld\n", newU);
     //printf("newV: %ld\n", newV);
 
@@ -185,16 +186,16 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             //uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
             //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
-            clock_t begin, end;
-            begin = clock();
+            //clock_t begin, end;
+            //begin = clock();
             if(diff<-1){
-                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
+                //moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
             }
             else{
-                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
+                //moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
             }
-            end = clock();
-            double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+            //end = clock();
+            //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
             //printf("%.9lf\n", time_spent);
 
             //uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
@@ -210,16 +211,16 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
             //printf("root: %ld\n", i);
-            clock_t begin, end;
-            begin = clock();
+            //clock_t begin, end;
+            //begin = clock();
             if(diff==-1) {
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
             }
             else{
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
             }
-            end = clock();
-            double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+            //end = clock();
+            //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
             //printf("%.9lf\n", time_spent); 
             //uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
             //uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
@@ -346,7 +347,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
 
         
     //fflush(stdout);
-    //#pragma omp parallel for schedule(dynamic,1)
+    #pragma omp parallel for schedule(dynamic,1)
     for (r = 0; r < NK; r++){ 
         //int64_t i = rootArrayForApproximation[r];
         int64_t i = workPerVertex[r][0];

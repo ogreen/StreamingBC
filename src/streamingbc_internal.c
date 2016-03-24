@@ -1168,18 +1168,22 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     qEnd = 0;
     for (int64_t lev = tree->vArr[startVertex].level; lev < NV; lev++) {
-        queue_node_t *temp_node = getFirstDS(queue, levelIndices, lev);
-        while (temp_node != NULL) {
+        //queue_node_t *temp_node = getFirstDS(queue, levelIndices, lev);
+        int64_t index = levelIndices[lev].front;
+        while (index != -1) {
         //while (multiLevelQueues[lev]->size > 0) {
             //node_t *temp_node = getFirst(multiLevelQueues[lev]);
             //Queue[qEnd++] = temp_node->id;
+            queue_node_t *temp_node = queue->nodes + index;
             Queue[qEnd++] = temp_node->data;
             //deleteFirst(multiLevelQueues[lev]);
-            deleteFirstDS(queue, levelIndices, lev);
-            temp_node = getFirstDS(queue, levelIndices, lev);
+            index = temp_node->next;
+            //deleteFirstDS(queue, levelIndices, lev);
+            //temp_node = getFirstDS(queue, levelIndices, lev);
         }
     }
-             
+    queue->size = 0; 
+
     for(int64_t k=0; k<NV;k++){
         if(eAPT->sV[k].touched!=0)// && k!=parentVertex)
         {
@@ -1446,7 +1450,6 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newEdgesAbove = 0;
         eAPT->sV[k].newEdgesBelow = 0;
     }
-    queue->size = 0;
     /*for (int64_t q = 0; q < tvDownEnd; q++) {
         int64_t k = touchedVerticesDown[q];
         //for(int64_t k=0; k<NV;k++){
