@@ -34,7 +34,7 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 20
+#define COUNT 1
 //#define INSERTING 0
 
 //int64_t * rootArrayForApproximation;
@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
 				 (double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounter[0][ins]);
 				 printf("%9lf, ",(double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounterMax[threadCount]);
 				 */
-				printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
+				//printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
 				//printf("%.9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
                                 //printf("%.9lf ", (double)(timingDynamic[threadCount][count]));
 				//printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
