@@ -5,6 +5,7 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "stinger.h"
 #include "streamingbc.h"
@@ -182,6 +183,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         //                    continue;
         //              }
         // Newly inserted edge is causing movement in the tee
+        float caseTime = 0.1;
+        tic();
         if(diff < -1 || diff > 1){
             //uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
             //uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
@@ -190,10 +193,13 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             //begin = clock();
             if(diff<-1){
                 moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
+                caseTime = toc(); 
             }
             else{
                 moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
+                caseTime = toc();
             }
+            printf("%.9lf\n", (double)caseTime); fflush(stdout);
             //end = clock();
             //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
             //printf("%.9lf\n", time_spent);
@@ -215,10 +221,13 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             //begin = clock();
             if(diff==-1) {
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
+                caseTime = toc();
             }
             else{
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
+                caseTime = toc();
             }
+            printf("%.9lf\n", (double) caseTime); fflush(stdout);
             //end = clock();
             //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
             //printf("%.9lf\n", time_spent); 
