@@ -84,13 +84,13 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	double  timeFullBefore = 0, timeFullAfter = 0, timeStream=0;//timeStream = 0, timeSummation = 0;
 
 	//tic();
-        clock_t begin, end;
-        begin = clock();
+        //clock_t begin, end;
+        //begin = clock();
 	*oneSEI = insertEdgeStreamingBC(beforeBCForest, stingerGraph, u_new, v_new, 
                             rootArrayForApproximation,NK,NV,NT,eAPT_perThread, loadBalancing);
-        end = clock();
-        double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-        timeStreamMulti = time_spent;
+        //end = clock();
+        //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+        //timeStreamMulti = time_spent;
 	//timeStreamMulti = toc();
 
 	return timeStreamMulti;
@@ -110,13 +110,13 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
     //tic();
-    clock_t begin, end;
-    begin = clock();
+    //clock_t begin, end;
+    //begin = clock();
     *oneSEI = deleteEdgeStreamingBC(beforeBCForest, stingerGraph, u_old, v_old, 
                             rootArrayForApproximation, NK, NV, NT,  eAPT_perThread, loadBalancing);
-    end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    timeStreamMulti = time_spent;
+    //end = clock();
+    //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    //timeStreamMulti = time_spent;
     //timeStreamMulti = toc();
 
     return timeStreamMulti;
@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
 				 (double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounter[0][ins]);
 				 printf("%9lf, ",(double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounterMax[threadCount]);
 				 */
-				//printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
+				printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
 				//printf("%.9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
                                 //printf("%.9lf ", (double)(timingDynamic[threadCount][count]));
 				//printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
@@ -594,14 +594,16 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		int64_t* insertionArrayDest, int64_t insertionCount)
 {
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
+         
+        /*
+        stinger_remove_edge(stingerGraph, 0, 14, 18);
+        stinger_remove_edge(stingerGraph, 0, 18, 14);
 
-	
-        /*stinger_remove_edge(stingerGraph, 0, 2, 5);
-        stinger_remove_edge(stingerGraph, 0, 5, 2);
-
-        insertionArraySrc[0] = 2;
-        insertionArrayDest[0] = 5;*/
-
+        insertionArraySrc[0] = 151;
+        insertionArrayDest[0] = 73;
+        */
+         
+        
         while (ins<insertionCount)
 	{
 		src = rand() % NV;
@@ -637,6 +639,7 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
 	}
+        
 }
 //
 void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,
@@ -646,12 +649,13 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     int64_t del = 0, src, dest;
 
     
-    /*stinger_insert_edge(stingerGraph, 0, 5, 18, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 18, 5, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 73, 151, 0, 0);
+    stinger_insert_edge(stingerGraph, 0, 151, 73, 0, 0);
 
-    deletionArraySrc[0] = 18;
-    deletionArrayDest[0] = 5;*/
+    deletionArraySrc[0] = 151;
+    deletionArrayDest[0] = 73;
     
+    /*
     while (del < deletionCount)
     {
         src = rand() % NV;
@@ -673,7 +677,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         deletionArrayDest[del] = dest;
         del++;
     }
-    
+    */    
      
     /*
     int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;
