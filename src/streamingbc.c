@@ -227,7 +227,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
                 caseTime = toc();
             }
-            printf("root: %ld, time: %.9lf\n", i, (double) caseTime); fflush(stdout);
+            //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             //end = clock();
             //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
             //printf("%.9lf\n", time_spent); 
@@ -262,13 +262,13 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
    
     //tic();
-    /*#pragma omp parallel for
+    #pragma omp parallel for
     for(uint64_t v=0;v<NV;v++){
         for(uint64_t t=0;t<NT;t++){
             forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
-    }*/
+    }
     //printf("%.20lf\n", toc());
 
 
@@ -407,7 +407,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
                         tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
             caseTime = toc();
-            printf("root: %ld, time: %.9lf\n", i, (double) caseTime); fflush(stdout);
+            //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             //uint64_t edgeCount = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
             //uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
 
@@ -423,6 +423,8 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             
             //printf("Case III root: %ld\n", i);
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
+            caseTime = toc();
+            //printf("%.9lf\n",  (double) caseTime); fflush(stdout);
             //printf("Case III: %.9lf\n", time_spent);
             //uint64_t edgeCount = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
             //uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
@@ -462,7 +464,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
     }*/
  
     
-    /*int64_t tlow = (NV * thread) / NT;
+    int64_t tlow = (NV * thread) / NT;
     int64_t thigh = (NV * (thread + 1)) / NT ;
        
     for (uint64_t v = tlow; v < NV; v++)
@@ -472,7 +474,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
-    }*/
+    }
     
     //printf("movement: %ld\n", movement);    
     //printf("\n");

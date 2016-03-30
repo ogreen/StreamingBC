@@ -34,7 +34,7 @@ int64_t* srcVerToDelete;
 int64_t* destVerToDelete;
 */
 
-#define COUNT 1
+#define COUNT 50
 //#define INSERTING 0
 
 //int64_t * rootArrayForApproximation;
@@ -83,7 +83,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	iterationCount=1;
 	double  timeFullBefore = 0, timeFullAfter = 0, timeStream=0;//timeStream = 0, timeSummation = 0;
 
-	//tic();
+	tic();
         //clock_t begin, end;
         //begin = clock();
 	*oneSEI = insertEdgeStreamingBC(beforeBCForest, stingerGraph, u_new, v_new, 
@@ -91,7 +91,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
         //end = clock();
         //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
         //timeStreamMulti = time_spent;
-	//timeStreamMulti = toc();
+	timeStreamMulti = toc();
 
 	return timeStreamMulti;
 }
@@ -109,7 +109,7 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
 
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
-    //tic();
+    tic();
     //clock_t begin, end;
     //begin = clock();
     *oneSEI = deleteEdgeStreamingBC(beforeBCForest, stingerGraph, u_old, v_old, 
@@ -117,7 +117,7 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     //end = clock();
     //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //timeStreamMulti = time_spent;
-    //timeStreamMulti = toc();
+    timeStreamMulti = toc();
 
     return timeStreamMulti;
 }
@@ -431,7 +431,7 @@ int main(int argc, char *argv[])
 
                 
                 // Remember to comment out the summing phase in streamingbc.c
-		/*bcForest* afterBCForest=NULL;
+		bcForest* afterBCForest=NULL;
 
 		afterBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
 		extraArraysPerThread** eAPT_perThreadAfter = createExtraArraysForThreads(NT,NV);
@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
                     }
                 } 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
-                */ 
+                
                  
                 
                 /*        	
@@ -649,13 +649,13 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
     int64_t del = 0, src, dest;
 
     
-    stinger_insert_edge(stingerGraph, 0, 73, 151, 0, 0);
+    /*stinger_insert_edge(stingerGraph, 0, 73, 151, 0, 0);
     stinger_insert_edge(stingerGraph, 0, 151, 73, 0, 0);
 
     deletionArraySrc[0] = 151;
-    deletionArrayDest[0] = 73;
+    deletionArrayDest[0] = 73;*/
     
-    /*
+    
     while (del < deletionCount)
     {
         src = rand() % NV;
@@ -677,7 +677,6 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         deletionArrayDest[del] = dest;
         del++;
     }
-    */    
      
     /*
     int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;

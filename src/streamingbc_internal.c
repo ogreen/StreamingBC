@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include "streamingbc_aux.h"
-
 //#include "timer.h"
 
 //#define COUNT_TRAVERSALS 1
@@ -1011,12 +1010,13 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     int64_t deepestLevel=stopLevel;
 
+    //if (currRoot == 29534)
+    //    tic();
     STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,startVertex)
     {
         int64_t k = STINGER_EDGE_DEST;
 
         if (tree->vArr[k].level == tree->vArr[startVertex].level){
-            //newLevel[k] = tree->vArr[k].level;
             eAPT->sV[k].newLevel = tree->vArr[k].level;
             eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
             topQueue[tqEnd++] = k;
@@ -1027,7 +1027,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             eAPT->sV[k].newPathsToRoot = INFINITY_MY;
             if(deepestLevel < tree->vArr[k].level)
                 deepestLevel = tree->vArr[k].level;
-        }
+       }
         Queue[qEnd++] = k;
         //touchedVertices[tvEnd++] = k;
         eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
@@ -1036,8 +1036,14 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newDelta = 0.0;
     }
     STINGER_FORALL_EDGES_OF_VTX_END();
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase1: %.9lf\n", caseTime);
+    //}   
 
     qStart = 1; 
+    //if (currRoot == 29534)
+    //    tic();
     while (qStart != qEnd){
         int64_t currElement = Queue[qStart++];
 
@@ -1076,9 +1082,15 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->dynamicTraverseVerticeCounter++;
 #endif
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase2: %.9lf\n", caseTime);
+    //} 
 
     qEnd = tqEnd;
     qStart = 0;
+    //if (currRoot == 29534)
+    //    tic();
     for(int64_t t = 0; t < qEnd; t++){
         Queue[t] = topQueue[t];
         eAPT->sV[t].newDelta=0.0;
@@ -1087,6 +1099,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         appendDS(queue, levelIndices, stopLevel, topQueue[t]);
         //compareLists(multiLevelQueues[stopLevel], queue, levelIndices, stopLevel);
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase3: %.9lf\n", caseTime);
+    //} 
 
     //eAPT->sV[parentVertex].newEdgesAbove = tree->vArr[parentVertex].edgesAbove;
     //eAPT->sV[parentVertex].touched = -1;
@@ -1102,6 +1118,8 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
     // While queue is not empty
 
+    //if (currRoot == 29534)
+    //    tic();
     while (qStart != qEnd){
         uint64_t currElement = Queue[qStart++];
 
@@ -1166,15 +1184,23 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->dynamicTraverseVerticeCounter++;
 #endif
     }  
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase4: %.9lf\n", caseTime);
+    //} 
 
+    //if (currRoot == 29534)
+    //    tic();
     qEnd = 0;
     for (int64_t lev = tree->vArr[startVertex].level; lev < NV; lev++) {
         //queue_node_t *temp_node = getFirstDS(queue, levelIndices, lev);
         int64_t index = levelIndices[lev].front;
+        int64_t levelEmpty = 1;
         while (index != -1) {
         //while (multiLevelQueues[lev]->size > 0) {
             //node_t *temp_node = getFirst(multiLevelQueues[lev]);
             //Queue[qEnd++] = temp_node->id;
+            levelEmpty = 0;
             queue_node_t *temp_node = queue->nodes + index;
             Queue[qEnd++] = temp_node->data;
             //deleteFirst(multiLevelQueues[lev]);
@@ -1184,13 +1210,26 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         }
         levelIndices[lev].front = -1;
         levelIndices[lev].back = -1;
+        if (levelEmpty) {
+            break;
+        }
     }
     queue->size = 0; 
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase5: %.9lf\n", caseTime);
+    //} 
 
+    //if (currRoot == 29534)
+    //    tic();
     for (int64_t k = 0; k < tvDownEnd; k++) {
         int64_t vertex = touchedVerticesDown[k];
         tree->vArr[vertex].level = eAPT->sV[vertex].newLevel;
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase6: %.9lf\n", caseTime);
+    //}
     /*for(int64_t k=0; k<NV;k++){
         if(eAPT->sV[k].touched!=0)// && k!=parentVertex)
         {
@@ -1229,6 +1268,8 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     //    placed in the Multi-level queue.
 
    // while (deepestLevel >= 0){
+    //if (currRoot == 29534)
+    //    tic();
     while (1) {
         // Removing last element from the queue
         int64_t currElement = -1;
@@ -1317,6 +1358,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
         }
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase7: %.9lf\n", caseTime);
+    //}
 
     #if 0
     while (deepestLevel >= 0){
@@ -1382,6 +1427,8 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     }
     #endif
     // Handles case where edge deletion creates new connected component.
+    //if (currRoot == 29534)
+    //    tic();
     if (tree->vArr[startVertex].level == INFINITY_MY){
         qStart = 0;
         qEnd = 1;
@@ -1416,7 +1463,13 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             STINGER_FORALL_EDGES_OF_VTX_END();
         }
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase8: %.9lf\n", caseTime);
+    //}
 
+    //if (currRoot == 29534)
+    //    tic();
     for (int64_t q = 0; q < tvDownEnd; q++) {
         int64_t k = touchedVerticesDown[q];
         //for(int64_t k=0; k<NV;k++){
@@ -1436,7 +1489,13 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newEdgesAbove = 0;
         //eAPT->sV[k].newEdgesBelow = 0;
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase9: %.9lf\n", caseTime);
+    //}
 
+    //if (currRoot == 29534)
+    //    tic();
     for (int64_t q = 0; q < tvUpEnd; q++) {
         int64_t k = touchedVerticesUp[q];
     //for(int64_t k=0; k<NV;k++){
@@ -1457,6 +1516,10 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
         eAPT->sV[k].newEdgesAbove = 0;
         eAPT->sV[k].newEdgesBelow = 0;
     }
+    //if (currRoot == 29534) {
+    //    float caseTime = toc();
+    //    printf("phase10: %.9lf\n", caseTime);
+   // }
     /*for (int64_t q = 0; q < tvDownEnd; q++) {
         int64_t k = touchedVerticesDown[q];
         //for(int64_t k=0; k<NV;k++){
