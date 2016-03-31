@@ -24,20 +24,9 @@
 #define PRINT_LEVEL_TREE(r) {int64_t s; for(s=0;s<NV;s++){printf("%ld,",level[r][s]);} printf("\n");}
 
 #define LINE_SIZE 100000
-/*int64_t noComputeDiffComp; // Not really used?
-testCase graphTestCase; // GraphType ER=0,RMAT=1,real graph=2, connec
-int64_t SCALE; // used only for RMAT type graphs
-uint64_t** parentArray;
-uint64_t*  parentCounter;
-// To be used on real graphs only
-int64_t* srcVerToDelete;
-int64_t* destVerToDelete;
-*/
 
 #define COUNT 50
-//#define INSERTING 0
 
-//int64_t * rootArrayForApproximation;
 
 typedef enum{
     UP_INSERT = 0,
@@ -84,13 +73,8 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	double  timeFullBefore = 0, timeFullAfter = 0, timeStream=0;//timeStream = 0, timeSummation = 0;
 
 	tic();
-        //clock_t begin, end;
-        //begin = clock();
 	*oneSEI = insertEdgeStreamingBC(beforeBCForest, stingerGraph, u_new, v_new, 
                             rootArrayForApproximation,NK,NV,NT,eAPT_perThread, loadBalancing);
-        //end = clock();
-        //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-        //timeStreamMulti = time_spent;
 	timeStreamMulti = toc();
 
 	return timeStreamMulti;
@@ -110,13 +94,8 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
     tic();
-    //clock_t begin, end;
-    //begin = clock();
     *oneSEI = deleteEdgeStreamingBC(beforeBCForest, stingerGraph, u_old, v_old, 
                             rootArrayForApproximation, NK, NV, NT,  eAPT_perThread, loadBalancing);
-    //end = clock();
-    //double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    //timeStreamMulti = time_spent;
     timeStreamMulti = toc();
 
     return timeStreamMulti;
@@ -177,45 +156,39 @@ int main(int argc, char *argv[])
         char line[LINE_SIZE];
 
 
-        // Read data from file
-        //if(1) {
-                fgets(line, LINE_SIZE, fp);
-                sscanf(line, "%ld %ld", &NV, &NE);
+        fgets(line, LINE_SIZE, fp);
+        sscanf(line, "%ld %ld", &NV, &NE);
 
-                NV=NV+1;
-                NE=NE*2;
+        NV=NV+1;
+        NE=NE*2;
 
-                csrGraph* CSRGraph = CreateEmptyDirectedCSR(NV,NE);
+        csrGraph* CSRGraph = CreateEmptyDirectedCSR(NV,NE);
 
-                CSRGraph->vertexPointerArray[0]=0;
-                CSRGraph->vertexPointerArray[1]=0;
-                int64_t counter=0;
-                for(int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
-                        uint64_t neigh=0;
-                        uint64_t v = 0;
-                        char * ptr = line;
-                        int read = 0;
+        CSRGraph->vertexPointerArray[0]=0;
+        CSRGraph->vertexPointerArray[1]=0;
+        int64_t counter=0;
+        for(int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
+                uint64_t neigh=0;
+                uint64_t v = 0;
+                char * ptr = line;
+                int read = 0;
 
-                        while(sscanf(ptr, "%ld%n", &v, &read) > 0) {
-                                ptr += read;
-                                neigh++;
-                                CSRGraph->edgeArray[counter++]=v;
-                        }
-
-                        CSRGraph->vertexPointerArray[u+1]=CSRGraph->vertexPointerArray[u]+neigh;
+                while(sscanf(ptr, "%ld%n", &v, &read) > 0) {
+                        ptr += read;
+                        neigh++;
+                        CSRGraph->edgeArray[counter++]=v;
                 }
-                
-                CreateStingerFromCSR(CSRGraph,&stingerGraph);
 
-                //FreeCSR(CSRGraph);
+                CSRGraph->vertexPointerArray[u+1]=CSRGraph->vertexPointerArray[u]+neigh;
+        }
+        
+        CreateStingerFromCSR(CSRGraph,&stingerGraph);
 
-        //}
 
         fclose(fp);
         
         for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 	{
-                //printf("thread done\n");
 		NT = threadArray[threadCount];
 
                 CreateStingerFromCSR(CSRGraph,&stingerGraph);
@@ -224,66 +197,14 @@ int main(int argc, char *argv[])
                 else
                     srand(randomSeed);
 
-
-                /*
-		if(randomSeed==0)
-			srand(time(NULL));
-		else
-			srand(randomSeed);
-
-
-		FILE * fp = fopen(initial_graph_name, "r");
-
-		struct stinger* stingerGraph;
-		char line[LINE_SIZE];
-
-
-		// Read data from file
-		if(1) {
-			fgets(line, LINE_SIZE, fp);
-			sscanf(line, "%ld %ld", &NV, &NE);
-
-			NV=NV+1;
-			NE=NE*2;
-
-			csrGraph* CSRGraph = CreateEmptyDirectedCSR(NV,NE);
-
-			CSRGraph->vertexPointerArray[0]=0;
-			CSRGraph->vertexPointerArray[1]=0;
-			int64_t counter=0;
-			for(int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
-				uint64_t neigh=0;
-				uint64_t v = 0;
-				char * ptr = line;
-				int read = 0;
-
-				while(sscanf(ptr, "%ld%n", &v, &read) > 0) {
-					ptr += read;
-					neigh++;
-					CSRGraph->edgeArray[counter++]=v;
-				}
-    
-				CSRGraph->vertexPointerArray[u+1]=CSRGraph->vertexPointerArray[u]+neigh;
-			}
-                        
-			CreateStingerFromCSR(CSRGraph,&stingerGraph);
-
-			FreeCSR(CSRGraph);
-
-		}
-
-		fclose(fp);
-                */
-		uint64_t * rootArrayForApproximation = NULL;
+                uint64_t * rootArrayForApproximation = NULL;
                 uint64_t * staticTraverseEdgeCounterRoot = NULL;
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
                 staticTraverseEdgeCounterRoot = (uint64_t *)xmalloc(sizeof(uint64_t) * NV);
 
-		//assert (NK == NV);
-        if(NK==NV){
-        	//printf("checking this\n");
-			for(int64_t vr=0;vr<NK;vr++)
-				rootArrayForApproximation[vr] = vr;
+                if(NK==NV){
+                    for(int64_t vr=0;vr<NK;vr++)
+                        rootArrayForApproximation[vr] = vr;
 		}
 		else{
 			int64_t* flag = (uint64_t*)xmalloc(sizeof(uint64_t)*NV);
@@ -300,19 +221,16 @@ int main(int argc, char *argv[])
 				}
 				rootArrayForApproximation[vr] = tempV;
 				flag[tempV]=1;
-                                //            printf("%ld,",rootArrayForApproximation[vr]);
 			}
 			free(flag);
 
 		}
-		//    printf("***************\n");
 
 		double timeFullBeforeMulti=0;
 
 
 		bcForest* beforeBCForest=NULL;
                               
-                //#if INSERTING==1 
                 if (operation == 1) {       
                     CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
                 }
@@ -320,52 +238,23 @@ int main(int argc, char *argv[])
                     CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
                                             deletionArrayDest, COUNT);
                 } 
-		if(0)
-		{
-			//-------Compute static BC
-			//-------START
+		
 
-			beforeBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
+                //-------Compute static BC - Parallel
+                //-------START
 
-			extraArraysPerThread* eAPT = createExtraArraysPerThread(NV);
+                beforeBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
+                extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
 
-			tic();
-			BrandesApproxCase(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT);
-			timeFullBeforeMulti=toc();
+                tic();
+                BrandesApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
+                timingStatic[threadCount]=toc();
+                staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
+                staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
+                destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
 
-			destroyExtraArraysPerThread(eAPT,NV);
-			//-------END
-		}
-		else
-		{
-
-			//-------Compute static BC - Parallel
-			//-------START
-
-			beforeBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
-			extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
-
-			tic();
-			BrandesApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
-                        timingStatic[threadCount]=toc();
-                        //printf("%.9f\n", timingStatic[threadCount]);
-			staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
-			staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
-
-			//   printf("********* %ld %ld  *********", staticTraverseVerticeCounter[threadCount], staticTraverseEdgeCounter[threadCount]);
-
-			/*
-			   printf("---------------------\n---------------------\n");
-			   for(int64_t t=0;t<NT;t++)
-			   printf("%ld %ld %ld\n", t,
-			   eAPT_perThread2[t]->staticTraverseVerticeCounter,eAPT_perThread2[t]->staticTraverseEdgeCounter);
-			   printf("---------------------\n---------------------\n");
-			 */
-			destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
-
-			//-------END
-		}
-                 
+                //-------END
+         
 
 		//-------Compute streaming BC
 		//-------START
@@ -382,7 +271,6 @@ int main(int argc, char *argv[])
 
 		for(int64_t count=0; count<COUNT; count++)
 		{
-                        //#if INSERTING==1
                         if (operation == 1) {
                             int64_t src = insertionArraySrc[count];
                             int64_t dest = insertionArrayDest[count];
@@ -390,7 +278,9 @@ int main(int argc, char *argv[])
                             stinger_insert_edge(stingerGraph,0,src,dest,0,0);
                             stinger_insert_edge(stingerGraph,0,dest,src,0,0);
 
-                            timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation, NK, NV, NT, beforeBCForest,src, dest, &iterationCount, loadBalancing); 
+                            timingDynamic[threadCount][count] = updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, 
+                                                                    rootArrayForApproximation, NK, NV, NT, beforeBCForest,src, 
+                                                                    dest, &iterationCount, loadBalancing); 
                         } else {
                             int64_t src = deletionArraySrc[count];
                             int64_t dest = deletionArrayDest[count];
@@ -398,7 +288,9 @@ int main(int argc, char *argv[])
                             stinger_remove_edge(stingerGraph, 0, src, dest);
                             stinger_remove_edge(stingerGraph, 0, dest, src);
                                 
-                            timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, rootArrayForApproximation, NK, NV, NT, beforeBCForest, src, dest, &iterationCount, loadBalancing);
+                            timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, 
+                                                                    rootArrayForApproximation, NK, NV, NT, beforeBCForest, src, 
+                                                                    dest, &iterationCount, loadBalancing);
                         }
 			timingDynamicTotal[threadCount]+=timingDynamic[threadCount][count];
 
@@ -439,8 +331,6 @@ int main(int argc, char *argv[])
 
 		for(int a=0; a<beforeBCForest->NV; a++)
                 {
-                    //printf("before totalBC[%ld]: %lf\n", a, beforeBCForest->totalBC[a]);
-                    //printf("after  totalBC[%ld]: %lf\n", a, afterBCForest->totalBC[a]);
                     if(beforeBCForest->totalBC[a]-afterBCForest->totalBC[a] > 0.001 ||
                         afterBCForest->totalBC[a] - beforeBCForest->totalBC[a] > 0.001) {
 			printf("Error in computation %d, before: %lf  after: %lf\n", a,beforeBCForest->totalBC[a],afterBCForest->totalBC[a]);
@@ -467,38 +357,6 @@ int main(int argc, char *argv[])
                 } 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
                 
-                 
-                
-                /*        	
-                //-------Compute static BC - Parallel
-                //-------START
-
-                beforeBCForest=CreateForestForApproxCase( NV, rootArrayForApproximation, NK);
-                extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
-
-                tic();
-                bfsBrandesForApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
-                timingStatic[threadCount]=toc();
-                staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
-                staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
-
-                //   printf("********* %ld %ld  *********", staticTraverseVerticeCounter[threadCount], staticTraverseEdgeCounter[threadCount]);
-
-                *
-                   printf("---------------------\n---------------------\n");
-                   for(int64_t t=0;t<NT;t++)
-                   printf("%ld %ld %ld\n", t,
-                   eAPT_perThread2[t]->staticTraverseVerticeCounter,eAPT_perThread2[t]->staticTraverseEdgeCounter);
-                   printf("---------------------\n---------------------\n");
-                 *
-                
-                destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
-                */
-                //destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
-		//-------END
-                
-
-
                 destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
 		DestroyForestApproximate(&beforeBCForest,rootArrayForApproximation, NK);
 
@@ -677,39 +535,6 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         deletionArrayDest[del] = dest;
         del++;
     }
-     
-    /*
-    int64_t del = 0, src, dest, srcAdj, destInAdj, destCounter;
-
-    while (del < deletionCount)
-    {
-        src = rand() % NV;
-
-        srcAdj = stinger_typed_outdegree(stingerGraph, src, 0);
-
-        // No adjacencies
-        if (srcAdj == 0)
-            continue;
-
-        destInAdj = rand() % srcAdj;
-        destCounter = 0;
-        dest = 0;
-        STINGER_FORALL_EDGES_OF_VTX_BEGIN(stingerGraph, srcAdj)
-            dest = STINGER_EDGE_DEST;
-            if (destInAdj == destCounter)
-                break;
-            destCounter++;
-        STINGER_FORALL_EDGES_OF_VTX_END();
-
-        if (src == dest)
-            continue;
-        if (src > NV || dest > NV)
-            printf("Oops %ld\n", del);
-
-        deletionArraySrc[del] = src;
-        deletionArrayDest[del] = dest;
-        del++;
-    }*/
 }
 
 void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,
