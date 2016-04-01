@@ -26,7 +26,6 @@
 #define LINE_SIZE 100000
 
 #define COUNT 50
-#define INSERTING 0
 
 
 typedef enum{
@@ -55,14 +54,16 @@ void FreeCSR(csrGraph* graph);
 
 
 void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,
-                                        int64_t *randomSeed, int64_t *iterationCount, char *initial_graph_name[1024]);
+                                        int64_t *randomSeed, int64_t *iterationCount, char *initial_graph_name[1024],
+                                        uint32_t *operation, uint32_t *loadBalancing);
 
 void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int64_t* insertionArraySrc,
 		int64_t* insertionArrayDest, int64_t insertionCount);
 
 double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 		extraArraysPerThread** eAPT_perThread, uint64_t * rootArrayForApproximation, int64_t NK,
-		int64_t NV, int64_t NT, bcForest* beforeBCForest,int64_t u_new, int64_t v_new, int64_t *iterationCount) {
+		int64_t NV, int64_t NT, bcForest* beforeBCForest,int64_t u_new, int64_t v_new, int64_t *iterationCount,
+                uint32_t loadBalancing) {
 
 	uint64_t iterator;
 	float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti=0;//timeStream = 0, timeSummation = 0;
@@ -72,7 +73,8 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 	double  timeFullBefore = 0, timeFullAfter = 0, timeStream=0;//timeStream = 0, timeSummation = 0;
 
 	tic();
-	*oneSEI = insertEdgeStreamingBC(beforeBCForest, stingerGraph, u_new, v_new, rootArrayForApproximation,NK,NV,NT,eAPT_perThread);
+	*oneSEI = insertEdgeStreamingBC(beforeBCForest, stingerGraph, u_new, v_new, 
+                            rootArrayForApproximation,NK,NV,NT,eAPT_perThread, loadBalancing);
 	timeStreamMulti = toc();
 
 	return timeStreamMulti;
@@ -80,7 +82,7 @@ double updateEdgeNEW(struct stinger* stingerGraph,StreamingExtraInfo* oneSEI,
 
 double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, extraArraysPerThread **eAPT_perThread,
                 uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT, 
-                bcForest *beforeBCForest, int64_t u_old, int64_t v_old, int64_t *iterationCount)
+                bcForest *beforeBCForest, int64_t u_old, int64_t v_old, int64_t *iterationCount, uint32_t loadBalancing)
 {
     uint64_t iterator;
     float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti = 0;
@@ -92,7 +94,8 @@ double deleteEdgeNEW(struct stinger *stingerGraph, StreamingExtraInfo* oneSEI, e
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
     tic();
-    *oneSEI = deleteEdgeStreamingBC(beforeBCForest, stingerGraph, u_old, v_old, rootArrayForApproximation, NK, NV, NT,  eAPT_perThread);
+    *oneSEI = deleteEdgeStreamingBC(beforeBCForest, stingerGraph, u_old, v_old, 
+                            rootArrayForApproximation, NK, NV, NT,  eAPT_perThread, loadBalancing);
     timeStreamMulti = toc();
 
     return timeStreamMulti;
@@ -114,6 +117,8 @@ int main(int argc, char *argv[])
         int64_t randomSeed;
         char initial_graph_name[1024];
         int64_t iterationCount;
+        uint32_t operation = -1; // 1 for inserting, 0 for deleting.
+        uint32_t loadBalancing = -1; // 1 to use load balancing, 0 otherwise.
         const int64_t threadArraySize = 1;
         int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
         
@@ -122,10 +127,12 @@ int main(int argc, char *argv[])
         int64_t deletionArraySrc[COUNT];
         int64_t deletionArrayDest[COUNT];
 
-        hostParseArgsVitalUpdate(argc, argv, &NV, &NE, &NK, &NT, &randomSeed, &iterationCount, &initial_graph_name);
+        hostParseArgsVitalUpdate(argc, argv, &NV, &NE, &NK, &NT, &randomSeed, 
+                                    &iterationCount, &initial_graph_name, &operation, &loadBalancing);
    
         printf("NV, NE, NK, NT: %ld, %ld, %ld, %ld\n", NV, NE, NK, NT); 
         printf("initial_graph_name: %s\n", initial_graph_name);
+        printf("operation, loadBalancing: %d, %d\n", operation, loadBalancing);
         double timingDynamic[threadArraySize][COUNT];
 	double timingStatic[threadArraySize];
 	double timingDynamicTotal[threadArraySize];
@@ -141,67 +148,63 @@ int main(int argc, char *argv[])
 	int64_t dynamicTraverseVerticeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterTotal[threadArraySize];
 	int64_t dynamicTraverseEdgeCounterMax[threadArraySize][COUNT];
-	
+
+        
+        FILE * fp = fopen(initial_graph_name, "r");
+
+        struct stinger* stingerGraph;
+        char line[LINE_SIZE];
+
+
+        fgets(line, LINE_SIZE, fp);
+        sscanf(line, "%ld %ld", &NV, &NE);
+
+        NV=NV+1;
+        NE=NE*2;
+
+        csrGraph* CSRGraph = CreateEmptyDirectedCSR(NV,NE);
+
+        CSRGraph->vertexPointerArray[0]=0;
+        CSRGraph->vertexPointerArray[1]=0;
+        int64_t counter=0;
+        for(int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
+                uint64_t neigh=0;
+                uint64_t v = 0;
+                char * ptr = line;
+                int read = 0;
+
+                while(sscanf(ptr, "%ld%n", &v, &read) > 0) {
+                        ptr += read;
+                        neigh++;
+                        CSRGraph->edgeArray[counter++]=v;
+                }
+
+                CSRGraph->vertexPointerArray[u+1]=CSRGraph->vertexPointerArray[u]+neigh;
+        }
+        
+        CreateStingerFromCSR(CSRGraph,&stingerGraph);
+
+
+        fclose(fp);
+        
         for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 	{
 		NT = threadArray[threadCount];
-		if(randomSeed==0)
-			srand(time(NULL));
-		else
-			srand(randomSeed);
 
+                CreateStingerFromCSR(CSRGraph,&stingerGraph);
+                if(randomSeed==0)
+                    srand(time(NULL));
+                else
+                    srand(randomSeed);
 
-		FILE * fp = fopen(initial_graph_name, "r");
-
-		struct stinger* stingerGraph;
-		char line[LINE_SIZE];
-
-
-		// Read data from file
-		if(1) {
-			fgets(line, LINE_SIZE, fp);
-			sscanf(line, "%ld %ld", &NV, &NE);
-
-			NV=NV+1;
-			NE=NE*2;
-
-			csrGraph* CSRGraph = CreateEmptyDirectedCSR(NV,NE);
-
-			CSRGraph->vertexPointerArray[0]=0;
-			CSRGraph->vertexPointerArray[1]=0;
-			int64_t counter=0;
-			for(int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
-				uint64_t neigh=0;
-				uint64_t v = 0;
-				char * ptr = line;
-				int read = 0;
-
-				while(sscanf(ptr, "%ld%n", &v, &read) > 0) {
-					ptr += read;
-					neigh++;
-					CSRGraph->edgeArray[counter++]=v;
-				}
-    
-				CSRGraph->vertexPointerArray[u+1]=CSRGraph->vertexPointerArray[u]+neigh;
-			}
-                        
-			CreateStingerFromCSR(CSRGraph,&stingerGraph);
-
-			FreeCSR(CSRGraph);
-
-		}
-
-		fclose(fp);
-
-		uint64_t * rootArrayForApproximation = NULL;
+                uint64_t * rootArrayForApproximation = NULL;
                 uint64_t * staticTraverseEdgeCounterRoot = NULL;
 		rootArrayForApproximation = (uint64_t*)xmalloc(sizeof(uint64_t)*NK);
                 staticTraverseEdgeCounterRoot = (uint64_t *)xmalloc(sizeof(uint64_t) * NV);
 
-        if(NK==NV){
-        	//printf("checking this\n");
-			for(int64_t vr=0;vr<NK;vr++)
-				rootArrayForApproximation[vr] = vr;
+                if(NK==NV){
+                    for(int64_t vr=0;vr<NK;vr++)
+                        rootArrayForApproximation[vr] = vr;
 		}
 		else{
 			int64_t* flag = (uint64_t*)xmalloc(sizeof(uint64_t)*NV);
@@ -222,102 +225,73 @@ int main(int argc, char *argv[])
 			free(flag);
 
 		}
-		//    printf("***************\n");
 
 		double timeFullBeforeMulti=0;
 
 
 		bcForest* beforeBCForest=NULL;
                               
-                #if INSERTING==1 
-				CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
-                #else
-                CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
+                if (operation == 1) {       
+                    CreateRandomEdgeListFromGraph(stingerGraph,NV,insertionArraySrc,insertionArrayDest,COUNT);
+                }
+                else {
+                    CreateRandomEdgeListFromGraphDeleting(stingerGraph, NV, deletionArraySrc, 
                                             deletionArrayDest, COUNT);
-                #endif
-               
-		if(0)
-		{
-			//-------Compute static BC
-			//-------START
+                } 
+		
 
-			beforeBCForest=CreateForestForApproxCase(NV, rootArrayForApproximation, NK);
+                //-------Compute static BC - Parallel
+                //-------START
 
-			extraArraysPerThread* eAPT = createExtraArraysPerThread(NV);
+                beforeBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
+                extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
 
-			tic();
-			BrandesApproxCase(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT);
-			timeFullBeforeMulti=toc();
+                tic();
+                BrandesApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
+                timingStatic[threadCount]=toc();
+                staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
+                staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
+                destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
 
-			destroyExtraArraysPerThread(eAPT,NV);
-			//-------END
-		}
-		else
-		{
-
-			//-------Compute static BC - Parallel
-			//-------START
-
-			beforeBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
-			extraArraysPerThread** eAPT_perThread2 = createExtraArraysForThreads(NT,NV);
-
-			tic();
-			BrandesApproxCaseParallel(beforeBCForest,stingerGraph, rootArrayForApproximation, NK,eAPT_perThread2,NT);
-                        timingStatic[threadCount]=toc();
-			staticTraverseVerticeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseVerticeCounter;
-			staticTraverseEdgeCounter[threadCount]=eAPT_perThread2[0]->staticTraverseEdgeCounter;
-
-			//   printf("********* %ld %ld  *********", staticTraverseVerticeCounter[threadCount], staticTraverseEdgeCounter[threadCount]);
-
-			/*
-			   printf("---------------------\n---------------------\n");
-			   for(int64_t t=0;t<NT;t++)
-			   printf("%ld %ld %ld\n", t,
-			   eAPT_perThread2[t]->staticTraverseVerticeCounter,eAPT_perThread2[t]->staticTraverseEdgeCounter);
-			   printf("---------------------\n---------------------\n");
-			 */
-			destroyExtraArraysForThreads(eAPT_perThread2,NT,NV);
-
-			//-------END
-		}
-                 
+                //-------END
+         
 
 		//-------Compute streaming BC
 		//-------START
 		StreamingExtraInfo oneSEI;
 		StreamingExtraInfo globalSEI = {0,0,0,0};
 
-                printf("NV: %ld\n", NV);
-		extraArraysPerThread** eAPT_perThread = createExtraArraysForThreads(NT,NV);
 
 		double streamingTimeTotal=0.0,minTime=10000000000.0,maxTime=0.0,itTime=0.0;
 
+		extraArraysPerThread** eAPT_perThread = createExtraArraysForThreads(NT,NV);
 		timingDynamicTotal[threadCount]=0.0;
 		dynamicTraverseVerticeCounterTotal[threadCount]=0;
 		dynamicTraverseEdgeCounterTotal[threadCount]=0;
 
 		for(int64_t count=0; count<COUNT; count++)
 		{
-                        #if INSERTING==1
-			int64_t src = insertionArraySrc[count];
-			int64_t dest = insertionArrayDest[count];
+                        if (operation == 1) {
+                            int64_t src = insertionArraySrc[count];
+                            int64_t dest = insertionArrayDest[count];
 
-			stinger_insert_edge(stingerGraph,0,src,dest,0,0);
-			stinger_insert_edge(stingerGraph,0,dest,src,0,0);
+                            stinger_insert_edge(stingerGraph,0,src,dest,0,0);
+                            stinger_insert_edge(stingerGraph,0,dest,src,0,0);
 
-			timingDynamic[threadCount][count] =updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, rootArrayForApproximation, 
-                                                                            NK, NV, NT, beforeBCForest,src, dest, &iterationCount); 
-                        #else
-                        int64_t src = deletionArraySrc[count];
-                        int64_t dest = deletionArrayDest[count];
+                            timingDynamic[threadCount][count] = updateEdgeNEW(stingerGraph,&oneSEI, eAPT_perThread, 
+                                                                    rootArrayForApproximation, NK, NV, NT, beforeBCForest,src, 
+                                                                    dest, &iterationCount, loadBalancing); 
+                        } else {
+                            int64_t src = deletionArraySrc[count];
+                            int64_t dest = deletionArrayDest[count];
 
-                        stinger_remove_edge(stingerGraph, 0, src, dest);
-                        stinger_remove_edge(stingerGraph, 0, dest, src);
-                            
-                        timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, rootArrayForApproximation, 
-                                                                            NK, NV, NT, beforeBCForest, src, dest, &iterationCount);
-                        #endif
-
+                            stinger_remove_edge(stingerGraph, 0, src, dest);
+                            stinger_remove_edge(stingerGraph, 0, dest, src);
+                                
+                            timingDynamic[threadCount][count] = deleteEdgeNEW(stingerGraph, &oneSEI, eAPT_perThread, 
+                                                                    rootArrayForApproximation, NK, NV, NT, beforeBCForest, src, 
+                                                                    dest, &iterationCount, loadBalancing);
+                        }
 			timingDynamicTotal[threadCount]+=timingDynamic[threadCount][count];
 
 			globalSEI.adjacent += oneSEI.adjacent; globalSEI.movement += oneSEI.movement; globalSEI.sameLevel += oneSEI.sameLevel;
@@ -347,6 +321,8 @@ int main(int argc, char *argv[])
 		seiDynamicTotal[threadCount].adjacent =globalSEI.adjacent; 
 		seiDynamicTotal[threadCount].sameLevel =globalSEI.sameLevel; 
 
+                
+                // Remember to comment out the summing phase in streamingbc.c
 		bcForest* afterBCForest=NULL;
 
 		afterBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
@@ -360,13 +336,28 @@ int main(int argc, char *argv[])
 			printf("Error in computation %d, before: %lf  after: %lf\n", a,beforeBCForest->totalBC[a],afterBCForest->totalBC[a]);
 	    	    }
                 }
+
+                
+                for (int i = 0; i < NK; i++) {
+                    int root = rootArrayForApproximation[i];
+                    bcTree *beforeTree = beforeBCForest->forest[root];
+                    bcTree *afterTree  = afterBCForest->forest[root];
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if (beforeTree->vArr[j].edgesAbove != afterTree->vArr[j].edgesAbove) {
+                            printf("Error in edges above value - root: %ld, vertex: %ld, before: %ld, after: %ld\n",
+                                                root, j, beforeTree->vArr[j].edgesAbove, afterTree->vArr[j].edgesAbove);
+                        }
+                    }
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if (beforeTree->vArr[j].edgesBelow != afterTree->vArr[j].edgesBelow) {
+                            printf("Error in edges below value - root: %ld, vertex: %ld, before: %ld, after %ld\n",
+                                                root, j, beforeTree->vArr[j].edgesBelow, afterTree->vArr[j].edgesBelow);
+                        }
+                    }
+                } 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
-
                 
-                destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
-                
-
-
+                destroyExtraArraysForThreads(eAPT_perThread,NT,NV); 
 		DestroyForestApproximate(&beforeBCForest,rootArrayForApproximation, NK);
 
 		//-------END
@@ -376,16 +367,18 @@ int main(int argc, char *argv[])
 		stinger_free(stingerGraph);
 
 	}
+        
+        FreeCSR(CSRGraph);
 	if(1)
 	{
 
 		for(int64_t count=0; count<COUNT;count++)
 		{
 			printf("%ld,",count);
-			printf("%ld,",seiDynamic[0][count].sameLevel);
-			printf("%ld,",seiDynamic[0][count].adjacent);  
-			printf("%ld,", seiDynamic[0][count].movement); 
-			printf("%9lf, ",(double)(timingStatic[0])); // Min speedup 
+			//printf("%ld,",seiDynamic[0][count].sameLevel);
+			//printf("%ld,",seiDynamic[0][count].adjacent);  
+			//printf("%ld,", seiDynamic[0][count].movement); 
+			//printf("%9lf, ",(double)(timingStatic[0])); // Min speedup 
 			for (int64_t threadCount=0; threadCount<threadArraySize; threadCount++)
 			{	
 				/*				printf("%ld,%lf,%ld, %ld, %ld, %lf, %lf, %lf\n", 
@@ -396,9 +389,10 @@ int main(int argc, char *argv[])
 				 printf("%9lf, ",(double)staticTraverseEdgeCounter[0]/(double)dynamicTraverseEdgeCounterMax[threadCount]);
 				 */
 				printf("%9lf, ",(double)(timingDynamic[threadCount][count])); // Min speedup 
-				printf("%9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
-				printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
-				printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[0]) );
+				//printf("%.9lf, ",(double)(timingDynamic[threadCount][count])/(double)timingStatic[threadCount]); // Min speedup 
+                                //printf("%.9lf ", (double)(timingDynamic[threadCount][count]));
+				//printf("%9lf",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[threadCount]) );
+				//printf("%9lf, ",(double)(dynamicTraverseEdgeCounterMax[threadCount][count])/(double)(staticTraverseEdgeCounter[0]) );
 
 				//				printf("%3ld, %3ld, ",ins,threadArray[threadCount]); // Number of threads used
 				//				printf("%9lf, ",(double)timingStatic[threadCount]/(double)(timingDynamic[threadCount][ins])); // Min speedup 
@@ -458,8 +452,17 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		int64_t* insertionArrayDest, int64_t insertionCount)
 {
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
+         
+        /*
+        stinger_remove_edge(stingerGraph, 0, 14, 18);
+        stinger_remove_edge(stingerGraph, 0, 18, 14);
 
-	while (ins<insertionCount)
+        insertionArraySrc[0] = 151;
+        insertionArrayDest[0] = 73;
+        */
+         
+        
+        while (ins<insertionCount)
 	{
 		src = rand() % NV;
 
@@ -493,13 +496,14 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		insertionArrayDest[ins]=dest;
 		ins++;
 	}
+        
 }
-
+//
 void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t NV, int64_t* deletionArraySrc,
                 int64_t* deletionArrayDest, int64_t deletionCount)
 {
     
-    int64_t del = 0, src, dest; 
+    int64_t del = 0, src, dest;    
     
     while (del < deletionCount)
     {
@@ -516,7 +520,6 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         if (result < 1)
             continue;
 
-        //printf("Src: %ld, Dest: %ld\n", src, dest);
         stinger_insert_edge(stingerGraph, 0, dest, src, 0, 0);
         deletionArraySrc[del] = src;
         deletionArrayDest[del] = dest;
@@ -525,7 +528,8 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
 }
 
 void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,
-                                        int64_t *randomSeed, int64_t *iterationCount, char *initial_graph_name[1024]) {
+                                        int64_t *randomSeed, int64_t *iterationCount, char *initial_graph_name[1024],
+                                        uint32_t *operation, uint32_t *loadBalancing) {
         updateType opType;
 	static struct option long_options[] = {
 		{"VCount", optional_argument, 0, 'V'},
@@ -537,19 +541,24 @@ void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, i
 		{"OperationType",optional_argument,0,'O'},
 		{"Threads",optional_argument,0,'T'},
 		{"ApproximateVCount",optional_argument,0,'K'},
-
+                {"LoadBalancing", optional_argument, 0, 'L'},
 		{0, 0, 0, 0}
 	};
 
 	while(1) {
 		int32_t option_index = 0;
-		int32_t c = getopt_long(argc, argv, "V:E:R:G:I:N:O:T:K:?h", long_options, &option_index);
+		int32_t c = getopt_long(argc, argv, "V:E:R:G:I:N:O:T:K:L:?h", long_options, &option_index);
 		extern char * optarg;
 		extern int32_t    optind, opterr, optopt;
 		int64_t intout = 0;
 
-		if(-1 == c)
-			break;
+		if(-1 == c) {
+                    if (*operation == -1 || *loadBalancing == -1) {
+                        printf("Error - Must specify operation and load balancing.\n");
+                        exit(-1);\
+                    }
+		    break;
+                }
 
 		switch(c) {
 			default:
@@ -612,11 +621,21 @@ void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, i
 				errno = 0;
 				intout = strtol(optarg, NULL, 10);
 				if(errno || intout < 0 || intout > 1) {
-					printf("Error - Operation can be either 0 or 1. 0 for insertion and 1 for deletion%s\n", optarg);
+					printf("Error - Operation can be either 1 or 0. 1 for insertion and 0 for deletion%s\n", optarg);
 					exit(-1);
 				}
-				opType = intout;
+                                *operation = intout;
+                                printf("operation_here\n");
 				break;
+                        case 'L':
+                                errno = 0;
+                                intout = strtol(optarg, NULL, 10);
+                                if (errno || intout < 0 || intout > 1) {
+                                        printf("Error - Load balancing can either be 0 or 1. 0 for load balancing and 1 for none%s\n", optarg);
+                                        exit(-1);
+                                }
+                                *loadBalancing = intout;
+                                break;
 			case 'T':
 				errno = 0;
 				intout = strtol(optarg, NULL, 10);

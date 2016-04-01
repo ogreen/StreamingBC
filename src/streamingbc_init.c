@@ -57,6 +57,7 @@ void BrandesApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint6
 	for(int64_t i=0; i<forest->NV; i++)
 		forest->totalBC[i]=0.0;
 
+        //printf("static threads here: %ld\n", NT);
 	#pragma omp parallel for schedule(dynamic,1)
 	for(uint64_t i = 0; i < NK; i++) {
 		int64_t thread = omp_get_thread_num();
@@ -81,6 +82,8 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		tree->vArr[j].level = INFINITY_MY;
 		tree->vArr[j].pathsToRoot = INFINITY_MY;
 		tree->vArr[j].delta = 0;
+                tree->vArr[j].edgesBelow = 0;
+                tree->vArr[j].edgesAbove = 0;
 	}
 	tree->vArr[currRoot].level = 0;
 	tree->vArr[currRoot].pathsToRoot = 1;
@@ -105,6 +108,7 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 
 			// If this is a neighbor and has not been found
 			if(tree->vArr[k].level > tree->vArr[currElement].level){
+                                tree->vArr[k].edgesAbove += tree->vArr[currElement].edgesAbove + 1; 
 				// Checking if "k" has been found.
 				if(tree->vArr[k].level==INFINITY_MY){
 					tree->vArr[k].level = tree->vArr[currElement].level+1;
@@ -146,6 +150,9 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 					((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
 					(bc_t)(tree->vArr[currElement].delta+1);
 			}
+                        else if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+                            tree->vArr[currElement].edgesBelow += tree->vArr[k].edgesBelow + 1;
+                        }
 		}
 		STINGER_FORALL_EDGES_OF_VTX_END();
 #if COUNT_TRAVERSALS==1
@@ -157,5 +164,6 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		}
 		sEnd--;
 	}
+
 	return -1;
 }

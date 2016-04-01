@@ -5,10 +5,12 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "stinger.h"
 #include "streamingbc.h"
 #include "streamingbc_aux.h"
+#include "timer.h"
 
 bcForest* streamingBCCreateForestExact(uint64_t NV){
     return CreateForestExact(NV);
@@ -52,141 +54,116 @@ StreamingExtraInfo insertVertexStreamingBC(bcForest* forest, struct stinger* sSt
         uint64_t dest = adjacencyArray[d];
         stinger_insert_edge(sStinger,0,src,dest,0,0);
         stinger_insert_edge(sStinger,0,dest,src,0,0);
-        oneSEI=insertEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT);
+        oneSEI=insertEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT, 1);
         returnsei.adjacent += oneSEI.adjacent; returnsei.movement += oneSEI.movement; returnsei.sameLevel += oneSEI.sameLevel;
     }
     return returnsei;    
 }
 
 
+int64_t compareArrays(const void *arr1, const void *arr2) {
+    const int64_t* one = (const int64_t *) arr1;
+    const int64_t* two = (const int64_t *) arr2;
+
+    return two[1] - one[1];
+}
+
 StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
-        extraArraysPerThread** eAPT){
+        extraArraysPerThread** eAPT, uint32_t loadBalancing){
     omp_set_num_threads(NT);
 
-    int64_t adjRootArray[NK];
-    int64_t moveRootArray[NK];
-
-    for(int64_t tk=0; tk<NK; tk++) {adjRootArray[tk]=0; moveRootArray[tk]=0;}
-
+    int64_t workPerVertex[NK][2]; // First column has vertex ids, second col has work values per id.
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent=0, movement=0;
+    int64_t workIndex = 0;
 
     for(currRoot = 0; currRoot < NK; currRoot++){
         uint64_t i = rootArrayForApproximation[currRoot];
         int64_t thread = 0;
         extraArraysPerThread* myExtraArrays = eAPT[thread];
         bcTree* tree = forest->forest[i];
-        int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
-        // New edge is connecting vertices in the same level. Nothing needs to be done.
-        if(diff==0){
-            eAPT[thread]->samelevelCounter++;
-            continue;
+
+        if (loadBalancing == 1)
+            workPerVertex[workIndex][0] = i;
+
+        int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level; 
+
+        if (loadBalancing == 1) {
+            if (diff < 0) {
+                workPerVertex[workIndex++][1] = 2 * tree->vArr[newV].edgesBelow + tree->vArr[newV].edgesAbove;
+            } else if (diff > 0) {
+                workPerVertex[workIndex++][1] = 2 * tree->vArr[newU].edgesBelow + tree->vArr[newU].edgesAbove;
+            } else {
+                workPerVertex[workIndex++][1] = 0;
+            }
         }
-        // Newly inserted edge is causing movement in the tee
-        if(diff < -1 || diff > 1){
-            moveRootArray[ eAPT[thread]->movementCounter++]=i;
-        }
-        // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
-        else if(diff == -1 || diff == 1){
-            adjRootArray[ eAPT[thread]->adjacentCounter++]=i;
-        }
     }
 
-    for(uint64_t thread=0; thread<1; ++thread){
-        samelevel += eAPT[thread]->samelevelCounter;
-        compConn += eAPT[thread]->compConnCounter;
-        adjacent += eAPT[thread]->adjacentCounter;
-        movement += eAPT[thread]->movementCounter;
+    if (loadBalancing == 1)
+        qsort((const int*)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
 
-        eAPT[thread]->compConnCounter=0;
-        eAPT[thread]->adjacentCounter=0;
-        eAPT[thread]->movementCounter=0;
-    }
-
-    int64_t newRootArray[NK];
-    int64_t counter=0, thread=0;
-    for(int64_t m=0; m<movement; m++){
-        newRootArray[counter++]=moveRootArray[m];
-    }
-    for(int64_t a=0; a<adjacent; a++){
-        newRootArray[counter++]=adjRootArray[a];
-    }
-
-    double times[NT];
     uint64_t r;
-
-    int64_t edgeCountValues[NV];
-
 
     #pragma omp parallel for schedule(dynamic,1)
     for(r = 0; r < NK; r++)
     {
-        int64_t i=rootArrayForApproximation[r];
+        int64_t i = workPerVertex[r][0];
+        if (loadBalancing == 0) {
+            i = rootArrayForApproximation[r];
+        }
+
         int64_t thread = omp_get_thread_num();
         extraArraysPerThread* myExtraArrays = eAPT[thread];
 
         bcTree* tree = forest->forest[i];
         int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
-        // New edge is connecting vertices in the same level. Nothing needs to be done.
-        //              if(diff==0)
-        //              {
-        //                  eAPT[thread]->sameevelCounter++;
-        //                    continue;
-        //              }
-        // Newly inserted edge is causing movement in the tee
-        if(diff < -1 || diff > 1){
-            uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
-            uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
+
+        float caseTime = 0.1;
+        tic();
+        if(diff < -1 || diff > 1) {
 
             if(diff<-1){
                 moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
+                caseTime = toc(); 
             }
             else{
                 moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
+                caseTime = toc();
             }
-
-            uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
-            uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;            
             eAPT[thread]->movementCounter++;
         }
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
         else if(diff == -1 || diff == 1){
-            uint64_t prevEdgeCount   = myExtraArrays->dynamicTraverseEdgeCounter;
-            uint64_t prevVertexCount = myExtraArrays->dynamicTraverseVerticeCounter;
 
-            if(diff==-1){
+            if(diff==-1) {
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
+                caseTime = toc();
             }
             else{
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
+                caseTime = toc();
             }
-             
-            uint64_t edgeCount   = myExtraArrays->dynamicTraverseEdgeCounter - prevEdgeCount;
-            uint64_t vertexCount = myExtraArrays->dynamicTraverseVerticeCounter - prevVertexCount;
-                
             eAPT[thread]->adjacentCounter++;
-        }
-//        #pragma omp barriar
+        } 
 
     }
-    
- 
-    int64_t tlow=(NV*thread)/NT;
-    int64_t thigh=(NV*(thread+1))/NT;
-    for(uint64_t v=tlow;v<thigh;v++){
+     
+    #pragma omp parallel for
+    for(uint64_t v=0;v<NV;v++){
         for(uint64_t t=0;t<NT;t++){
             forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
     }
 
+
     StreamingExtraInfo returnSEI={0,0,0,0};
     returnSEI.sameLevel= samelevel;
     returnSEI.adjacent = adjacent;
     returnSEI.movement = movement;
 
-return returnSEI;
+    return returnSEI;
 }
 
 
@@ -204,7 +181,7 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sSt
         stinger_remove_edge(sStinger, 0, src, dest);
         stinger_remove_edge(sStinger, 0, dest, src);
 
-        oneSEI=deleteEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT);
+        oneSEI=deleteEdgeStreamingBC(forest,sStinger,src,dest,rootArrayForApproximation,NK, NV,NT,eAPT, 1);
         returnsei.adjacent += oneSEI.adjacent; returnsei.movement += oneSEI.movement; returnsei.sameLevel += oneSEI.sameLevel;
     }
     STINGER_FORALL_EDGES_OF_VTX_END();        
@@ -215,17 +192,8 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sSt
 
 StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
                             uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
-                            extraArraysPerThread **eAPT){
+                            extraArraysPerThread **eAPT, uint32_t loadBalancing) {
     omp_set_num_threads(NT);
-
-    int64_t adjRootArray[NK];
-    int64_t moveRootArray[NK];
-
-    for (int64_t i = 0; i < NK; i++){
-        adjRootArray[i] = 0;
-        moveRootArray[i] = 0;
-    }
-
 
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
@@ -233,12 +201,34 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
     uint64_t r;
     int64_t thread = 0;
 
-    int64_t edgeCountValues[NV];
-    
+    int64_t workPerVertex[NK][2];
+    int64_t workIndex = 0;
 
+    if (loadBalancing == 1) {
+        for (r = 0; r < NK; r++) {
+            int64_t i = rootArrayForApproximation[r];
+            bcTree *tree = forest->forest[i];
+            int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
+            workPerVertex[workIndex][0] = i;
+            if (diff < 0) {
+                workPerVertex[workIndex++][1] = 2 * tree->vArr[oldV].edgesBelow + tree->vArr[oldV].edgesAbove;
+            } else if (diff > 0) {
+                workPerVertex[workIndex++][1] = 2 * tree->vArr[oldU].edgesBelow + tree->vArr[oldU].edgesAbove;
+            } else {
+                workPerVertex[workIndex++][1] = 0;
+            }
+        }
+    }
+    
+    if (loadBalancing == 1)
+        qsort((const int*)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
+    
     #pragma omp parallel for schedule(dynamic,1)
     for (r = 0; r < NK; r++){ 
-        int64_t i = rootArrayForApproximation[r];
+        int64_t i = workPerVertex[r][0];
+        if (loadBalancing == 0)
+            i = rootArrayForApproximation[r];
+
         int64_t thread = omp_get_thread_num();
         extraArraysPerThread *myExtraArrays = eAPT[thread];
 
@@ -249,7 +239,9 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
         int64_t parentVertex = oldV;
         
         int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
+        
         if (diff == 0){ 
+            //printf("%.9lf\n", 0.0f);
             eAPT[thread]->samelevelCounter++;
             samelevel++;
             continue;
@@ -269,36 +261,36 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
-        
+        float caseTime = 0.1;
+        tic();
         if (extraParents >= 1){                 
-            
             removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
                         tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
-
+            caseTime = toc();
+            //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;
             adjacent++;
         }
         else{ 
-            
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
-            
+            caseTime = toc();
+            //printf("%.9lf\n",  (double) caseTime); fflush(stdout);
             eAPT[thread]->movementCounter++;
             movement++;
-        }
-    }
-     
-    
+        } 
+    }  
+  
     int64_t tlow = (NV * thread) / NT;
     int64_t thigh = (NV * (thread + 1)) / NT ;
        
-    for (uint64_t v = tlow; v < thigh; v++)
+    for (uint64_t v = tlow; v < NV; v++)
     { 
         for (uint64_t t = 0; t < NT; t++)
         {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
-    } 
+    }
     
     StreamingExtraInfo returnSEI = {0,0,0,0};
 
