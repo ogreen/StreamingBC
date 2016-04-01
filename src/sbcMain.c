@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
                 } 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
                 
-                destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
+                destroyExtraArraysForThreads(eAPT_perThread,NT,NV); 
 		DestroyForestApproximate(&beforeBCForest,rootArrayForApproximation, NK);
 
 		//-------END
@@ -494,7 +494,6 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 
 		insertionArraySrc[ins]=src;
 		insertionArrayDest[ins]=dest;
-		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
 	}
         
@@ -504,15 +503,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
                 int64_t* deletionArrayDest, int64_t deletionCount)
 {
     
-    int64_t del = 0, src, dest;
-
-    
-    /*stinger_insert_edge(stingerGraph, 0, 73, 151, 0, 0);
-    stinger_insert_edge(stingerGraph, 0, 151, 73, 0, 0);
-
-    deletionArraySrc[0] = 151;
-    deletionArrayDest[0] = 73;*/
-    
+    int64_t del = 0, src, dest;    
     
     while (del < deletionCount)
     {
@@ -529,7 +520,6 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         if (result < 1)
             continue;
 
-        //printf("Src, Dest: %ld, %ld\n", src, dest);
         stinger_insert_edge(stingerGraph, 0, dest, src, 0, 0);
         deletionArraySrc[del] = src;
         deletionArrayDest[del] = dest;

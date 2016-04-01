@@ -678,6 +678,7 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
                 eAPT->sV[currElement].newEdgesBelow -= tree->vArr[k].edgesBelow;
                 eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow;
             }
+
             
             if (eAPT->sV[parentVertex].touched != -1 && tree->vArr[k].level == tree->vArr[parentVertex].level) {
                 eAPT->sV[parentVertex].touched = -1;
@@ -808,6 +809,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
        }
         Queue[qEnd++] = k;
         eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
+
         eAPT->sV[k].touched = 1;
         touchedVerticesDown[tvDownEnd++] = k;  
         eAPT->sV[k].newDelta = 0.0;
@@ -889,6 +891,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
 
                     if (deepestLevel < eAPT->sV[k].newLevel)
                         deepestLevel = eAPT->sV[k].newLevel;
+
                     appendDS(queue, levelIndices, eAPT->sV[k].newLevel, k);
                     if (eAPT->sV[k].touched == 0) {
                         printf("currRoot, currElement, k: %ld, %ld, %ld\n", currRoot, currElement, k);
@@ -961,6 +964,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
             eAPT->sV[parentVertex].touched = -1;
             QueueUp[qUpEnd++] = parentVertex;
+
         }
     }
 
@@ -1020,6 +1024,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
                     eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
                     eAPT->sV[parentVertex].touched = -1;
                     QueueUp[qUpEnd++] = parentVertex;
+
                 }
             }
             
@@ -1100,6 +1105,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
     // Phase 9 -------
     for (int64_t q = 0; q < tvDownEnd; q++) {
         int64_t k = touchedVerticesDown[q];
+    
         if(eAPT->sV[k].touched>0){
             tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
         }

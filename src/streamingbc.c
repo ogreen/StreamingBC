@@ -131,7 +131,6 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
                 moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
                 caseTime = toc();
             }
-            //printf("%.9lf\n", (double)caseTime); fflush(stdout); 
             eAPT[thread]->movementCounter++;
         }
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
@@ -145,7 +144,6 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
                 caseTime = toc();
             }
-            //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;
         } 
 
@@ -196,14 +194,6 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
                             uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
                             extraArraysPerThread **eAPT, uint32_t loadBalancing) {
     omp_set_num_threads(NT);
-
-    int64_t adjRootArray[NK];
-    int64_t moveRootArray[NK];
-
-    for (int64_t i = 0; i < NK; i++){
-        adjRootArray[i] = 0;
-        moveRootArray[i] = 0;
-    }
 
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
