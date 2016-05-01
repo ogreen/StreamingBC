@@ -39,6 +39,10 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
         int64_t *qStart_nxt = &(eAPT->qStart_nxt);
         int64_t *qEnd_nxt = &(eAPT->qEnd_nxt);
 
+        *qEnd = 1;
+        *qStart_nxt = 1;
+        *qEnd_nxt = 1;
+
 	int64_t deepestLevel = tree->vArr[startVertex].level;
 	int64_t intialLevel = tree->vArr[startVertex].level;
 
