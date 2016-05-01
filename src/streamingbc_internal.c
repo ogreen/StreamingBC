@@ -32,7 +32,12 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
         eAPT->sV[parentVertex].newEdgesBelow += eAPT->sV[startVertex].newEdgesBelow + 1; 
 
 	QueueDown[0] = startVertex;
-	int64_t qStart=0,qEnd=1;
+	//int64_t qStart=0,qEnd=1;
+
+        int64_t *qStart = &(eAPT->qStart);
+        int64_t *qEnd = &(eAPT->qEnd);
+        int64_t *qStart_nxt = &(eAPT->qStart_nxt);
+        int64_t *qEnd_nxt = &(eAPT->qEnd_nxt);
 
 	int64_t deepestLevel = tree->vArr[startVertex].level;
 	int64_t intialLevel = tree->vArr[startVertex].level;
@@ -43,8 +48,8 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 	// Each level in the tree(max depth NV) has a queue and a counter specifiying how deep a specific deepth-queue is.
 	// For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
 	// for the BFS traversal.
-	while(qStart<qEnd){
-		uint64_t currElement = QueueDown[qStart];
+	while(*qStart < *qEnd){
+		uint64_t currElement = QueueDown[*qStart];
 		int64_t levelCurrPlusOne = tree->vArr[currElement].level+1;
 		int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
 
@@ -76,7 +81,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 					//NEW
 					eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
 					// insert this vertex into the BFS queue
-					QueueDown[qEnd++] = k;
+					QueueDown[(*qEnd_nxt)++] = k;
 					// indicate that it is in the next level of the BFS
 					eAPT->sV[k].touched = touchedCurrPlusOne;
 					// add new paths to root that go through current BFS Vertex
@@ -100,14 +105,21 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
 		eAPT->dynamicTraverseVerticeCounter++;
 #endif
-		qStart++;
+		(*qStart)++;
+
+                if (*qStart == *qEnd) {
+                    *qStart = *qStart_nxt;
+                    *qEnd = *qEnd_nxt;
+                    *qStart_nxt = *qEnd;
+                    *qEnd_nxt = *qStart_nxt;
+                }
 	}
 	int64_t QUpStart=0,QUpEnd=0;
 	//    int64_t myCont=1;
 	int64_t currElement;
-	qEnd--;
+	(*qEnd)--;
 
-	int64_t qDownEndMarker= qEnd;
+	int64_t qDownEndMarker= *qEnd;
 	// Starting Multi-Level "BFS" ascent.
 	// The ascent continues going up as long as the root has not been reached and that there
 	// are elements in the current level of the ascent. The ascent starts in the deepest level
@@ -120,23 +132,23 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 	//    values have changed due to the changes occuring below them. Because of this, they are
 	//    placed in the Multi-level queue.
 	while(1){
-		if(qEnd<0 && QUpStart>=QUpEnd){
+		if(*qEnd<0 && QUpStart>=QUpEnd){
 			break;
 		}
-		else if(qEnd<0){
+		else if(*qEnd<0){
 			currElement=QueueUp[QUpStart++];
 		}
-		else if (qEnd>=0){
+		else if (*qEnd>=0){
 			if(QUpEnd>0){
-				if(tree->vArr[QueueUp[QUpStart]].level < tree->vArr[QueueDown[qEnd]].level){
-					currElement=QueueDown[qEnd--];
+				if(tree->vArr[QueueUp[QUpStart]].level < tree->vArr[QueueDown[*qEnd]].level){
+					currElement=QueueDown[(*qEnd)--];
 				}
 				else{
 					currElement=QueueUp[QUpStart++];
 				}
 			}
 			else
-				currElement=QueueDown[qEnd--];
+				currElement=QueueDown[(*qEnd)--];
 		}
 		else{
 			printf("should never be here\n");
@@ -219,6 +231,12 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
                 eAPT->sV[k].newEdgesBelow = 0;
 		eAPT->sV[k].newPathsToRoot=0;
 	}
+
+        eAPT->qStart = 0;
+        eAPT->qEnd = 0;
+        eAPT->qStart_nxt = 0;
+        eAPT->qEnd_nxt = 0;
+
 	return;
 }
 

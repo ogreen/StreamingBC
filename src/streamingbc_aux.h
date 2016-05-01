@@ -166,6 +166,12 @@ typedef struct {
     list_ptr* multiLevelQueues;
     queue_t* queue;
     level_node_t* levelIndices;
+
+    int64_t qStart;
+    int64_t qEnd;
+    int64_t qStart_nxt;
+    int64_t qEnd_nxt;
+
 	uint64_t dummy[8];
 
 } extraArraysPerThread;

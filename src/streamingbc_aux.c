@@ -239,6 +239,11 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     eapt->dynamicTraverseVerticeCounter=0;
     eapt->dynamicTraverseEdgeCounter=0;
 
+    eapt->qStart = 0;
+    eapt->qEnd = 0;
+    eapt->qStart_nxt = 0;
+    eapt->qEnd_nxt = 0;
+
     return eapt;
 }
 
