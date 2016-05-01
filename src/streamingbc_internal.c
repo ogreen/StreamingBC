@@ -263,8 +263,17 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	eAPT->sV[parentVertex].newPathsToRoot = tree->vArr[parentVertex].pathsToRoot;
 	eAPT->sV[startVertex].newPathsToRoot = tree->vArr[startVertex].pathsToRoot;
 
-	int64_t qStart = 0;
-	int64_t qEnd = 1;
+	//int64_t qStart = 0;
+	//int64_t qEnd = 1;
+
+        int64_t *qStart = &(eAPT->qStart);
+        int64_t *qEnd = &(eAPT->qEnd);
+        int64_t *qStart_nxt = &(eAPT->qStart_nxt);
+        int64_t *qEnd_nxt = &(eAPT->qEnd_nxt);
+
+        *qEnd = 1;
+        *qStart_nxt = 1;
+        *qEnd_nxt = 1;
 
 	QueueDown[0] = startVertex;
 	eAPT->sV[startVertex].touched = 1;
@@ -282,8 +291,8 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	// Each level in the tree(max depth NV) has a queue and a counter specifiying how deep a specific deepth-queue is.
 	// For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
 	// for the BFS traversal.
-	while(qStart != qEnd) {
-		int64_t currElement = QueueDown[qStart];
+	while(*qStart != *qEnd) {
+		int64_t currElement = QueueDown[*qStart];
 
 		int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
                 eAPT->sV[currElement].newEdgesAbove = 0;
@@ -319,7 +328,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 					eAPT->sV[k].diffPath = eAPT->sV[currElement].diffPath;
 					eAPT->sV[k].movementDelta = computedDelta;
 					eAPT->sV[k].IMoved=1;
-					QueueDown[qEnd++] = k;
+					QueueDown[(*qEnd_nxt)++] = k;
 				}
 				// Vertex that will not be moved has been found.
 				else if(computedDelta == 0){      
@@ -329,7 +338,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 					eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
 					eAPT->sV[k].movementDelta = computedDelta;
 					eAPT->sV[k].IMoved=0;
-					QueueDown[qEnd++] = k;
+					QueueDown[(*qEnd_nxt)++] = k;
 				}
 				// Vertex that the number of shortest path to the root does not change has been found.
 				// This vertex is not marked as it might be touched on the way up.
@@ -363,29 +372,36 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		if(deepestLevel<tree->vArr[currElement].level)
 			deepestLevel=tree->vArr[currElement].level;
 
-		qStart++;
+		(*qStart)++;
+
+                if (*qStart == *qEnd) {
+                    *qStart = *qStart_nxt;
+                    *qEnd = *qEnd_nxt;
+                    *qStart_nxt = *qEnd;
+                    *qEnd_nxt = *qStart_nxt;
+                }
 	}
 
 	// Starting Multi-Level "BFS" ascent.
-	qEnd=0;
+	*qEnd=0;
         queue_node_t* temp_node;
 	for(int lev = tree->vArr[startVertex].level; lev<NV; lev++){
                 temp_node = getFirstDS(queue, levelIndices, lev);
                 while (temp_node != NULL) {
-                        QueueDown[qEnd++] = temp_node->data;
+                        QueueDown[(*qEnd)++] = temp_node->data;
                         deleteFirstDS(queue, levelIndices, lev);
                         temp_node = getFirstDS(queue, levelIndices, lev);
 		}
 	}
-	qEnd--;
+	(*qEnd)--;
 	//NEW 
-	int64_t qDownEndMarker= qEnd;
+	int64_t qDownEndMarker= *qEnd;
 
 	int64_t QUpStart=0,QUpEnd=0;
 	int64_t QSameStart=0,QSameEnd=0;
 	int64_t currElement=0;  //dummy initilization - variable will be initialized in function.
 	int64_t upCounter=0;
-	int64_t depthDown=tree->vArr[QueueDown[qEnd]].level,depthUp=-1,depthSame=-1;
+	int64_t depthDown=tree->vArr[QueueDown[*qEnd]].level,depthUp=-1,depthSame=-1;
 	// The ascent continues going up as long as the root has not been reached and that there
 	// are elements in the current level of the ascent. The ascent starts in the deepest level
 	// of the graph.
@@ -405,12 +421,12 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		if(depthDown==-1 && depthSame==-1 && depthUp==-1)
 			break;
 		if(depthDown>=depthSame && depthDown >=depthUp){
-			currElement=QueueDown[qEnd];
-			qEnd--;
-			if (qEnd<0)
+			currElement=QueueDown[*qEnd];
+			(*qEnd)--;
+			if (*qEnd<0)
 				depthDown=-1;
 			else
-				depthDown=tree->vArr[QueueDown[qEnd]].level;
+				depthDown=tree->vArr[QueueDown[*qEnd]].level;
 		}
 		else if(depthUp>=depthSame && depthUp >=depthDown){
 			currElement=QueueUp[QUpStart];
@@ -548,6 +564,12 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].newPathsToRoot=0;
 	}
         queue->size = 0;	
+
+        eAPT->qStart = 0;
+        eAPT->qEnd = 0;
+        eAPT->qStart_nxt = 0;
+        eAPT->qEnd_nxt = 0;
+
 	return;
 }
 
