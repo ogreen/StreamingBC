@@ -598,7 +598,16 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
 
     QueueDown[0] = startVertex;
     
-    int64_t qDownStart=0,qDownEnd=1;
+    //int64_t qDownStart=0,qDownEnd=1;
+    int64_t *qDownStart = &(eAPT->qStart);
+    int64_t *qDownEnd = &(eAPT->qEnd);
+    int64_t *qDownStart_nxt = &(eAPT->qStart_nxt);
+    int64_t *qDownEnd_nxt = &(eAPT->qEnd_nxt);
+
+    *qDownEnd = 1;
+    *qDownStart_nxt = 1;
+    *qDownEnd_nxt = 1;
+
     int64_t deepestLevel = tree->vArr[startVertex].level;
     
     queue_t* queue = eAPT->queue;
@@ -609,8 +618,8 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     // Each level in the tree(max depth NV) has a queue and a counter specifiying how deep a specific deepth-queue is.
     // For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
     // for the BFS traversal.
-    while(qDownStart!=qDownEnd){
-        uint64_t currElement = QueueDown[qDownStart];
+    while(*qDownStart != *qDownEnd){
+        uint64_t currElement = QueueDown[*qDownStart];
 
         if (currElement != startVertex)
             eAPT->sV[currElement].newEdgesAbove = tree->vArr[currElement].edgesAbove;
@@ -638,7 +647,7 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
                         deepestLevel = tree->vArr[k].level;
 
         	    // insert this vertex into the BFS queue
-        	    QueueDown[qDownEnd++] = k;
+        	    QueueDown[(*qDownEnd_nxt)++] = k;
                    
                     eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot; 
                     // indicate that it is in the next level of the BFS
@@ -664,15 +673,22 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
         eAPT->dynamicTraverseEdgeCounter += stinger_typed_outdegree(sStinger, currElement, 0);
         eAPT->dynamicTraverseVerticeCounter++;
 #endif
-	qDownStart++;
+	(*qDownStart)++;
+
+        if (*qDownStart == *qDownEnd) {
+            *qDownStart = *qDownStart_nxt;
+            *qDownEnd = *qDownEnd_nxt;
+            *qDownStart_nxt = *qDownEnd;
+            *qDownEnd_nxt = *qDownStart_nxt;
+        }
     }
 
     // The parent vertex needs to be placed in the queue for the dependency accumulation stage.
     // Also, it no longer has a child and so the delta from the child needs to be removed.
     
     int64_t qUpStart = 0, qUpEnd = 0;
-    qDownEnd--;
-    int64_t qDownEndMarker = qDownEnd;
+    (*qDownEnd)--;
+    int64_t qDownEndMarker = *qDownEnd;
     // Starting Multi-Level "BFS" ascent.
 
     // The ascent continues going up as long as the root has not been reached and that there
@@ -689,19 +705,19 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     while (1){
         
         uint64_t currElement = -1;
-        if (qDownEnd < 0 && qUpStart >= qUpEnd) {
+        if (*qDownEnd < 0 && qUpStart >= qUpEnd) {
             break;
-        } else if (qDownEnd < 0) {
+        } else if (*qDownEnd < 0) {
             currElement = QueueUp[qUpStart++];
-        } else if (qDownEnd >= 0) {
+        } else if (*qDownEnd >= 0) {
             if (qUpEnd > 0) {
-                if (tree->vArr[QueueUp[qUpStart]].level < tree->vArr[QueueDown[qDownEnd]].level) {
-                    currElement = QueueDown[qDownEnd--];
+                if (tree->vArr[QueueUp[qUpStart]].level < tree->vArr[QueueDown[*qDownEnd]].level) {
+                    currElement = QueueDown[(*qDownEnd)--];
                 } else {
                     currElement = QueueUp[qUpStart++];
                 }
             } else {
-                currElement = QueueDown[qDownEnd--];
+                currElement = QueueDown[(*qDownEnd)--];
             }
         } else {
             printf("Should never be here.\n");
@@ -805,6 +821,11 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
     }
 
     queue->size = 0;
+
+    eAPT->qStart = 0;
+    eAPT->qEnd = 0;
+    eAPT->qStart_nxt = 0;
+    eAPT->qEnd_nxt = 0;
 }
 
 int compare_levels(const void *a, const void *b, void *arg) {
