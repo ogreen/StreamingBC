@@ -83,15 +83,15 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 					}
 
 					//NEW
-					eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
+					eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
 					// insert this vertex into the BFS queue
 					QueueDown[(*qEnd_nxt)++] = k;
 					// indicate that it is in the next level of the BFS
-					eAPT->sV[k].touched = touchedCurrPlusOne;
+					eAPT->sV[k].touched += touchedCurrPlusOne;
 					// add new paths to root that go through current BFS Vertex
 					eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
 					// pass on my new paths to root for its search
-					eAPT->sV[k].diffPath = eAPT->sV[currElement].diffPath;
+					eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
 				}
 				// otherwise if it has been touched, but is specifically in the next level
 				// of the search (meaning it has more than one edge to the current level)
@@ -179,12 +179,12 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
                         if(tree->vArr[k].level == levelCurrMinusOne){
 				// Checking to see if "k" has been touched before.
 				if(eAPT->sV[k].touched==0){
-					eAPT->sV[k].newDelta=tree->vArr[k].delta;
+					eAPT->sV[k].newDelta += tree->vArr[k].delta;
 					// Marking element as touched in the ascent stage.
 					eAPT->sV[k].touched=-1;
 					QueueUp[QUpEnd] = k;
 					QUpEnd++;
-					eAPT->sV[k].newPathsToRoot = tree->vArr[k].pathsToRoot;
+					eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
 				}
  
 				eAPT->sV[k].newDelta +=
@@ -926,6 +926,7 @@ void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t cu
             if (eAPT->sV[currElement].touched == 1) {
                 topQueue[tqEnd++] = currElement;      
                 eAPT->sV[currElement].newLevel = tree->vArr[siblingOutsideSubtree].level + 1;   
+                printf("root, level: %ld, %ld\n", currRoot, eAPT->sV[currElement].newLevel);
             }
 
             if (eAPT->sV[currElement].touched != PARENT_ANCHORED) {
