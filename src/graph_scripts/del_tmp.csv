@@ -1,0 +1,9 @@
+make: Entering directory '/home/atripathy8/StreamingBC_dev/src'
+make: 'main' is up to date.
+make: Leaving directory '/home/atripathy8/StreamingBC_dev/src'
+operation_here
+NV, NE, NK, NT: 0, 0, 256, 1
+initial_graph_name: ../../graphs/astro-ph.graph
+operation, loadBalancing: 0, 0
+Src, Dest: 4434, 14242
+0, 0.000105, 

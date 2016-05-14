@@ -7,10 +7,8 @@ if len(sys.argv) != 2:
 
 
 shell_script = sys.argv[1]
-#NT = 16
-NT = 1
-#threadArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40]
-threadArray = [0, 1, 2]
+NT = 16
+threadArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40]
 
 os.system("sed -i 's/{[0-9]*}/{0}/g' ../sbcMain.c")
 os.system("rm tmp*")
@@ -22,5 +20,5 @@ for i in range(1, NT + 1):
     os.system(sed_command)
     experiment_command = "./" + shell_script + " > tmp2.csv"
     os.system(experiment_command)
-    serialize_command = "grep -vE \"(make|gcc|NV|initial|lm)\" tmp2.csv >> tmp.csv"
+    serialize_command = "grep -vE \"(make|gcc|NV|initial|lm|operation)\" tmp2.csv >> tmp.csv"
     os.system(serialize_command)

@@ -119,17 +119,13 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         bcTree* tree = forest->forest[i];
         int64_t diff = tree->vArr[newU].level - tree->vArr[newV].level;
 
-        float caseTime = 0.1;
-        tic();
         if(diff < -1 || diff > 1) {
 
             if(diff<-1){
                 moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
-                caseTime = toc(); 
             }
             else{
                 moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
-                caseTime = toc();
             }
             //printf("%.9lf\n", (double)caseTime); fflush(stdout); 
             eAPT[thread]->movementCounter++;
@@ -139,11 +135,9 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
             if(diff==-1) {
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
-                caseTime = toc();
             }
             else{
                 addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
-                caseTime = toc();
             }
             //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;
@@ -271,19 +265,15 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             }
         }
         STINGER_FORALL_EDGES_OF_VTX_END();
-        float caseTime = 0.1;
-        tic();
         if (extraParents >= 1){                 
             removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
                         tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
-            caseTime = toc();
             //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;
             adjacent++;
         }
         else{ 
             moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
-            caseTime = toc();
             //printf("%.9lf\n",  (double) caseTime); fflush(stdout);
             eAPT[thread]->movementCounter++;
             movement++;

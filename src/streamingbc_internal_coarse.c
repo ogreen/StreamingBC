@@ -12,14 +12,11 @@
 
 void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
-		uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT, uint64_t cores) {
+		uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT){
 
 	bcTree* tree = forest->forest[currRoot];
-
-	uint64_t *QueueDown = eAPT->QueueDown;
-	uint64_t *QueueUp = eAPT->QueueUp;
-        uint64_t *QueueDownBorders = eAPT->QueueSame;
-
+	uint64_t *QueueDown=eAPT->QueueDown;
+	uint64_t *QueueUp=eAPT->QueueUp;
 	int64_t NV = forest->NV;
 
         
@@ -42,7 +39,6 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
         int64_t *qStart_nxt = &(eAPT->qStart_nxt);
         int64_t *qEnd_nxt = &(eAPT->qEnd_nxt);
 
-        int64_t qDownBIndex = 0;
         *qEnd = 1;
         *qStart_nxt = 1;
         *qEnd_nxt = 1;
@@ -57,93 +53,77 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 	// For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
 	// for the BFS traversal.
 	while(*qStart < *qEnd){
-                QueueDownBorders[qDownBIndex++] = *qStart;
-                QueueDownBorders[qDownBIndex++] = *qEnd;
-                for (int64_t i = *qStart; i < *qEnd; i++) {
-                    //uint64_t currElement = QueueDown[*qStart];
-                    uint64_t currElement = QueueDown[i];
-                    int64_t levelCurrPlusOne = tree->vArr[currElement].level+1;
-                    int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
+		uint64_t currElement = QueueDown[*qStart];
+		int64_t levelCurrPlusOne = tree->vArr[currElement].level+1;
+		int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
 
-                    //if (currElement != startVertex)
-                    //    eAPT->sV[currElement].newEdgesAbove = tree->vArr[currElement].edgesAbove;
-                    STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
-                    {
-                            uint64_t k = STINGER_EDGE_DEST;
+                if (currElement != startVertex)
+                    eAPT->sV[currElement].newEdgesAbove = tree->vArr[currElement].edgesAbove;
+		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
+		{
+			uint64_t k = STINGER_EDGE_DEST;
 
-                            // if this vertex has not been added yet
-                            if(levelCurrPlusOne == (tree->vArr[k].level)){
-                                    
-                                    if(eAPT->sV[k].touched == 0){
-                                            // Checking if a "deeper level" has been reached.
-                                            if(deepestLevel<tree->vArr[k].level){
-                                                    deepestLevel=tree->vArr[k].level;
-                                            }
+			// if this vertex has not been added yet
+			if (currElement != startVertex 
+                                && tree->vArr[currElement].level >= tree->vArr[startVertex].level
+                                && tree->vArr[k].level < tree->vArr[currElement].level) {
+                            
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
 
-                                            eAPT->sV[k].newEdgesAbove += tree->vArr[k].edgesAbove;
-                                            eAPT->sV[k].newEdgesAbove -= tree->vArr[currElement].edgesAbove;
-                                            eAPT->sV[k].newEdgesAbove += eAPT->sV[currElement].newEdgesAbove;
+                            eAPT->sV[currElement].newEdgesAbove -= tree->vArr[k].edgesAbove;
+                            eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove;
+                        }
+                        if(levelCurrPlusOne == (tree->vArr[k].level)){
+                                
+                                if(eAPT->sV[k].touched == 0){
+					// Checking if a "deeper level" has been reached.
+					if(deepestLevel<tree->vArr[k].level){
+						deepestLevel=tree->vArr[k].level;
+					}
 
-                                            //NEW
-                                            eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-                                            // insert this vertex into the BFS queue
-                                            QueueDown[(*qEnd_nxt)++] = k;
-                                            // indicate that it is in the next level of the BFS
-                                            eAPT->sV[k].touched += touchedCurrPlusOne;
-                                            // add new paths to root that go through current BFS Vertex
-                                            eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
-                                            // pass on my new paths to root for its search
-                                            eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
-                                    }
-                                    // otherwise if it has been touched, but is specifically in the next level
-                                    // of the search (meaning it has more than one edge to the current level)
-                                    else if(eAPT->sV[k].touched == touchedCurrPlusOne){
-                                            eAPT->sV[k].newEdgesAbove -= tree->vArr[currElement].edgesAbove;
-                                            eAPT->sV[k].newEdgesAbove += eAPT->sV[currElement].newEdgesAbove;
-
-                                            // add new paths to root that go through current BFS Vertex
-                                            eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
-                                            // pass on my new paths to root for its search
-                                            eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
-                                    }
-                            }
-                    }
-                    STINGER_FORALL_EDGES_OF_VTX_END();
+					//NEW
+					eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+					// insert this vertex into the BFS queue
+					QueueDown[(*qEnd_nxt)++] = k;
+					// indicate that it is in the next level of the BFS
+					eAPT->sV[k].touched += touchedCurrPlusOne;
+					// add new paths to root that go through current BFS Vertex
+					eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
+					// pass on my new paths to root for its search
+					eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
+				}
+				// otherwise if it has been touched, but is specifically in the next level
+				// of the search (meaning it has more than one edge to the current level)
+				else if(eAPT->sV[k].touched == touchedCurrPlusOne){
+					// add new paths to root that go through current BFS Vertex
+					eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
+					// pass on my new paths to root for its search
+					eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
+				}
+			}
+		}
+		STINGER_FORALL_EDGES_OF_VTX_END();
 
 #if COUNT_TRAVERSALS==1
-                    eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
-                    eAPT->dynamicTraverseVerticeCounter++;
+		eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
+		eAPT->dynamicTraverseVerticeCounter++;
 #endif
-                    //(*qStart)++;
-                }
-                //if (*qStart == *qEnd) {
+		(*qStart)++;
+
+                if (*qStart == *qEnd) {
                     *qStart = *qStart_nxt;
                     *qEnd = *qEnd_nxt;
                     *qStart_nxt = *qEnd;
                     *qEnd_nxt = *qStart_nxt;
-                //}
+                }
 	}
-
-        #if 0
-        printf("currRoot, %ld\n", currRoot);
-        for (int64_t i = 0; i < qDownBIndex; i += 2) {
-            printf("border: %ld, %ld\n", QueueDownBorders[i], QueueDownBorders[i + 1]);
-        }
-        #endif
-
 	int64_t QUpStart=0,QUpEnd=0;
 	//    int64_t myCont=1;
 	int64_t currElement;
 	(*qEnd)--;
 
 	int64_t qDownEndMarker= *qEnd;
-        int64_t qDownEnd = *qEnd;
-
-        *qStart = 0;
-        *qEnd = 0;
-        *qStart_nxt = 0;
-        *qEnd_nxt = 0;
-
 	// Starting Multi-Level "BFS" ascent.
 	// The ascent continues going up as long as the root has not been reached and that there
 	// are elements in the current level of the ascent. The ascent starts in the deepest level
@@ -155,129 +135,83 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 	//    are elements that do not have shortest paths going through "vertex" ,however, there BC
 	//    values have changed due to the changes occuring below them. Because of this, they are
 	//    placed in the Multi-level queue.
-	while(!(qDownBIndex <= 0 && *qStart >= *qEnd && *qStart_nxt >= *qEnd_nxt)) {
-            
-            
-            for (int64_t i = QueueDownBorders[qDownBIndex - 2]; qDownBIndex >= 2 && i < QueueDownBorders[qDownBIndex - 1]; i++) {
-                //if (currElement != parentVertex)
-                //    eAPT->sV[currElement].newEdgesBelow = tree->vArr[currElement].edgesBelow;
-                
-                int64_t currElement = QueueDown[i];
-                int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
-                STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
-                {
-                    uint64_t k = STINGER_EDGE_DEST;
+	while(1){
+		if(*qEnd<0 && QUpStart>=QUpEnd){
+			break;
+		}
+		else if(*qEnd<0){
+			currElement=QueueUp[QUpStart++];
+		}
+		else if (*qEnd>=0){
+			if(QUpEnd>0){
+				if(tree->vArr[QueueUp[QUpStart]].level < tree->vArr[QueueDown[*qEnd]].level){
+					currElement=QueueDown[(*qEnd)--];
+				}
+				else{
+					currElement=QueueUp[QUpStart++];
+				}
+			}
+			else
+				currElement=QueueDown[(*qEnd)--];
+		}
+		else{
+			printf("should never be here\n");
+		}
+		int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
 
-                    if(tree->vArr[k].level == levelCurrMinusOne){
-                            // Checking to see if "k" has been touched before.
-                        if(eAPT->sV[k].touched==0){
-                            eAPT->sV[k].newDelta += tree->vArr[k].delta;
-                            // Marking element as touched in the ascent stage.
-                            eAPT->sV[k].touched=-1;
-                            //QueueUp[QUpEnd] = k;
-                            //QUpEnd++;
-                            QueueUp[*qEnd_nxt] = k;
-                            (*qEnd_nxt)++;
-                            eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-                            if (k != parentVertex) {
-                                eAPT->sV[k].newEdgesBelow += tree->vArr[k].edgesBelow;
-                            }
+                if (currElement != parentVertex)
+                    eAPT->sV[currElement].newEdgesBelow = tree->vArr[currElement].edgesBelow;
+		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
+		{
+			uint64_t k = STINGER_EDGE_DEST;
+
+			if (currElement != parentVertex 
+                                && tree->vArr[currElement].level <= tree->vArr[parentVertex].level
+                                && tree->vArr[k].level > tree->vArr[currElement].level) {
+                            
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+                            
+                            eAPT->sV[currElement].newEdgesBelow -= tree->vArr[k].edgesBelow;
+                            eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow;
                         }
+                        
+                        if(tree->vArr[k].level == levelCurrMinusOne){
+				// Checking to see if "k" has been touched before.
+				if(eAPT->sV[k].touched==0){
+					eAPT->sV[k].newDelta += tree->vArr[k].delta;
+					// Marking element as touched in the ascent stage.
+					eAPT->sV[k].touched=-1;
+					QueueUp[QUpEnd] = k;
+					QUpEnd++;
+					eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+				}
+ 
+				eAPT->sV[k].newDelta +=
+					((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
+					(bc_t)(eAPT->sV[currElement].newDelta+1);
 
-                        if (k != parentVertex && tree->vArr[k].level <= tree->vArr[parentVertex].level) {
-                            eAPT->sV[k].newEdgesBelow -= tree->vArr[currElement].edgesBelow; 
-                            eAPT->sV[k].newEdgesBelow += eAPT->sV[currElement].newEdgesBelow;
-                        }
-
-                        eAPT->sV[k].newDelta +=
-                                    ((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
-                                    (bc_t)(eAPT->sV[currElement].newDelta+1);
-
-                        // For the elements that are touched in the ascent stage it is necessary to
-                        // to reduce the values that they previously had.
-                        // In addition to this, the "parentVertex" that is connected to "vertex", i.e.
-                        // the vertices of the new edge, needs to increase its betweenness centrality
-                        // following the new connection, without removing the old delta value.
-                        if(eAPT->sV[k].touched<0 && ( k!=parentVertex  || currElement!=startVertex)){
-                                eAPT->sV[k].newDelta -=
-                                        ((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
-                                        (bc_t)(tree->vArr[currElement].delta+1);
-                        }
-                    }
-                }
-                STINGER_FORALL_EDGES_OF_VTX_END();
+                                // For the elements that are touched in the ascent stage it is necessary to
+				// to reduce the values that they previously had.
+				// In addition to this, the "parentVertex" that is connected to "vertex", i.e.
+				// the vertices of the new edge, needs to increase its betweenness centrality
+				// following the new connection, without removing the old delta value.
+				if(eAPT->sV[k].touched<0 && ( k!=parentVertex  || currElement!=startVertex)){
+					eAPT->sV[k].newDelta -=
+						((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
+						(bc_t)(tree->vArr[currElement].delta+1);
+	                        }
+			}
+		}
+		STINGER_FORALL_EDGES_OF_VTX_END();
 
 #if COUNT_TRAVERSALS==1
-                eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
-                eAPT->dynamicTraverseVerticeCounter++;
+		eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
+		eAPT->dynamicTraverseVerticeCounter++;
 #endif
-                if(currElement!=currRoot){
-                        eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta - tree->vArr[currElement].delta;
-                }
-            }
-            
-            qDownBIndex -= 2;
-
-            *qStart = *qStart_nxt;
-            *qEnd = *qEnd_nxt;
-            *qStart_nxt = *qEnd;
-            *qEnd_nxt = *qStart_nxt;
-            
-            for (int64_t i = *qStart; i < *qEnd; i++) {
-                int64_t currElement = QueueUp[i];
-                (*qStart)++;
-                int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
-                STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
-                {
-                    uint64_t k = STINGER_EDGE_DEST;
-
-                    if(tree->vArr[k].level == levelCurrMinusOne){
-                            // Checking to see if "k" has been touched before.
-                        if(eAPT->sV[k].touched==0){
-                            eAPT->sV[k].newDelta += tree->vArr[k].delta;
-                            // Marking element as touched in the ascent stage.
-                            eAPT->sV[k].touched=-1;
-                            //QueueUp[QUpEnd] = k;
-                            //QUpEnd++;
-                            QueueUp[*qEnd_nxt] = k;
-                            (*qEnd_nxt)++;
-                            eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-                            if (k != parentVertex) {
-                                eAPT->sV[k].newEdgesBelow += tree->vArr[k].edgesBelow;
-                            }
-                        }
-
-                        if (k != parentVertex && tree->vArr[k].level <= tree->vArr[parentVertex].level) {
-                            eAPT->sV[k].newEdgesBelow -= tree->vArr[currElement].edgesBelow; 
-                            eAPT->sV[k].newEdgesBelow += eAPT->sV[currElement].newEdgesBelow;
-                        }
-
-                        eAPT->sV[k].newDelta +=
-                                    ((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
-                                    (bc_t)(eAPT->sV[currElement].newDelta+1);
-
-                        // For the elements that are touched in the ascent stage it is necessary to
-                        // to reduce the values that they previously had.
-                        // In addition to this, the "parentVertex" that is connected to "vertex", i.e.
-                        // the vertices of the new edge, needs to increase its betweenness centrality
-                        // following the new connection, without removing the old delta value.
-                        if(eAPT->sV[k].touched<0 && ( k!=parentVertex  || currElement!=startVertex)){
-                                eAPT->sV[k].newDelta -=
-                                        ((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
-                                        (bc_t)(tree->vArr[currElement].delta+1);
-                        }
-                    }
-                }
-                STINGER_FORALL_EDGES_OF_VTX_END();
-
-#if COUNT_TRAVERSALS==1
-                eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
-                eAPT->dynamicTraverseVerticeCounter++;
-#endif
-                if(currElement!=currRoot){
-                        eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta - tree->vArr[currElement].delta;
-                }
-            }
+		if(currElement!=currRoot){
+			eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta - tree->vArr[currElement].delta;
+		}
 	}
 
 	for(uint64_t c = 0; c <= qDownEndMarker; c++){
@@ -289,13 +223,9 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].touched=0;
 		eAPT->sV[k].newDelta=0.0;
 		eAPT->sV[k].newPathsToRoot=0;
-                eAPT->sV[k].newEdgesAbove = 0;
 	}
-        eAPT->sV[startVertex].newEdgesAbove = 0;
-        eAPT->sV[parentVertex].newEdgesAbove = 0;
 
-	//for(uint64_t c = 0; c < QUpEnd; c++){
-        for (uint64_t c = 0; c < *qEnd; c++) {
+	for(uint64_t c = 0; c < QUpEnd; c++){
 		uint64_t k=QueueUp[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
 		tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
@@ -304,11 +234,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].newDelta=0.0;
                 eAPT->sV[k].newEdgesBelow = 0;
 		eAPT->sV[k].newPathsToRoot=0;
-                eAPT->sV[k].newEdgesBelow = 0;
 	}
-
-        eAPT->sV[parentVertex].newEdgesBelow = 0;
-        eAPT->sV[startVertex].newEdgesBelow = 0;
 
         eAPT->qStart = 0;
         eAPT->qEnd = 0;
@@ -340,7 +266,6 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	//int64_t qStart = 0;
 	//int64_t qEnd = 1;
 
-
         int64_t *qStart = &(eAPT->qStart);
         int64_t *qEnd = &(eAPT->qEnd);
         int64_t *qStart_nxt = &(eAPT->qStart_nxt);
@@ -357,7 +282,6 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	eAPT->sV[startVertex].movementDelta = prevDist;
 	eAPT->sV[startVertex].IMoved = 1;
 
-        eAPT->sV[parentVertex].newEdgesAbove = tree->vArr[parentVertex].edgesAbove;
         eAPT->sV[startVertex].newEdgesAbove = eAPT->sV[parentVertex].newEdgesAbove + 1;
 	int64_t deepestLevel = tree->vArr[parentVertex].level+1;
 
@@ -372,7 +296,6 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 		int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
                 eAPT->sV[currElement].newEdgesAbove = 0;
-
 		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
 		{
 			uint64_t k = STINGER_EDGE_DEST;
@@ -383,18 +306,15 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                         int64_t newCurrLevel = tree->vArr[currElement].level - eAPT->sV[currElement].movementDelta;
                         int64_t newKLevel = tree->vArr[k].level - computedDelta;
 
+
                         if (computedDelta >= 0 && newKLevel < newCurrLevel) {
                             if (eAPT->sV[k].touched == 0)
                                 eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
                             eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
                         } else if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
-                            //if (eAPT->sV[k].touched == 0)
-                            //    eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
-                            //eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
                             if (eAPT->sV[k].touched == 0)
-                                eAPT->sV[currElement].newEdgesAbove += tree->vArr[k].edgesAbove + 1;
-                            else
-                                eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
+                                eAPT->sV[k].newEdgesAbove = tree->vArr[k].edgesAbove;
+                            eAPT->sV[currElement].newEdgesAbove += eAPT->sV[k].newEdgesAbove + 1;
                         }
 
 			if(eAPT->sV[k].touched == 0 ){
@@ -535,14 +455,9 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
                         if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
 
-                            if (eAPT->sV[k].touched == 0) {
-                                eAPT->sV[currElement].newEdgesBelow += tree->vArr[k].edgesBelow + 1;
-                            } else {
-                                eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
-                            }
-                            //if (eAPT->sV[k].touched == 0)
-                            //    eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
-                            //eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
+                            if (eAPT->sV[k].touched == 0)
+                                eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
+                            eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
                         }
 
 			if(tree->vArr[k].level == levelCurrMinusOne){
@@ -623,12 +538,8 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].movementDelta=0;
 		eAPT->sV[k].IMoved=-1;
 		eAPT->sV[k].newPathsToRoot=0;
-                eAPT->sV[k].newEdgesAbove = 0;
-                eAPT->sV[k].newEdgesBelow = 0;
 	}
-        
-        eAPT->sV[startVertex].newEdgesAbove = 0;
-        eAPT->sV[parentVertex].newEdgesAbove = 0;
+
 
 	for(uint64_t c = 0; c < QSameEnd; c++){
 		uint64_t k=QueueSame[c];
@@ -640,7 +551,6 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].movementDelta=0;
 		eAPT->sV[k].IMoved=-1;
 		eAPT->sV[k].newPathsToRoot=0;
-                eAPT->sV[k].newEdgesBelow = 0;
 	}
 	for(uint64_t c = 0; c < QUpEnd; c++){
 		uint64_t k=QueueUp[c];
@@ -652,12 +562,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].movementDelta=0;
 		eAPT->sV[k].IMoved=-1;
 		eAPT->sV[k].newPathsToRoot=0;
-                eAPT->sV[k].newEdgesBelow = 0;
 	}
-
-        eAPT->sV[startVertex].newEdgesBelow = 0;
-        eAPT->sV[parentVertex].newEdgesBelow = 0;
-
         queue->size = 0;	
 
         eAPT->qStart = 0;

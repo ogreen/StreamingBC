@@ -27,7 +27,6 @@
 
 #define COUNT 50
 
-
 typedef enum{
     UP_INSERT = 0,
     UP_DELETE,
@@ -519,6 +518,7 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		stinger_remove_edge(stingerGraph,0,src,dest);
 		stinger_remove_edge(stingerGraph,0,dest,src);
 
+                printf("src, dest: %ld, %ld\n", src, dest);
 		insertionArraySrc[ins]=src;
 		insertionArrayDest[ins]=dest;
 		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
@@ -572,6 +572,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         if (result < 1)
             continue;
 
+        printf("src, dest: %ld, %ld\n", src, dest);
         stinger_insert_edge(stingerGraph, 0, dest, src, 0, 0);
         deletionArraySrc[del] = src;
         deletionArrayDest[del] = dest;

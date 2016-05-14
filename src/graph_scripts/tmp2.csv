@@ -1,4 +1,28 @@
-make: Entering directory '/home/atripathy8/StreamingBC/src'
+make: Entering directory `/home/atripathy8/StreamingBC/src'
 gcc -std=gnu9x   -g -O2 -Istinger -fopenmp -g -w -o main sbcMain.c streamingbc.c streamingbc_init.c streamingbc_internal.c streamingbc_aux.c stinger/stinger.c stinger/stinger-utils.c stinger/timer.c stinger/xmalloc.c stinger/x86-full-empty.c \
-	 -lm -lrt
-make: Leaving directory '/home/atripathy8/StreamingBC/src'
+		 -lm -lrt
+make: Leaving directory `/home/atripathy8/StreamingBC/src'
+operation_here
+NV, NE, NK, NT: 4198603, 0, 50, 2
+initial_graph_name: ../../graphs/coPapersDBLP.graph
+operation, loadBalancing: 0, 1
+0, 0.004811, 
+1, 0.005339, 
+2, 0.017401, 
+3, 0.006160, 
+4, 0.007662, 
+5, 0.006811, 
+6, 0.002531, 
+7, 0.016354, 
+8, 0.006630, 
+9, 0.004593, 
+10, 0.006785, 
+11, 0.004338, 
+12, 0.006145, 
+13, 0.004838, 
+14, 0.006844, 
+15, 0.011292, 
+16, 0.007865, 
+17, 0.010860, 
+18, 0.002961, 
+19, 0.011643, 

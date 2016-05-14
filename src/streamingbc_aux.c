@@ -213,6 +213,8 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
         eapt->sV[v].newDelta=0;
         eapt->sV[v].totalBC=0;
         eapt->sV[v].IMoved=-1;
+        eapt->sV[v].newEdgesAbove = 0;
+        eapt->sV[v].newEdgesBelow = 0;
     }
 
     eapt->QueueDown = (int64_t*)malloc(NV*sizeof(int64_t));
