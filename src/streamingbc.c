@@ -133,11 +133,12 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
         else if(diff == -1 || diff == 1){
 
+            //printf("Case II root: %ld\n", i); fflush(stdout);
             if(diff==-1) {
-                addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
+                addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays, (uint64_t)4);
             }
             else{
-                addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
+                addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays, (uint64_t)4);
             }
             //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;

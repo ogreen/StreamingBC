@@ -478,11 +478,15 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
          
         #if 0
-        src = 195559;
-        dest = 383688;
+        src = 3;
+        dest = 33;
+
+        src = 6;
+        dest = 1;
         stinger_remove_edge(stingerGraph, 0, src, dest);
         stinger_remove_edge(stingerGraph, 0, dest, src);
 
+        printf("src, dest: %ld, %ld\n", src, dest);
         insertionArraySrc[0] = src;
         insertionArrayDest[0] = dest;
         #endif

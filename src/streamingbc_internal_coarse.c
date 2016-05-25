@@ -95,7 +95,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 				}
 				// otherwise if it has been touched, but is specifically in the next level
 				// of the search (meaning it has more than one edge to the current level)
-				else if(eAPT->sV[k].touched == touchedCurrPlusOne){
+				else { // if(eAPT->sV[k].touched == touchedCurrPlusOne){
 					// add new paths to root that go through current BFS Vertex
 					eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
 					// pass on my new paths to root for its search

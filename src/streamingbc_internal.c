@@ -14,6 +14,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 		uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
 		uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT, uint64_t cores) {
 
+        //omp_set_num_threads(cores);
 	bcTree* tree = forest->forest[currRoot];
 
 	uint64_t *QueueDown = eAPT->QueueDown;
@@ -56,57 +57,64 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 	// Each level in the tree(max depth NV) has a queue and a counter specifiying how deep a specific deepth-queue is.
 	// For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
 	// for the BFS traversal.
-	while(*qStart < *qEnd){
-                QueueDownBorders[qDownBIndex++] = *qStart;
-                QueueDownBorders[qDownBIndex++] = *qEnd;
-                for (int64_t i = *qStart; i < *qEnd; i++) {
-                    //uint64_t currElement = QueueDown[*qStart];
-                    uint64_t currElement = QueueDown[i];
-                    int64_t levelCurrPlusOne = tree->vArr[currElement].level+1;
-                    int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
+	while (*qStart < *qEnd) {
+            QueueDownBorders[qDownBIndex++] = *qStart;
+            QueueDownBorders[qDownBIndex++] = *qEnd;
 
-                    //if (currElement != startVertex)
-                    //    eAPT->sV[currElement].newEdgesAbove = tree->vArr[currElement].edgesAbove;
+            //#pragma omp parallel for schedule(dynamic, 1)
+            int64_t thread_nums = cores;
+            if ((*qEnd - *qStart) < thread_nums) {
+                thread_nums = *qEnd - *qStart;
+            }
+
+            #pragma omp parallel num_threads(thread_nums)
+            {
+                #pragma omp for
+                for (int64_t i = *qStart; i < *qEnd; i++) {
+                    uint64_t currElement = QueueDown[i];
+                    int64_t levelCurrPlusOne = tree->vArr[currElement].level + 1;
+                    int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched + 1;
+
                     STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
                     {
-                            uint64_t k = STINGER_EDGE_DEST;
+                        uint64_t k = STINGER_EDGE_DEST;
 
-                            // if this vertex has not been added yet
-                            if(levelCurrPlusOne == (tree->vArr[k].level)){
-                                    
-                                    if(eAPT->sV[k].touched == 0){
-                                            // Checking if a "deeper level" has been reached.
-                                            if(deepestLevel<tree->vArr[k].level){
-                                                    deepestLevel=tree->vArr[k].level;
-                                            }
+                        // if this vertex has not been added yet
+                        if(levelCurrPlusOne == (tree->vArr[k].level)){
+                                
+                            if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, currElement)) {
+                                // Checking if a "deeper level" has been reached.
+                                if (deepestLevel < tree->vArr[k].level) {
+                                        deepestLevel = tree->vArr[k].level;
+                                }
 
-                                            eAPT->sV[k].newEdgesAbove += tree->vArr[k].edgesAbove;
-                                            eAPT->sV[k].newEdgesAbove -= tree->vArr[currElement].edgesAbove;
-                                            eAPT->sV[k].newEdgesAbove += eAPT->sV[currElement].newEdgesAbove;
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove);
+                                __sync_fetch_and_sub(&(eAPT->sV[k].newEdgesAbove), tree->vArr[currElement].edgesAbove);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), eAPT->sV[currElement].newEdgesAbove);
 
-                                            //NEW
-                                            eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-                                            // insert this vertex into the BFS queue
-                                            QueueDown[(*qEnd_nxt)++] = k;
-                                            // indicate that it is in the next level of the BFS
-                                            eAPT->sV[k].touched += touchedCurrPlusOne;
-                                            // add new paths to root that go through current BFS Vertex
-                                            eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
-                                            // pass on my new paths to root for its search
-                                            eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
-                                    }
-                                    // otherwise if it has been touched, but is specifically in the next level
-                                    // of the search (meaning it has more than one edge to the current level)
-                                    else if(eAPT->sV[k].touched == touchedCurrPlusOne){
-                                            eAPT->sV[k].newEdgesAbove -= tree->vArr[currElement].edgesAbove;
-                                            eAPT->sV[k].newEdgesAbove += eAPT->sV[currElement].newEdgesAbove;
-
-                                            // add new paths to root that go through current BFS Vertex
-                                            eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
-                                            // pass on my new paths to root for its search
-                                            eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
-                                    }
+                                //NEW
+                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
+                                
+                                // insert this vertex into the BFS queue
+                                QueueDown[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
+                                // indicate that it is in the next level of the BFS
+                                // add new paths to root that go through current BFS Vertex
+                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                // pass on my new paths to root for its search
+                                __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                             }
+                            // otherwise if it has been touched, but is specifically in the next level
+                            // of the search (meaning it has more than one edge to the current level)
+                            else if (eAPT->sV[k].touched != currElement) { 
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), -tree->vArr[currElement].edgesAbove);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), eAPT->sV[currElement].newEdgesAbove);
+
+                                // add new paths to root that go through current BFS Vertex
+                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                // pass on my new paths to root for its search
+                                __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
+                            }
+                        }
                     }
                     STINGER_FORALL_EDGES_OF_VTX_END();
 
@@ -114,14 +122,12 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
                     eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
                     eAPT->dynamicTraverseVerticeCounter++;
 #endif
-                    //(*qStart)++;
                 }
-                //if (*qStart == *qEnd) {
-                    *qStart = *qStart_nxt;
-                    *qEnd = *qEnd_nxt;
-                    *qStart_nxt = *qEnd;
-                    *qEnd_nxt = *qStart_nxt;
-                //}
+            }
+            *qStart = *qStart_nxt;
+            *qEnd = *qEnd_nxt;
+            *qStart_nxt = *qEnd;
+            *qEnd_nxt = *qStart_nxt;
 	}
 
         #if 0
