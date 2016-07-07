@@ -219,8 +219,8 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
 
     eapt->QueueDown = (int64_t*)malloc(NV*sizeof(int64_t));
     eapt->QueueUp = (int64_t*)malloc(NV*sizeof(int64_t));
-    eapt->QueueSame = (int64_t*)malloc(NV*sizeof(int64_t));
-    eapt->Stack = (int64_t*)malloc(NV*sizeof(int64_t));
+    eapt->QueueSame = (int64_t*)malloc(2 * NV*sizeof(int64_t));
+    eapt->Stack = (int64_t*)malloc(2 * NV*sizeof(int64_t));
     eapt->touchedVerticesUp = (int64_t*) malloc(NV * sizeof(int64_t));
     eapt->touchedVerticesDown = (int64_t*) malloc(NV * sizeof(int64_t));
     //makeArrayOfLists(&eapt->multiLevelQueues,NV);
@@ -231,6 +231,8 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     for (int64_t i = 0; i < NV; i++) {
         eapt->levelIndices[i].front = -1;
         eapt->levelIndices[i].back = -1;
+        eapt->queue->nodes[i].next = -2;
+        eapt->levelIndices[i].back_flag = -1;
     }
     eapt->samelevelCounter=0;
     eapt->compConnCounter=0;
@@ -315,23 +317,31 @@ node_t* makeNode(int64_t id)
     return newnode;
 }
 
-/* note will be appended at the end. */
 void appendDS(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_t data) {
-    int64_t next = queue->size;
-    queue_node_t* list = queue->nodes;
+    appendDS2(queue, levelIndices, level, data, 0);
+}
 
-    if (levelIndices[level].back == -1) {
-        levelIndices[level].front = next;
-        levelIndices[level].back = next;
-        list[next].data = data;
-        list[next].next = -1;
-        queue->size++;
-    } else {
-        list[levelIndices[level].back].next = next;
-        levelIndices[level].back = next;
-        list[next].data = data;
-        list[next].next = -1;
-        queue->size++;
+/* note will be appended at the end. */
+void appendDS2(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_t data, int64_t thread_num) {
+
+    int64_t next = __sync_fetch_and_add(&(queue->size), 1);
+    queue_node_t *list = queue->nodes;
+    
+    while (1) {
+        if (__sync_bool_compare_and_swap(&(levelIndices[level].back_flag), -1, thread_num)) {
+            if (levelIndices[level].back == -1) {
+                levelIndices[level].front = next;
+                levelIndices[level].back = next;
+                list[next].next = -1;
+            } else {
+                list[levelIndices[level].back].next = next;
+                levelIndices[level].back = next;
+                list[next].next = -1;
+            }
+            levelIndices[level].back_flag = -1;
+            list[next].data = data;
+            break;
+        }
     }
 }
 
@@ -352,6 +362,7 @@ void deleteFirstDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
     } else {
         int64_t next = queue->nodes[front].next;
         levelIndices[level].front = next;
+        queue->nodes[front].next = -2;
     } 
 }
 

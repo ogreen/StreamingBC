@@ -85,6 +85,7 @@ typedef struct queue {
 typedef struct struct_level_node_t {
     int64_t front;
     int64_t back;
+    int64_t back_flag;
 } level_node_t;
 
 
@@ -94,6 +95,7 @@ list_t* makeList(void);
 node_t* makeNode(int64_t);
 void append(list_t*,node_t*);
 void appendDS(queue_t*, level_node_t*, int64_t, int64_t);
+void appendDS2(queue_t*, level_node_t*, int64_t, int64_t, int64_t);
 node_t *getFirst(list_t*);
 queue_node_t* getFirstDS(queue_t*, level_node_t*, int64_t);
 void deleteFirst(list_t*);
