@@ -478,8 +478,8 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
 
         #if 0
-        src = 3;
-        dest = 29;
+        src = 7;
+        dest = 5;
 
         stinger_remove_edge(stingerGraph, 0, src, dest);
         stinger_remove_edge(stingerGraph, 0, dest, src);
@@ -680,7 +680,6 @@ void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, i
 					exit(-1);
 				}
                                 *operation = intout;
-                                printf("operation_here\n");
 				break;
                         case 'L':
                                 errno = 0;

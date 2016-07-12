@@ -122,10 +122,10 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         if(diff < -1 || diff > 1) {
 
             if(diff<-1){
-                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)1);
+                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)2);
             }
             else{
-                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)1);
+                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)2);
             }
             //printf("%.9lf\n", (double)caseTime); fflush(stdout); 
             eAPT[thread]->movementCounter++;
@@ -135,10 +135,10 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
             //printf("Case II root: %ld\n", i); fflush(stdout);
             if(diff==-1) {
-                addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays, (uint64_t)1);
+                addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays, (uint64_t)2);
             }
             else{
-                addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays, (uint64_t)1);
+                addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays, (uint64_t)2);
             }
             //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;

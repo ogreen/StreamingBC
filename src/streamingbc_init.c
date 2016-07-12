@@ -164,6 +164,6 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		}
 		sEnd--;
 	}
-
+    
 	return -1;
 }
