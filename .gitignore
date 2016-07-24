@@ -1,2 +1,2 @@
-src/graph_scripts/csvs
-src/dimacs_to_csr
+./src/graph_scripts/csvs
+./src/dimacs_to_csr
