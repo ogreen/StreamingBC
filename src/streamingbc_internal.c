@@ -386,12 +386,16 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	//int64_t qStart = 0;
 	//int64_t qEnd = 1;
 
-
         int64_t *qStart = &(eAPT->qStart);
         int64_t *qEnd = &(eAPT->qEnd);
         int64_t *qStart_nxt = &(eAPT->qStart_nxt);
         int64_t *qEnd_nxt = &(eAPT->qEnd_nxt);
         int64_t qDownBIndex = 0;
+
+        int64_t *qStartSame = &(eAPT->qStartSame);
+        int64_t *qEndSame = &(eAPT->qEndSame);
+        int64_t *qStartSame_nxt = &(eAPT->qStartSame_nxt);
+        int64_t *qEndSame_nxt = &(eAPT->qEndSame_nxt);
 
         *qEnd = 1;
         *qStart_nxt = 1;
@@ -440,43 +444,27 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                                 int64_t computedDelta = eAPT->sV[currElement].movementDelta -
                                                     (tree->vArr[currElement].level - tree->vArr[k].level + 1);
 
-                                int64_t newCurrLevel = tree->vArr[currElement].level - eAPT->sV[currElement].movementDelta;
+                                int64_t newCurrLevel = 0;
+                                __sync_fetch_and_add(&newCurrLevel, tree->vArr[currElement].level);
+                                __sync_fetch_and_add(&newCurrLevel, -eAPT->sV[currElement].movementDelta);
 
-                                int64_t newKLevel = tree->vArr[k].level - computedDelta;
+                                uint64_t newKLevel = 0;
+                                __sync_fetch_and_add(&newKLevel, tree->vArr[k].level);
+                                __sync_fetch_and_add(&newKLevel, -computedDelta);
 
                                 int go_in = 0;
                                 if (computedDelta < 0 && eAPT->sV[k].touched == 0) {
-                                    go_in = 1;
+                                    if (computedDelta >= 0 && newKLevel < newCurrLevel) {
+                                        __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove);
+                                        __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
+                                    }
+
+                                    if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
+                                        __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1);
+                                    }
                                 }
                                 //if(eAPT->sV[k].touched == 0 ){}
-                                if (go_in || __sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, touchedCurrPlusOne)) {
-                                        // compute distance the adjacent vertex should be moved
-                                        int64_t computedDelta = eAPT->sV[currElement].movementDelta - 
-                                                            (tree->vArr[currElement].level - tree->vArr[k].level + 1);
-                                        // if the adjacent vertex should be moved, put it in the queue
-                                        if(computedDelta > 0){
-                                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].movementDelta), computedDelta);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].IMoved), 2);
-                                                QueueDown[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
-                                        }
-                                        // Vertex that will not be moved has been found.
-                                        else if(computedDelta == 0){      
-                                                //NEW
-                                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].movementDelta), computedDelta);
-                                                __sync_fetch_and_add(&(eAPT->sV[k].IMoved), -eAPT->sV[k].IMoved);
-                                                QueueDown[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
-                                        }
-                                        // Vertex that the number of shortest path to the root does not change has been found.
-                                        // This vertex is not marked as it might be touched on the way up.
-                                        else {
-                                                eAPT->sV[k].touched=0;
-                                        }
-
+                                else if (go_in ||  __sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, touchedCurrPlusOne)) {
                                         if (computedDelta >= 0 && newKLevel < newCurrLevel) {
                                             __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove);
                                             __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
@@ -484,24 +472,47 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
                                         if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
                                             __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1);
-                                        } 
+                                        }
+                                        
+                                        // if the adjacent vertex should be moved, put it in the queue
+                                        if(computedDelta > 0){
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].movementDelta), computedDelta);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].IMoved), 2);
+                                            QueueDown[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
+                                        }
+                                        // Vertex that will not be moved has been found.
+                                        else if(computedDelta == 0){      
+                                            //NEW
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].movementDelta), computedDelta);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].IMoved), -eAPT->sV[k].IMoved);
+                                            QueueDown[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
+                                        }
+                                        // Vertex that the number of shortest path to the root does not change has been found.
+                                        // This vertex is not marked as it might be touched on the way up.
+                                                                                 
                                         // if adjacent and in the next level
                                 }
                                 //else if(eAPT->sV[k].touched == eAPT->sV[currElement].touched + 1)
                                 else if(eAPT->sV[k].touched == touchedCurrPlusOne){
-                                        int64_t computedDelta = eAPT->sV[currElement].movementDelta - (tree->vArr[currElement].level - tree->vArr[k].level + 1);
-                                        if(computedDelta >= 0){
-                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
-                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
-                                        }
-
+                                        //int64_t computedDelta = eAPT->sV[currElement].movementDelta - (tree->vArr[currElement].level - tree->vArr[k].level + 1);
                                         if (computedDelta >= 0 && newKLevel < newCurrLevel) {
                                             __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                         }
 
                                         if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
                                             __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
+                                        } 
+                                        if(computedDelta >= 0){
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                                         }
+
+                                        
                                 }
                                 else if (computedDelta >= 0 && newKLevel < newCurrLevel) {
                                     __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
@@ -509,7 +520,6 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                                 else if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
                                     __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                 }
-
                         }
                         STINGER_FORALL_EDGES_OF_VTX_END();
                         
@@ -554,6 +564,17 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	int64_t currElement=0;  //dummy initilization - variable will be initialized in function.
 	int64_t upCounter=0;
 	int64_t depthDown=tree->vArr[QueueDown[*qEnd]].level,depthUp=-1,depthSame=-1;
+        
+        *qStart = 0;
+        *qEnd = 0;
+        *qStart_nxt = 0;
+        *qEnd_nxt = 0;
+        
+        *qStartSame = 0;
+        *qEndSame = 0;
+        *qStartSame_nxt = 0;
+        *qEndSame_nxt = 0;
+
 	// The ascent continues going up as long as the root has not been reached and that there
 	// are elements in the current level of the ascent. The ascent starts in the deepest level
 	// of the graph.
@@ -569,122 +590,362 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 	//    through the vertex that did not move was reduced. These vertices will be touched  as -2
 	//    and added to the queue and the "BFS ascent" will continue from these vertices as well.
 
-	while(1){
-		if(depthDown==-1 && depthSame==-1 && depthUp==-1)
-			break;
-		if(depthDown>=depthSame && depthDown >=depthUp){
-			currElement=QueueDown[*qEnd];
-			(*qEnd)--;
-			if (*qEnd<0)
-				depthDown=-1;
-			else
-				depthDown=tree->vArr[QueueDown[*qEnd]].level;
-		}
-		else if(depthUp>=depthSame && depthUp >=depthDown){
-			currElement=QueueUp[QUpStart];
-			QUpStart++;
-			if (QUpStart>=QUpEnd)
-				depthUp=-1;
-			else
-				depthUp=tree->vArr[QueueUp[QUpStart]].level;
-		}
-		else if(depthDown<=depthSame && depthUp <=depthSame){
-			currElement=QueueSame[QSameStart];
-			QSameStart++;
-			if (QSameStart>=QSameEnd)
-				depthSame=-1;
-			else
-				depthSame=tree->vArr[QueueSame[QSameStart]].level;
-		}
+        while (!(qDownBIndex <= 0 && *qStart >= *qEnd && *qStart_nxt >= *qEnd_nxt && *qStartSame >= *qEndSame && *qStartSame_nxt >= *qEndSame_nxt)) {
 
+            int operation = -1; // 0 - down, 1 - up, 2 - same
+            if(depthDown==-1 && depthSame==-1 && depthUp==-1)
+                break;
+            if(depthUp>=depthSame && depthUp >=depthDown){
+                operation = 1;
+                if (*qEnd_nxt > *qStart_nxt)
+                    depthUp=-1;
+                else {
+                    depthUp=tree->vArr[QueueUp[*qStart_nxt]].level;
+                }
+            }
+            else if(depthDown>=depthSame && depthDown >=depthUp){
+                operation = 0;
+                if (qDownBIndex < 2 || QueueDownBorders[qDownBIndex - 2] > QueueDownBorders[qDownBIndex - 1])
+                    depthDown = -1;
+                else if (qDownBIndex > 2) {
+                    depthDown=tree->vArr[QueueDown[QueueDownBorders[qDownBIndex - 2] - 1]].level;
+                }
+            }
+            
+            else if(depthDown<=depthSame && depthUp <=depthSame){
+                operation = 2;
+                if (*qEndSame_nxt > *qStartSame_nxt)
+                    depthSame=-1;
+                else
+                    depthSame=tree->vArr[QueueSame[*qStartSame_nxt]].level;
+            }
 
-                int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
-                eAPT->sV[currElement].newEdgesBelow = 0;
-		STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
-		{
-			uint64_t k = STINGER_EDGE_DEST;
-			// Checking that the vertices are in different levels.
+            if (operation == 0 && qDownBIndex >= 2) {
 
-                        if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+                int64_t thread_nums = cores;
+                if (QueueDownBorders[qDownBIndex - 1] - QueueDownBorders[qDownBIndex - 2] < thread_nums) {
+                    thread_nums = QueueDownBorders[qDownBIndex - 1] - QueueDownBorders[qDownBIndex - 2];
+                }
 
-                            if (eAPT->sV[k].touched == 0) {
-                                eAPT->sV[currElement].newEdgesBelow += tree->vArr[k].edgesBelow + 1;
-                            } else {
-                                eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
-                            }
-                            //if (eAPT->sV[k].touched == 0)
-                            //    eAPT->sV[k].newEdgesBelow = tree->vArr[k].edgesBelow;
-                            //eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
-                        }
+                #pragma omp parallel num_threads(thread_nums)
+                {
+                    #pragma omp for
+                    for (int64_t i = QueueDownBorders[qDownBIndex - 2]; i < QueueDownBorders[qDownBIndex - 1]; i++) {
 
-			if(tree->vArr[k].level == levelCurrMinusOne){
-				// Checking to see if "k" has been touched before.
-				if(eAPT->sV[k].touched==0){
-					eAPT->sV[k].newDelta += tree->vArr[k].delta;
-					upCounter++;
-					// Marking element as touched in the ascent stage.
-					eAPT->sV[k].touched=-1;
+                        int64_t currElement = QueueDown[i];
+                        int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
+                        eAPT->sV[currElement].newEdgesBelow = 0;
+                        STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
+                        {
+                                uint64_t k = STINGER_EDGE_DEST;
+                                // Checking that the vertices are in different levels.
 
-					QueueUp[QUpEnd] = k;
-					if(depthUp==-1)
-						depthUp=tree->vArr[QueueUp[QUpStart]].level;
-					QUpEnd++;
+                                if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
 
-                                        if (k != parentVertex)
+                                    if (eAPT->sV[k].touched == 0) {
+                                        eAPT->sV[currElement].newEdgesBelow += tree->vArr[k].edgesBelow + 1;
+                                    } else {
+                                        eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
+                                    }
+                                }
+
+                                if(tree->vArr[k].level == levelCurrMinusOne){
+                                        // Checking to see if "k" has been touched before.
+                                        if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
+                                                eAPT->sV[k].newDelta += tree->vArr[k].delta;
+                                                upCounter++;
+                                                // Marking element as touched in the ascent stage.
+                                                eAPT->sV[k].touched=-1;
+
+                                                __sync_bool_compare_and_swap(&depthUp, -1, tree->vArr[k].level);
+                                                QueueUp[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
+
+                                                if (k != parentVertex)
+                                                    eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+                                        }
+                                }
+                                
+                                if (tree->vArr[k].level == tree->vArr[currElement].level + 1 && eAPT->sV[k].touched != 0) { 
+                                    eAPT->sV[currElement].newDelta +=
+                                                ((bc_t)eAPT->sV[currElement].newPathsToRoot/(bc_t)eAPT->sV[k].newPathsToRoot)*
+                                                (bc_t)(eAPT->sV[k].newDelta+1);
+                                    // For the elements that are touched in the ascent stage it is necessary to
+                                    // to reduce the values that they previously had.
+                                    // In addition to this, the "parentVertex" that is connected to "startVertex", i.e.
+                                    // the vertices of the new edge, needs to increase its betweenness centrality
+                                    // following the new connection, without removing the old delta value.
+                                    if(eAPT->sV[currElement].touched<0 && ( currElement!=parentVertex  || k!=startVertex)){
+                                        eAPT->sV[currElement].newDelta -=
+                                                ((bc_t)tree->vArr[currElement].pathsToRoot/(bc_t)tree->vArr[k].pathsToRoot)*
+                                                (bc_t)(tree->vArr[k].delta+1);
+                                        
+                                    }
+                                }
+
+                                        
+                                // Vertices that did not move and that one of their neighbors move up(such that
+                                //    the vertices are now in the same level).
+                                if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[currElement].IMoved==1 && eAPT->sV[k].IMoved<0) )){
+                                    // Checking to see if "k" has been touched before.
+                                    //if(eAPT->sV[k].touched==0){
+                                    if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
+                                            eAPT->sV[k].newDelta += tree->vArr[k].delta;
+                                            
+                                            upCounter++;
+                                            // Marking element as touched in the ascent stage.
+                                            eAPT->sV[k].touched=-2;
+                                            __sync_bool_compare_and_swap(&depthSame, -1, tree->vArr[k].level);
+                                            QueueSame[__sync_fetch_and_add(qEndSame_nxt, 1)] = k;
                                             eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-				}
+                                    }
+                                    // Paths that previosul went through this vertex no longer go through them, thus the
+                                    // shortest path count(BC) is reduced.
+                                                                        
+                                }
 
-				eAPT->sV[k].newDelta +=
-					((bc_t)eAPT->sV[k].newPathsToRoot/(bc_t)eAPT->sV[currElement].newPathsToRoot)*
-					(bc_t)(eAPT->sV[currElement].newDelta+1);
+                                if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[k].IMoved==1 && eAPT->sV[currElement].IMoved<0) )){
+                                    eAPT->sV[currElement].newDelta -=
+                                            ((bc_t)tree->vArr[currElement].pathsToRoot/(bc_t)tree->vArr[k].pathsToRoot)*
+                                            (bc_t)(tree->vArr[k].delta+1);
 
-				// For the elements that are touched in the ascent stage it is necessary to
-				// to reduce the values that they previously had.
-				// In addition to this, the "parentVertex" that is connected to "startVertex", i.e.
-				// the vertices of the new edge, needs to increase its betweenness centrality
-				// following the new connection, without removing the old delta value.
-				if(eAPT->sV[k].touched<0 && ( k!=parentVertex  || currElement!=startVertex)){
-					eAPT->sV[k].newDelta -=
-						((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
-						(bc_t)(tree->vArr[currElement].delta+1);
-				}
-			}
-			// Vertices that did not move and that one of their neighbors move up(such that
-			//    the vertices are now in the same level).
-			else if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[currElement].IMoved==1 && eAPT->sV[k].IMoved<0) )){
-				// Checking to see if "k" has been touched before.
-				if(eAPT->sV[k].touched==0){
-					eAPT->sV[k].newDelta += tree->vArr[k].delta;
-
-					upCounter++;
-					// Marking element as touched in the ascent stage.
-					eAPT->sV[k].touched=-2;
-					QueueSame[QSameEnd]=k;
-					if(depthSame==-1)
-						depthSame=tree->vArr[QueueSame[QSameStart]].level;
-					QSameEnd++;
-					eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-				}
-
-				// Paths that previosul went through this vertex no longer go through them, thus the
-				// shortest path count(BC) is reduced.
-				eAPT->sV[k].newDelta -=
-					((bc_t)tree->vArr[k].pathsToRoot/(bc_t)tree->vArr[currElement].pathsToRoot)*
-					(bc_t)(tree->vArr[currElement].delta+1);
-			}
-		}
-		STINGER_FORALL_EDGES_OF_VTX_END();
+                                }
+                        }
+                        STINGER_FORALL_EDGES_OF_VTX_END();
 
 #if COUNT_TRAVERSALS==1
-		eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
-		eAPT->dynamicTraverseVerticeCounter++;
+                        eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
+                        eAPT->dynamicTraverseVerticeCounter++;
 #endif
-		if(currElement!=currRoot){
-			eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
-		}
-	}  
+                        if(currElement!=currRoot){
+                                eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
+                        }        
+                    }
+                }
+                qDownBIndex -= 2;
 
-	for(uint64_t c = 0; c <= qDownEndMarker; c++){
+            }
+
+
+            if (operation == 1) {
+                *qStart = *qStart_nxt;
+                *qEnd = *qEnd_nxt;
+                *qStart_nxt = *qEnd;
+                *qEnd_nxt = *qStart_nxt;
+
+                int64_t thread_nums = cores;
+                if (*qEnd - *qStart < cores) {
+                    thread_nums = *qEnd - *qStart;
+                }
+
+                #pragma omp parallel num_threads(thread_nums)
+                {
+                    #pragma omp for
+                    for (int64_t i = *qStart; i < *qEnd; i++) {
+                        int64_t currElement = QueueUp[i];
+                        int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
+                        eAPT->sV[currElement].newEdgesBelow = 0;
+                        STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
+                        {
+                                uint64_t k = STINGER_EDGE_DEST;
+                                // Checking that the vertices are in different levels.
+
+                                if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+
+                                    if (eAPT->sV[k].touched == 0) {
+                                        eAPT->sV[currElement].newEdgesBelow += tree->vArr[k].edgesBelow + 1;
+                                    } else {
+                                        eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
+                                    }
+                                }
+
+                                if(tree->vArr[k].level == levelCurrMinusOne){
+                                        // Checking to see if "k" has been touched before.
+                                        if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
+                                                eAPT->sV[k].newDelta += tree->vArr[k].delta;
+                                                upCounter++;
+                                                // Marking element as touched in the ascent stage.
+                                                eAPT->sV[k].touched=-1;
+
+                                                //QueueUp[QUpEnd] = k;
+                                                __sync_bool_compare_and_swap(&depthUp, -1, tree->vArr[k].level);
+                                                QueueUp[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
+
+                                                if (k != parentVertex)
+                                                    eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+                                        }
+                                }
+                                
+                                if (tree->vArr[k].level == tree->vArr[currElement].level + 1 && eAPT->sV[k].touched != 0) { 
+                                    eAPT->sV[currElement].newDelta +=
+                                                ((bc_t)eAPT->sV[currElement].newPathsToRoot/(bc_t)eAPT->sV[k].newPathsToRoot)*
+                                                (bc_t)(eAPT->sV[k].newDelta+1);
+                                    // For the elements that are touched in the ascent stage it is necessary to
+                                    // to reduce the values that they previously had.
+                                    // In addition to this, the "parentVertex" that is connected to "startVertex", i.e.
+                                    // the vertices of the new edge, needs to increase its betweenness centrality
+                                    // following the new connection, without removing the old delta value.
+                                    if(eAPT->sV[currElement].touched<0 && ( currElement!=parentVertex  || k!=startVertex)){
+                                        eAPT->sV[currElement].newDelta -=
+                                                ((bc_t)tree->vArr[currElement].pathsToRoot/(bc_t)tree->vArr[k].pathsToRoot)*
+                                                (bc_t)(tree->vArr[k].delta+1);
+                                        
+                                    }
+                                }
+
+                                        
+                                // Vertices that did not move and that one of their neighbors move up(such that
+                                //    the vertices are now in the same level).
+                                if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[currElement].IMoved==1 && eAPT->sV[k].IMoved<0) )){
+                                    // Checking to see if "k" has been touched before.
+                                    //if(eAPT->sV[k].touched==0){
+                                    if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
+                                            eAPT->sV[k].newDelta += tree->vArr[k].delta;
+                                            
+                                            upCounter++;
+                                            // Marking element as touched in the ascent stage.
+                                            eAPT->sV[k].touched=-2;
+                                            //QueueSame[QSameEnd]=k;
+                                            
+                                            __sync_bool_compare_and_swap(&depthSame, -1, tree->vArr[k].level);
+                                            QueueSame[__sync_fetch_and_add(qEndSame_nxt, 1)]=k;
+                                            eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+                                    }
+                                    // Paths that previosul went through this vertex no longer go through them, thus the
+                                    // shortest path count(BC) is reduced.
+                                                                        
+                                }
+
+                                if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[k].IMoved==1 && eAPT->sV[currElement].IMoved<0) )){
+                                    eAPT->sV[currElement].newDelta -=
+                                            ((bc_t)tree->vArr[currElement].pathsToRoot/(bc_t)tree->vArr[k].pathsToRoot)*
+                                            (bc_t)(tree->vArr[k].delta+1);
+
+                                }
+                        }
+                        STINGER_FORALL_EDGES_OF_VTX_END();
+
+#if COUNT_TRAVERSALS==1
+                        eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
+                        eAPT->dynamicTraverseVerticeCounter++;
+#endif
+                        if(currElement!=currRoot){
+                                eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
+                        } 
+                    }
+                }
+                *qStart = *qEnd;
+            }
+
+            if (operation == 2) {
+                *qStartSame = *qStartSame_nxt;
+                *qEndSame = *qEndSame_nxt;
+                *qStartSame_nxt = *qEndSame;
+                *qEndSame_nxt = *qStartSame_nxt;
+
+                int64_t thread_nums = cores;
+                if (*qEndSame - *qStartSame < cores) {
+                    thread_nums = *qEndSame - *qStartSame;
+                }
+
+                #pragma omp parallel num_threads(thread_nums)
+                {
+                    #pragma omp for
+                    for (int64_t i = *qStartSame; i < *qEndSame; i++) {
+                        int64_t currElement = QueueSame[i];
+                        int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
+                        eAPT->sV[currElement].newEdgesBelow = 0;
+                        STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
+                        {
+                                uint64_t k = STINGER_EDGE_DEST;
+                                // Checking that the vertices are in different levels.
+
+                                if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
+
+                                    if (eAPT->sV[k].touched == 0) {
+                                        eAPT->sV[currElement].newEdgesBelow += tree->vArr[k].edgesBelow + 1;
+                                    } else {
+                                        eAPT->sV[currElement].newEdgesBelow += eAPT->sV[k].newEdgesBelow + 1;
+                                    }
+                                }
+
+                                if(tree->vArr[k].level == levelCurrMinusOne){
+                                        // Checking to see if "k" has been touched before.
+                                        if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
+                                                eAPT->sV[k].newDelta += tree->vArr[k].delta;
+                                                upCounter++;
+                                                // Marking element as touched in the ascent stage.
+                                                eAPT->sV[k].touched=-1;
+
+                                                __sync_bool_compare_and_swap(&depthUp, -1, tree->vArr[k].level);
+                                                QueueUp[__sync_fetch_and_add(qEnd_nxt, 1)] = k;
+
+                                                if (k != parentVertex)
+                                                    eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+                                        }
+                                }
+                                
+                                if (tree->vArr[k].level == tree->vArr[currElement].level + 1 && eAPT->sV[k].touched != 0) { 
+                                    eAPT->sV[currElement].newDelta +=
+                                                ((bc_t)eAPT->sV[currElement].newPathsToRoot/(bc_t)eAPT->sV[k].newPathsToRoot)*
+                                                (bc_t)(eAPT->sV[k].newDelta+1);
+                                    // For the elements that are touched in the ascent stage it is necessary to
+                                    // to reduce the values that they previously had.
+                                    // In addition to this, the "parentVertex" that is connected to "startVertex", i.e.
+                                    // the vertices of the new edge, needs to increase its betweenness centrality
+                                    // following the new connection, without removing the old delta value.
+                                    if(eAPT->sV[currElement].touched<0 && ( currElement!=parentVertex  || k!=startVertex)){
+                                        eAPT->sV[currElement].newDelta -=
+                                                ((bc_t)tree->vArr[currElement].pathsToRoot/(bc_t)tree->vArr[k].pathsToRoot)*
+                                                (bc_t)(tree->vArr[k].delta+1);
+                                        
+                                    }
+                                }
+
+                                        
+                                // Vertices that did not move and that one of their neighbors move up(such that
+                                //    the vertices are now in the same level).
+                                if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[currElement].IMoved==1 && eAPT->sV[k].IMoved<0) )){
+                                    // Checking to see if "k" has been touched before.
+                                    //if(eAPT->sV[k].touched==0){
+                                    if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
+                                            eAPT->sV[k].newDelta += tree->vArr[k].delta;
+                                            
+                                            upCounter++;
+                                            // Marking element as touched in the ascent stage.
+                                            eAPT->sV[k].touched=-2;
+                                            __sync_bool_compare_and_swap(&depthSame, -1, tree->vArr[k].level);
+                                            QueueSame[__sync_fetch_and_add(qEndSame_nxt, 1)]=k;
+                                            eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
+                                    }
+                                    // Paths that previosul went through this vertex no longer go through them, thus the
+                                    // shortest path count(BC) is reduced.
+                                                                        
+                                }
+
+                                if(tree->vArr[k].level == tree->vArr[currElement].level && ((eAPT->sV[k].IMoved==1 && eAPT->sV[currElement].IMoved<0) )){
+                                    eAPT->sV[currElement].newDelta -=
+                                            ((bc_t)tree->vArr[currElement].pathsToRoot/(bc_t)tree->vArr[k].pathsToRoot)*
+                                            (bc_t)(tree->vArr[k].delta+1);
+
+                                }
+                        }
+                        STINGER_FORALL_EDGES_OF_VTX_END();
+
+#if COUNT_TRAVERSALS==1
+                        eAPT->dynamicTraverseEdgeCounter+=stinger_typed_outdegree(sStinger,currElement,0);
+                        eAPT->dynamicTraverseVerticeCounter++;
+#endif
+                        if(currElement!=currRoot){
+                                eAPT->sV[currElement].totalBC+=eAPT->sV[currElement].newDelta-tree->vArr[currElement].delta;
+                        }                                             
+                    }
+                } 
+                *qStartSame = *qEndSame;
+            }
+
+        }
+
+        for(uint64_t c = 0; c <= qDownEndMarker; c++){
 		uint64_t k=QueueDown[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
 		tree->vArr[k].pathsToRoot=eAPT->sV[k].newPathsToRoot;
@@ -703,7 +964,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
         eAPT->sV[startVertex].newEdgesAbove = 0;
         eAPT->sV[parentVertex].newEdgesAbove = 0;
 
-	for(uint64_t c = 0; c < QSameEnd; c++){
+        for (uint64_t c = 0; c < *qEndSame; c++) {
 		uint64_t k=QueueSame[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
@@ -715,7 +976,8 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 		eAPT->sV[k].newPathsToRoot=0;
                 eAPT->sV[k].newEdgesBelow = 0;
 	}
-	for(uint64_t c = 0; c < QUpEnd; c++){
+
+	for(uint64_t c = 0; c < *qEnd; c++){
 		uint64_t k=QueueUp[c];
 		tree->vArr[k].delta=eAPT->sV[k].newDelta;
                 tree->vArr[k].edgesBelow = eAPT->sV[k].newEdgesBelow;
@@ -737,6 +999,11 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
         eAPT->qEnd = 0;
         eAPT->qStart_nxt = 0;
         eAPT->qEnd_nxt = 0;
+
+        eAPT->qStartSame = 0;
+        eAPT->qEndSame = 0;
+        eAPT->qStartSame_nxt = 0;
+        eAPT->qEndSame_nxt = 0;
 
 	return;
 }

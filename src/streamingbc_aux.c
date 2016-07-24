@@ -248,6 +248,10 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     eapt->qStart_nxt = 0;
     eapt->qEnd_nxt = 0;
 
+    eapt->qStartSame = 0;
+    eapt->qEndSame = 0;
+    eapt->qStartSame_nxt = 0;
+    eapt->qEndSame_nxt = 0;
     return eapt;
 }
 

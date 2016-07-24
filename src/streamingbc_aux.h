@@ -141,6 +141,7 @@ void destroyParallelBetweennessArray(float** parallelList, int64_t threadCount);
     int64_t newEdgesBelow;
     int64_t newEdgesAbove;
     int64_t IMoved;
+
 }sbcV;
 
 
@@ -155,10 +156,10 @@ typedef struct {
     int64_t* touchedVerticesUp;
     int64_t* touchedVerticesDown;
 
-	uint64_t samelevelCounter;
-	uint64_t compConnCounter;
-	uint64_t adjacentCounter;
-	uint64_t movementCounter;
+    uint64_t samelevelCounter;
+    uint64_t compConnCounter;
+    uint64_t adjacentCounter;
+    uint64_t movementCounter;
 
     uint64_t staticTraverseVerticeCounter;
     uint64_t staticTraverseEdgeCounter;
@@ -173,8 +174,13 @@ typedef struct {
     int64_t qEnd;
     int64_t qStart_nxt;
     int64_t qEnd_nxt;
-
-	uint64_t dummy[8];
+    
+    int64_t qStartSame;
+    int64_t qEndSame;
+    int64_t qStartSame_nxt;
+    int64_t qEndSame_nxt;
+ 
+    uint64_t dummy[8];
 
 } extraArraysPerThread;
 

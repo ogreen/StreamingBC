@@ -69,7 +69,7 @@ void BrandesApproxCaseParallel(bcForest* forest, struct stinger* sStinger, uint6
 		for(uint64_t t=0;t<NT;t++) {
 			forest->totalBC[v]+=eAPT[t]->sV[v].totalBC;
 			eAPT[t]->sV[v].totalBC = 0.0;
-        }
+        }	
     }
 }
 
@@ -165,5 +165,5 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 		sEnd--;
 	}
     
-	return -1;
+        return -1;
 }
