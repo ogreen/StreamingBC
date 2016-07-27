@@ -27,7 +27,6 @@
 
 #define COUNT 50
 
-
 typedef enum{
     UP_INSERT = 0,
     UP_DELETE,
@@ -193,9 +192,9 @@ int main(int argc, char *argv[])
 
                 CreateStingerFromCSR(CSRGraph,&stingerGraph);
                 if(randomSeed==0) {
-                    int seed = time(NULL);
-                    srand(seed);
-                    printf("seed: %ld\n", seed);
+                    time_t t = time(NULL);
+                    srand(t);
+                    printf("seed: %ld\n", t);
                 }
                 else
                     srand(randomSeed);
@@ -357,10 +356,32 @@ int main(int argc, char *argv[])
                                                 root, j, beforeTree->vArr[j].edgesBelow, afterTree->vArr[j].edgesBelow);
                         }
                     }
+
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if (beforeTree->vArr[j].pathsToRoot != afterTree->vArr[j].pathsToRoot) {
+                            printf("Error in sigma value - root: %ld, vertex: %ld, before: %ld, after: %ld\n",
+                                                root, j, beforeTree->vArr[j].pathsToRoot, afterTree->vArr[j].pathsToRoot);
+                        }
+                    }
+
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if (beforeTree->vArr[j].level != afterTree->vArr[j].level) {
+                            printf("Error in level value - root: %ld, vertex: %ld, before: %ld, after: %ld\n",
+                                                root, j, beforeTree->vArr[j].level, afterTree->vArr[j].level);
+                        }
+                    }
+                    
+                    for (int j = 0; j < beforeBCForest->NV; j++) {
+                        if ((beforeTree->vArr[j].delta - afterTree->vArr[j].delta) > 0.001 ||
+                            (afterTree->vArr[j].delta - beforeTree->vArr[j].delta) > 0.001) {
+                            printf("Error in delta value - root: %ld, vertex: %ld, before: %lf, after: %lf\n",
+                                                root, j, beforeTree->vArr[j].delta, afterTree->vArr[j].delta);
+                        }
+                    }
                 } 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
                 
-                destroyExtraArraysForThreads(eAPT_perThread,NT,NV); 
+                destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
 		DestroyForestApproximate(&beforeBCForest,rootArrayForApproximation, NK);
 
 		//-------END
@@ -455,16 +476,19 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		int64_t* insertionArrayDest, int64_t insertionCount)
 {
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
-         
-        /*
-        stinger_remove_edge(stingerGraph, 0, 14, 18);
-        stinger_remove_edge(stingerGraph, 0, 18, 14);
 
-        insertionArraySrc[0] = 151;
-        insertionArrayDest[0] = 73;
-        */
-         
-        
+        #if 0
+        src = 556;
+        dest = 11371;
+
+        stinger_remove_edge(stingerGraph, 0, src, dest);
+        stinger_remove_edge(stingerGraph, 0, dest, src);
+
+        printf("src, dest: %ld, %ld\n", src, dest);
+        insertionArraySrc[0] = src;
+        insertionArrayDest[0] = dest;
+        #endif
+          
         while (ins<insertionCount)
 	{
 		src = rand() % NV;
@@ -495,8 +519,10 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		stinger_remove_edge(stingerGraph,0,src,dest);
 		stinger_remove_edge(stingerGraph,0,dest,src);
 
+                printf("src, dest: %ld, %ld\n", src, dest);
 		insertionArraySrc[ins]=src;
 		insertionArrayDest[ins]=dest;
+		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
 	}
         
@@ -506,17 +532,30 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
                 int64_t* deletionArrayDest, int64_t deletionCount)
 {
     
-    int64_t del = 0, src, dest;    
-    
-    #if 0
-    src = 1;
-    dest = 7;
+    int64_t del = 0, src, dest;
 
+    #if 0
+    src = 14170;
+    dest = 1103;
+    #endif
+    #if 0
+    src = 14512;
+    dest = 8365;
+    #endif
+
+    #if 0
+    src = 15;
+    dest = 6;
+    #endif
+
+    #if 0
     stinger_insert_edge(stingerGraph, 0, src, dest, 0, 0);
     stinger_insert_edge(stingerGraph, 0, dest, src, 0, 0);
 
-    deletionArraySrc[del] = src;
-    deletionArrayDest[del] = dest;
+    deletionArraySrc[0] = src;
+    deletionArrayDest[0] = dest;
+     
+    printf("Src, Dest: %ld, %ld\n", src, dest);
     #endif
 
     while (del < deletionCount)
@@ -541,6 +580,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger* stingerGraph, int64_t
         del++;
     }
 }
+
 
 void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, int64_t *NK, int64_t *NT,
                                         int64_t *randomSeed, int64_t *iterationCount, char *initial_graph_name[1024],
@@ -640,7 +680,6 @@ void hostParseArgsVitalUpdate(int argc, char** argv, int64_t *NV, int64_t *NE, i
 					exit(-1);
 				}
                                 *operation = intout;
-                                printf("operation_here\n");
 				break;
                         case 'L':
                                 errno = 0;

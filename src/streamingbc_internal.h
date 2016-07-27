@@ -30,7 +30,7 @@ void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
 
 void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                             uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
-                            uint64_t prevDist,  extraArraysPerThread* eAPT);
+                            uint64_t prevDist,  extraArraysPerThread* eAPT, uint64_t cores);
 
 
 //----------------------------------------------
@@ -39,7 +39,7 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                         uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
-                        extraArraysPerThread *eAPT);
+                        extraArraysPerThread *eAPT, uint64_t cores);
 
 void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                 uint64_t startVertex, uint64_t parentVertex, extraArraysPerThread *eAPT);

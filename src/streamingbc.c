@@ -186,19 +186,10 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sSt
     return returnsei;
 }
 
-
 StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStinger, uint64_t oldU, uint64_t oldV,
                             uint64_t *rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
                             extraArraysPerThread **eAPT, uint32_t loadBalancing) {
     omp_set_num_threads(NT);
-
-    int64_t adjRootArray[NK];
-    int64_t moveRootArray[NK];
-
-    for (int64_t i = 0; i < NK; i++){
-        adjRootArray[i] = 0;
-        moveRootArray[i] = 0;
-    }
 
     uint64_t currRoot = 0;
     uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
@@ -268,7 +259,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
         STINGER_FORALL_EDGES_OF_VTX_END();
         if (extraParents >= 1){                 
             removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex, 
-                        tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
+                        tree->vArr[parentVertex].pathsToRoot, myExtraArrays, (uint64_t)1);
             //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;
             adjacent++;
