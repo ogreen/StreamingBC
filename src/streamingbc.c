@@ -265,7 +265,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
             adjacent++;
         }
         else{ 
-            moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
+            moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays, (uint64_t)2);
             //printf("%.9lf\n",  (double) caseTime); fflush(stdout);
             eAPT[thread]->movementCounter++;
             movement++;
