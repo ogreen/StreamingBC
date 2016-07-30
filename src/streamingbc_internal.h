@@ -42,7 +42,7 @@ void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger
                         extraArraysPerThread *eAPT, uint64_t cores);
 
 void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
-                uint64_t startVertex, uint64_t parentVertex, extraArraysPerThread *eAPT);
+                uint64_t startVertex, uint64_t parentVertex, extraArraysPerThread *eAPT, uint64_t cores);
 
 
 

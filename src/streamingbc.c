@@ -292,3 +292,4 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest *forest, struct stinger *sStin
     
     return returnSEI;
 }
+
