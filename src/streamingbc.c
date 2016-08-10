@@ -122,10 +122,10 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         if(diff < -1 || diff > 1) {
 
             if(diff<-1){
-                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)2);
+                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)1);
             }
             else{
-                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)2);
+                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)1);
             }
             //printf("%.9lf\n", (double)caseTime); fflush(stdout); 
             eAPT[thread]->movementCounter++;

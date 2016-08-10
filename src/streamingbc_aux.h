@@ -155,6 +155,7 @@ typedef struct {
     int64_t* Stack;
     int64_t* touchedVerticesUp;
     int64_t* touchedVerticesDown;
+    int64_t* tqBorders;
 
     uint64_t samelevelCounter;
     uint64_t compConnCounter;
@@ -179,6 +180,11 @@ typedef struct {
     int64_t qEndSame;
     int64_t qStartSame_nxt;
     int64_t qEndSame_nxt;
+
+    int64_t tqStart;
+    int64_t tqEnd;
+    int64_t tqStart_nxt;
+    int64_t tqEnd_nxt;
  
     uint64_t dummy[8];
 

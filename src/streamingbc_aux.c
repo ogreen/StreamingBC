@@ -224,6 +224,7 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     eapt->Stack = (int64_t*)malloc(2 * NV*sizeof(int64_t));
     eapt->touchedVerticesUp = (int64_t*) malloc(NV * sizeof(int64_t));
     eapt->touchedVerticesDown = (int64_t*) malloc(NV * sizeof(int64_t));
+    eapt->tqBorders = (int64_t*) malloc(NV * sizeof(int64_t));
     //makeArrayOfLists(&eapt->multiLevelQueues,NV);
     eapt->queue = (queue_t*) malloc(sizeof(queue_t));
     eapt->queue->size = 0;
@@ -253,6 +254,11 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     eapt->qEndSame = 0;
     eapt->qStartSame_nxt = 0;
     eapt->qEndSame_nxt = 0;
+
+    eapt->tqStart = 0;
+    eapt->tqEnd = 0;
+    eapt->tqStart_nxt = 0;
+    eapt->tqEnd_nxt = 0;
     return eapt;
 }
 
@@ -277,6 +283,7 @@ void destroyExtraArraysPerThread(extraArraysPerThread* eapt,int64_t NV){
     free(eapt->queue->nodes);
     free(eapt->queue);
     free(eapt->levelIndices); 
+    free(eapt->tqBorders);
     //destroyArrayOfLists(&eapt->multiLevelQueues,NV);
     free(eapt);
 }
