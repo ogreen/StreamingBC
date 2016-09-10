@@ -35,3 +35,4 @@ StreamingExtraInfo insertVertexStreamingBC(bcForest* forest, struct stinger* sSt
 StreamingExtraInfo deleteVertexStreamingBC(bcForest* forest, struct stinger* sStinger, uint64_t src,
                        uint64_t* adjacencyArray,uint64_t* adjacencySize, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT, extraArraysPerThread** eAPT);
 
+void prefixSum(int64_t *worksValues, int64_t NT, int64_t NK); 

@@ -16,7 +16,7 @@
 #define STINGER_MAX_LVERTICES (1L<<22)
 #else
 /* much smaller for quick testing */
-#define STINGER_MAX_LVERTICES (1L<<21)
+#define STINGER_MAX_LVERTICES (1L<<22)
 #endif
 #endif
 /** Number of edges in each edge block */

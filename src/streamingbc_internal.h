@@ -26,11 +26,20 @@ uint64_t BrandesSingleTree(bcForest* forest, struct stinger* sStinger,
 
 void addEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger,
                             uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
-                            uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT, uint64_t cores);
+                            uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT); 
 
 void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
                             uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
+                            uint64_t prevDist,  extraArraysPerThread* eAPT); 
+
+void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
+                            uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
+                            uint64_t addedPathsToRoot,  extraArraysPerThread* eAPT, uint64_t cores);
+
+void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
+                            uint64_t currRoot, uint64_t startVertex, uint64_t parentVertex,
                             uint64_t prevDist,  extraArraysPerThread* eAPT, uint64_t cores);
+
 
 
 //----------------------------------------------
@@ -39,11 +48,16 @@ void moveUpTreeBrandes(bcForest* forest, struct stinger* sStinger,
 
 void removeEdgeWithoutMovementBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                         uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
-                        extraArraysPerThread *eAPT, uint64_t cores);
+                        extraArraysPerThread *eAPT);
 
 void moveDownTreeBrandes(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
+                uint64_t startVertex, uint64_t parentVertex, extraArraysPerThread *eAPT); 
+
+
+void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
+                        uint64_t startVertex, uint64_t parentVertex, uint64_t deletedPathsFromRoot, 
+                        extraArraysPerThread *eAPT, uint64_t cores);
+
+void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t currRoot, 
                 uint64_t startVertex, uint64_t parentVertex, extraArraysPerThread *eAPT, uint64_t cores);
-
-
-
 

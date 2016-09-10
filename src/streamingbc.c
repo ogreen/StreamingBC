@@ -71,7 +71,7 @@ int64_t compareArrays(const void *arr1, const void *arr2) {
 StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStinger,
         uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation,int64_t NK, int64_t NV, int64_t NT,
         extraArraysPerThread** eAPT, uint32_t loadBalancing){
-    omp_set_num_threads(NT);
+    //omp_set_num_threads(NT);
 
     int64_t workPerVertex[NK][2]; // First column has vertex ids, second col has work values per id.
     uint64_t currRoot = 0;
@@ -105,7 +105,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
     uint64_t r;
 
-    #pragma omp parallel for schedule(dynamic,1)
+    //#pragma omp parallel for schedule(dynamic,1)
     for(r = 0; r < NK; r++)
     {
         int64_t i = workPerVertex[r][0];
@@ -122,10 +122,12 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         if(diff < -1 || diff > 1) {
 
             if(diff<-1){
-                moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)1);
+                moveUpTreeBrandesFG(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)NT);
+                //moveUpTreeBrandes(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays);
             }
             else{
-                moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)1);
+                moveUpTreeBrandesFG(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)NT);
+                //moveUpTreeBrandes(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays);
             }
             //printf("%.9lf\n", (double)caseTime); fflush(stdout); 
             eAPT[thread]->movementCounter++;
@@ -133,12 +135,13 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
         // Newly inserted edge is connecting vertices that were in adjacent levels before insertions
         else if(diff == -1 || diff == 1){
 
-            //printf("Case II root: %ld\n", i); fflush(stdout);
             if(diff==-1) {
-                addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays, (uint64_t)1);
+                addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays, (uint64_t)NT);
+                //addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot,myExtraArrays);
             }
             else{
-                addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays, (uint64_t)1);
+                addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays, (uint64_t)NT);
+                //addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
             }
             //printf("%.9lf\n", (double) caseTime); fflush(stdout);
             eAPT[thread]->adjacentCounter++;
@@ -146,6 +149,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
 
     }
      
+    #if 0
     #pragma omp parallel for
     for(uint64_t v=0;v<NV;v++){
         for(uint64_t t=0;t<NT;t++){
@@ -153,6 +157,7 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest* forest, struct stinger* sStin
             eAPT[t]->sV[v].totalBC = 0.0;
         }
     }
+    #endif
 
 
     StreamingExtraInfo returnSEI={0,0,0,0};

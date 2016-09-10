@@ -1499,10 +1499,6 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
 	// Each level in the tree(max depth NV) has a queue and a counter specifiying how deep a specific deepth-queue is.
 	// For simplicity, all elements are pushed both into the multi-level queue and into the regular queue which is used
 	// for the BFS traversal.
-        int threadTally[16];
-        for (int i = 0; i < 16; i++) {
-            threadTally[i] = 0;
-        }
 	#pragma omp parallel num_threads(cores) 
         {
         while (*qStart < *qEnd) {
@@ -1521,7 +1517,6 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
             #pragma omp for
             for (int64_t i = *qStart; i < *qEnd; i++) {
                 uint64_t currElement = QueueDown[i];
-                threadTally[omp_get_thread_num()]++;
                 int64_t levelCurrPlusOne = tree->vArr[currElement].level + 1;
                 int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched + 1;
 
@@ -1538,35 +1533,34 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
                                     deepestLevel = tree->vArr[k].level;
                             }
 
-                            __atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove - tree->vArr[currElement].edgesAbove + 
-                                                                eAPT->sV[currElement].newEdgesAbove,__ATOMIC_RELAXED);
-                            //__atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[currElement].edgesAbove, __ATOMIC_RELAXED);
-                            //__atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), eAPT->sV[currElement].newEdgesAbove,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove);
+                            __sync_fetch_and_sub(&(eAPT->sV[k].newEdgesAbove), tree->vArr[currElement].edgesAbove);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), eAPT->sV[currElement].newEdgesAbove);
 
                             //NEW
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
                             //eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
                             
                             // insert this vertex into the BFS queue
                             QueueDown[__atomic_fetch_add(qEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                             // indicate that it is in the next level of the BFS
                             // add new paths to root that go through current BFS Vertex
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
                             //eAPT->sV[k].newPathsToRoot += eAPT->sV[currElement].diffPath;
                             // pass on my new paths to root for its search
-                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                             //eAPT->sV[k].diffPath += eAPT->sV[currElement].diffPath;
                         }
                         // otherwise if it has been touched, but is specifically in the next level
                         // of the search (meaning it has more than one edge to the current level)
                         else if (eAPT->sV[k].touched != currElement) {
-                            __atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), -tree->vArr[currElement].edgesAbove,__ATOMIC_RELAXED);
-                            __atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), eAPT->sV[currElement].newEdgesAbove,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), -tree->vArr[currElement].edgesAbove);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), eAPT->sV[currElement].newEdgesAbove);
 
                             // add new paths to root that go through current BFS Vertex
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
                             // pass on my new paths to root for its search
-                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                         }
                     }
                 }
@@ -1636,7 +1630,6 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
                     for (int64_t i = QueueDownBorders[qDownBIndex - 2]; i < QueueDownBorders[qDownBIndex - 1]; i++) {
 
                         int64_t currElement = QueueDown[i];
-                        threadTally[omp_get_thread_num()]++;
                         //eAPT->sV[currElement].touched = -1;
                         int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
                         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -1656,18 +1649,18 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
                                     //(*qEnd_nxt)++;
                                     QueueUp[__atomic_fetch_add(qEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                                     //eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-                                    __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                                    __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
 
                                     if (k != parentVertex) {
                                         //eAPT->sV[k].newEdgesBelow += tree->vArr[k].edgesBelow;
-                                        __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), tree->vArr[k].edgesBelow,__ATOMIC_RELAXED);
+                                        __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), tree->vArr[k].edgesBelow);
                                     }
                                 }
                                 if (k != parentVertex && tree->vArr[k].level <= tree->vArr[parentVertex].level) {
                                     //eAPT->sV[k].newEdgesBelow -= tree->vArr[currElement].edgesBelow;
-                                    __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), -tree->vArr[currElement].edgesBelow,__ATOMIC_RELAXED);
+                                    __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), -tree->vArr[currElement].edgesBelow);
                                     //eAPT->sV[k].newEdgesBelow += eAPT->sV[currElement].newEdgesBelow;
-                                    __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), eAPT->sV[currElement].newEdgesBelow,__ATOMIC_RELAXED);
+                                    __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), eAPT->sV[currElement].newEdgesBelow);
                                 }
                             }
                             
@@ -1728,7 +1721,6 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
                 #pragma omp for
                 for (int64_t i = *qStart; i < *qEnd; i++) {
                     int64_t currElement = QueueUp[i];
-                    threadTally[omp_get_thread_num()]++;
                     //eAPT->sV[currElement].touched = -1;
                     //(*qStart)++;
                     //__atomic_fetch_add(qStart, 1,__ATOMIC_RELAXED);
@@ -1750,18 +1742,18 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
                                 //(*qEnd_nxt)++;
                                 QueueUp[__atomic_fetch_add(qEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                                 //eAPT->sV[k].newPathsToRoot += tree->vArr[k].pathsToRoot;
-                                __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
                                 if (k != parentVertex) {
                                     //eAPT->sV[k].newEdgesBelow += tree->vArr[k].edgesBelow;
-                                    __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), tree->vArr[k].edgesBelow,__ATOMIC_RELAXED);
+                                    __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), tree->vArr[k].edgesBelow);
                                 }
                             }
 
                             if (k != parentVertex && tree->vArr[k].level <= tree->vArr[parentVertex].level) {
                                 //eAPT->sV[k].newEdgesBelow -= tree->vArr[currElement].edgesBelow;
-                                __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), -tree->vArr[currElement].edgesBelow,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), -tree->vArr[currElement].edgesBelow);
                                 //eAPT->sV[k].newEdgesBelow += eAPT->sV[currElement].newEdgesBelow;
-                                __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), eAPT->sV[currElement].newEdgesBelow,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), eAPT->sV[currElement].newEdgesBelow);
                             }
 
                         }
@@ -1839,11 +1831,6 @@ void addEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sStinger,
         eAPT->qStart_nxt = 0;
         eAPT->qEnd_nxt = 0;
 
-        printf("threadTally: ");
-        for (int i = 0; i < 16; i++) {
-            printf("%d ", threadTally[i]);
-        }
-        printf("\n");
 	return;
 }
 
@@ -1892,11 +1879,6 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
 	int64_t currElement=0; //dummy initilization - variable will be initialized in function.
         int operation = -1; // 0 - down, 1 - up, 2 - same for dependency accumulation.
         
-        int threadTally[16];
-        for (int i = 0; i < 16; i++) {
-            threadTally[i] = 0;
-        }
-
 	QueueDown[0] = startVertex;
 	eAPT->sV[startVertex].touched = 1;
 	eAPT->sV[startVertex].newPathsToRoot = eAPT->sV[parentVertex].newPathsToRoot;
@@ -1937,9 +1919,8 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                         //int64_t currElement = QueueDown[*qStart];
 
                         int64_t currElement = QueueDown[i];
-                        threadTally[omp_get_thread_num()]++;
                         int64_t touchedCurrPlusOne = eAPT->sV[currElement].touched+1;
-                        __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), -eAPT->sV[currElement].newEdgesAbove,__ATOMIC_RELAXED);
+                        __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), -eAPT->sV[currElement].newEdgesAbove);
 
                         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
                         {
@@ -1949,50 +1930,50 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                                                     (tree->vArr[currElement].level - tree->vArr[k].level + 1);
 
                                 int64_t newCurrLevel = 0;
-                                __atomic_fetch_add(&newCurrLevel, tree->vArr[currElement].level,__ATOMIC_RELAXED);
-                                __atomic_fetch_add(&newCurrLevel, -eAPT->sV[currElement].movementDelta,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&newCurrLevel, tree->vArr[currElement].level);
+                                __sync_fetch_and_add(&newCurrLevel, -eAPT->sV[currElement].movementDelta);
 
                                 uint64_t newKLevel = 0;
-                                __atomic_fetch_add(&newKLevel, tree->vArr[k].level,__ATOMIC_RELAXED);
-                                __atomic_fetch_add(&newKLevel, -computedDelta,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&newKLevel, tree->vArr[k].level);
+                                __sync_fetch_and_add(&newKLevel, -computedDelta);
 
                                 if (computedDelta < 0 && eAPT->sV[k].touched == 0) {
                                     if (computedDelta >= 0 && newKLevel < newCurrLevel) {
-                                        __atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove,__ATOMIC_RELAXED);
-                                        __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                                        __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove);
+                                        __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                     }
 
                                     if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
-                                        __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1,__ATOMIC_RELAXED);
+                                        __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1);
                                     }
                                 }
                                 //if(eAPT->sV[k].touched == 0 ){}
                                 else if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, touchedCurrPlusOne)) {
                                         if (computedDelta >= 0 && newKLevel < newCurrLevel) {
-                                            __atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), tree->vArr[k].edgesAbove);
+                                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                         }
 
                                         if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
-                                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1);
                                         }
                                         
                                         // if the adjacent vertex should be moved, put it in the queue
                                         if(computedDelta > 0){
-                                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].movementDelta), computedDelta,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].IMoved), 2,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].movementDelta), computedDelta);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].IMoved), 2);
                                             QueueDown[__atomic_fetch_add(qEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                                         }
                                         // Vertex that will not be moved has been found.
                                         else if(computedDelta == 0){
                                             //NEW
-                                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].movementDelta), computedDelta,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].IMoved), -eAPT->sV[k].IMoved,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].movementDelta), computedDelta);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].IMoved), -eAPT->sV[k].IMoved);
                                             QueueDown[__atomic_fetch_add(qEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                                         }
                                         // Vertex that the number of shortest path to the root does not change has been found.
@@ -2004,24 +1985,24 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                                 else if(eAPT->sV[k].touched == touchedCurrPlusOne){
                                         //int64_t computedDelta = eAPT->sV[currElement].movementDelta - (tree->vArr[currElement].level - tree->vArr[k].level + 1);
                                         if (computedDelta >= 0 && newKLevel < newCurrLevel) {
-                                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                         }
 
                                         if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
-                                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                         } 
                                         if(computedDelta >= 0){
-                                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
-                                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), eAPT->sV[currElement].diffPath);
+                                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                                         }
 
                                         
                                 }
                                 else if (computedDelta >= 0 && newKLevel < newCurrLevel) {
-                                    __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                                    __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                 }
                                 else if (computedDelta < 0 && tree->vArr[k].level < newCurrLevel) {
-                                    __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                                    __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                                 }
                         }
                         STINGER_FORALL_EDGES_OF_VTX_END();
@@ -2032,7 +2013,7 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                         eAPT->dynamicTraverseVerticeCounter++;
 #endif
                         // move ourself and retire
-                        __atomic_fetch_add(&(tree->vArr[currElement].level), -eAPT->sV[currElement].movementDelta,__ATOMIC_RELAXED);
+                        __sync_fetch_and_add(&(tree->vArr[currElement].level), -eAPT->sV[currElement].movementDelta);
                         appendDS2(queue, levelIndices, tree->vArr[currElement].level, currElement, omp_get_thread_num());
                         // Checking if a "deeper level" has been reached.
                         if(deepestLevel<tree->vArr[currElement].level)
@@ -2160,7 +2141,6 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                     for (int64_t i = QueueDownBorders[qDownBIndex - 2]; i < QueueDownBorders[qDownBIndex - 1]; i++) {
 
                         int64_t currElement = QueueDown[i];
-                        threadTally[omp_get_thread_num()]++;
                         int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
                         eAPT->sV[currElement].newEdgesBelow = 0;
                         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -2277,7 +2257,6 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                     #pragma omp for
                     for (int64_t i = *qStart; i < *qEnd; i++) {
                         int64_t currElement = QueueUp[i];
-                        threadTally[omp_get_thread_num()]++;
                         int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
                         eAPT->sV[currElement].newEdgesBelow = 0;
                         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -2396,7 +2375,6 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
                     #pragma omp for
                     for (int64_t i = *qStartSame; i < *qEndSame; i++) {
                         int64_t currElement = QueueSame[i];
-                        threadTally[omp_get_thread_num()]++;
                         int64_t levelCurrMinusOne = tree->vArr[currElement].level-1;
                         eAPT->sV[currElement].newEdgesBelow = 0;
                         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -2557,12 +2535,7 @@ void moveUpTreeBrandesFG(bcForest* forest, struct stinger* sStinger,
         eAPT->qStartSame_nxt = 0;
         eAPT->qEndSame_nxt = 0;
 
-        printf("threadTally: ");
-        for (int i = 0; i < 16; i++) {
-            printf("%d ", threadTally[i]);
-        }
-        printf("\n");
-        return;
+	return;
 }
 
 // Case 2 
@@ -2626,7 +2599,7 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                 uint64_t currElement = QueueDown[i];
 
                 if (currElement != startVertex) {
-                    __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[currElement].edgesAbove,__ATOMIC_RELAXED);
+                    __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[currElement].edgesAbove);
                 }
 
                 STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
@@ -2638,8 +2611,8 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                             && tree->vArr[currElement].level >= tree->vArr[startVertex].level) {
 
                         if (eAPT->sV[k].touched != 0) {
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), -tree->vArr[k].edgesAbove,__ATOMIC_RELAXED);
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), -tree->vArr[k].edgesAbove);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove);
                         }
                     }
 
@@ -2653,24 +2626,24 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                             // insert this vertex into the BFS queue
                             QueueDown[__atomic_fetch_add(qDownEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                            
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
 
                             // indicate that it is in the next level of the BFS
 
                             // add new paths to root that go through current BFS Vertex
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), -eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), -eAPT->sV[currElement].diffPath);
                             // pass on my new paths to root for its search
-                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                         }        
                         // otherwise if it has been touched, but is specifically in the next level
                         // of the search (meaning it has more than one edge to the current level)
                         //else if(eAPT->sV[k].touched == eAPT->sV[currElement].touched + 1){}
                         else if (eAPT->sV[k].touched != currElement) {
                             // add new paths to root that go through current BFS Vertex
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), -eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), -eAPT->sV[currElement].diffPath);
 
                             // pass on my new paths to root for its search
-                            __atomic_fetch_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].diffPath), eAPT->sV[currElement].diffPath);
                         }     
                     }
                 }
@@ -2728,7 +2701,7 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                     int64_t currElement = QueueDown[i];
 
                     if (currElement != parentVertex && currElement != startVertex) {
-                        __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[currElement].edgesBelow,__ATOMIC_RELAXED);
+                        __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[currElement].edgesBelow);
                     }
                     STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
                     {
@@ -2741,15 +2714,15 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
 
 
                             if (eAPT->sV[k].touched != 0) {
-                                __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), -tree->vArr[k].edgesBelow,__ATOMIC_RELAXED);
-                                __atomic_fetch_add(&(eAPT->sV[k].newEdgesBelow), eAPT->sV[k].newEdgesBelow,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), -tree->vArr[k].edgesBelow);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newEdgesBelow), eAPT->sV[k].newEdgesBelow);
                             }
                         }
 
                         
                         if (tree->vArr[k].level == tree->vArr[parentVertex].level && __sync_bool_compare_and_swap(&(eAPT->sV[parentVertex].touched), 0, -1)) {
                             QueueUp[__atomic_fetch_add(qDownEnd_nxt, 1,__ATOMIC_RELAXED)] = parentVertex;
-                            __atomic_fetch_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot);
                             eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta -
                                     ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
                                     (bc_t)(tree->vArr[startVertex].delta + 1);
@@ -2762,7 +2735,7 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                             if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
                                 eAPT->sV[k].newDelta=tree->vArr[k].delta;
                                 // Marking element as touched in the ascent stage.
-                                __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
                                 QueueUp[__atomic_fetch_add(qDownEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                             }
                         }
@@ -2817,7 +2790,7 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
             for (int64_t i = *qDownStart; i < *qDownEnd; i++) {
                 int64_t currElement = QueueUp[i];
                 if (currElement != parentVertex && currElement != startVertex) {
-                    __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[currElement].edgesBelow,__ATOMIC_RELAXED);
+                    __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[currElement].edgesBelow);
                 }
                 STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger,currElement)
                 {
@@ -2829,15 +2802,15 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                             && tree->vArr[k].level > tree->vArr[currElement].level) {
 
                         if (eAPT->sV[k].touched != 0) {
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), -tree->vArr[k].edgesBelow,__ATOMIC_RELAXED);
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), eAPT->sV[k].newEdgesBelow,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), -tree->vArr[k].edgesBelow);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), eAPT->sV[k].newEdgesBelow);
                         }
                     }
 
                     
                     if (tree->vArr[k].level == tree->vArr[parentVertex].level && __sync_bool_compare_and_swap(&(eAPT->sV[parentVertex].touched), 0, -1)) {
                         QueueUp[__atomic_fetch_add(qDownEnd_nxt, 1,__ATOMIC_RELAXED)] = parentVertex;
-                        __atomic_fetch_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot,__ATOMIC_RELAXED);
+                        __sync_fetch_and_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot);
                         eAPT->sV[parentVertex].newDelta = tree->vArr[parentVertex].delta -
                                 ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
                                 (bc_t)(tree->vArr[startVertex].delta + 1);
@@ -2850,7 +2823,7 @@ void removeEdgeWithoutMovementBrandesFG(bcForest* forest, struct stinger* sSting
                         if (__sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
                             eAPT->sV[k].newDelta=tree->vArr[k].delta;
                             // Marking element as touched in the ascent stage.
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
                             QueueUp[__atomic_fetch_add(qDownEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                         }
                     }
@@ -3003,9 +2976,9 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
                     int64_t k = STINGER_EDGE_DEST;
                     
                     if (tree->vArr[k].level == tree->vArr[currElement].level + 1 && __sync_bool_compare_and_swap(&(eAPT->sV[k].touched), 0, -1)) {
-                        __atomic_fetch_add(&(eAPT->sV[k].newEdgesAbove), INFINITY_MY,__ATOMIC_RELAXED);
-                        __atomic_fetch_add(&(eAPT->sV[k].newLevel), INFINITY_MY,__ATOMIC_RELAXED);
-                        __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), INFINITY_MY,__ATOMIC_RELAXED);
+                        __sync_fetch_and_add(&(eAPT->sV[k].newEdgesAbove), INFINITY_MY);
+                        __sync_fetch_and_add(&(eAPT->sV[k].newLevel), INFINITY_MY);
+                        __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), INFINITY_MY);
                         touchedVerticesDown[__atomic_fetch_add(&tvDownEnd, 1,__ATOMIC_RELAXED)] = k;
                         Queue[__atomic_fetch_add(qEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                         eAPT->sV[k].newDelta = 0.0;
@@ -3080,7 +3053,7 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
                         else if (eAPT->sV[currElement].touched == SIBLING_ANCHORED && __sync_bool_compare_and_swap(&(eAPT->sV[k].touched), -2, SIBLING_ANCHORED)) {}
                          
                         else {
-                            __atomic_fetch_add(&(eAPT->sV[k].touched), 3,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].touched), 3);
                         }
                     } 
                 }
@@ -3220,20 +3193,20 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
 
                     if (eAPT->sV[currElement].newLevel == tree->vArr[k].level + 1 && eAPT->sV[k].touched == 0) {
                         if (__sync_bool_compare_and_swap(&(eAPT->sV[currElement].newPathsToRoot), INFINITY_MY, tree->vArr[k].pathsToRoot)) {}
-                        else { __atomic_fetch_add(&(eAPT->sV[currElement].newPathsToRoot), tree->vArr[k].pathsToRoot, __ATOMIC_RELAXED); }
+                        else { __sync_fetch_and_add(&(eAPT->sV[currElement].newPathsToRoot), tree->vArr[k].pathsToRoot); }
 
                         if (__sync_bool_compare_and_swap(&(eAPT->sV[currElement].newEdgesAbove), INFINITY_MY, tree->vArr[k].edgesAbove + 1)) {}
-                        else { __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1, __ATOMIC_RELAXED); }
+                        else { __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), tree->vArr[k].edgesAbove + 1); }
                     } else if (eAPT->sV[currElement].newLevel == eAPT->sV[k].newLevel + 1 && eAPT->sV[k].touched != 0) {
 
                         if (__sync_bool_compare_and_swap(&(eAPT->sV[currElement].newPathsToRoot), INFINITY_MY, eAPT->sV[k].newPathsToRoot)) {
                         } else {
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newPathsToRoot), eAPT->sV[k].newPathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newPathsToRoot), eAPT->sV[k].newPathsToRoot);
                         }
                         
                         if (__sync_bool_compare_and_swap(&(eAPT->sV[currElement].newEdgesAbove), INFINITY_MY, eAPT->sV[k].newEdgesAbove)) {
                         } else {
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesAbove), eAPT->sV[k].newEdgesAbove + 1);
                         }
                     }
                 }
@@ -3351,9 +3324,9 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
 
                         if (kLevel == currElementLevel + 1) {
                             if (eAPT->sV[k].touched != 0) {
-                                __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), eAPT->sV[k].newEdgesBelow + 1,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), eAPT->sV[k].newEdgesBelow + 1);
                             } else if (eAPT->sV[k].touched == 0) {
-                                __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[k].edgesBelow + 1,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[k].edgesBelow + 1);
                             }
                         }
 
@@ -3363,7 +3336,7 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
                                         ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
                                         (bc_t)(tree->vArr[startVertex].delta + 1);
 
-                                __atomic_fetch_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot);
                                 QueueUp[__atomic_fetch_add(qUpEnd_nxt, 1,__ATOMIC_RELAXED)] = parentVertex;
                             }
                         }
@@ -3376,7 +3349,7 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
                                 eAPT->sV[k].newDelta=tree->vArr[k].delta;
 
                                 // Marking element as touched in the ascent stage.
-                                __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                                __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
                                 QueueUp[__atomic_fetch_add(qUpEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                             }                 
                             
@@ -3448,9 +3421,9 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
 
                     if (kLevel == currElementLevel + 1) {
                         if (eAPT->sV[k].touched != 0) {
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), eAPT->sV[k].newEdgesBelow + 1,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), eAPT->sV[k].newEdgesBelow + 1);
                         } else if (eAPT->sV[k].touched == 0) {
-                            __atomic_fetch_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[k].edgesBelow + 1,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[currElement].newEdgesBelow), tree->vArr[k].edgesBelow + 1);
                         }
                     }
 
@@ -3460,7 +3433,7 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
                                     ((bc_t)tree->vArr[parentVertex].pathsToRoot / (bc_t)tree->vArr[startVertex].pathsToRoot) *
                                     (bc_t)(tree->vArr[startVertex].delta + 1);
 
-                            __atomic_fetch_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[parentVertex].newPathsToRoot), tree->vArr[parentVertex].pathsToRoot);
                             QueueUp[__atomic_fetch_add(qUpEnd_nxt, 1,__ATOMIC_RELAXED)] = parentVertex;
                         }
                     }
@@ -3473,7 +3446,7 @@ void moveDownTreeBrandesFG(bcForest* forest, struct stinger* sStinger, uint64_t 
                             eAPT->sV[k].newDelta=tree->vArr[k].delta;
 
                             // Marking element as touched in the ascent stage.
-                            __atomic_fetch_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot,__ATOMIC_RELAXED);
+                            __sync_fetch_and_add(&(eAPT->sV[k].newPathsToRoot), tree->vArr[k].pathsToRoot);
                             QueueUp[__atomic_fetch_add(qUpEnd_nxt, 1,__ATOMIC_RELAXED)] = k;
                         }                 
                         

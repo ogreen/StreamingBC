@@ -16,7 +16,8 @@
 #include "stinger-traversal.h"
 #include "xmalloc.h"
 
-#include "omp.h"
+//#include "omp.h"
+#include <omp.h>
 
 #define PRINT_NEIGHBORS(u) printf("Neighbors of %ld : ",u);{for(uint64_t k = 0; k < NV; k++) { if(graphAfter[u][k] == 1) printf("%ld ,",k);}  printf("\n");}
 #define PRINT_NEIGHBORS_GRAPH(u) printf("Neighbors of %ld : ",u);{for(uint64_t k = 0; k < NV; k++) { if(graphAfter[u][k] == 1) printf("%ld ,",k);}  printf("\n");}
@@ -25,7 +26,7 @@
 
 #define LINE_SIZE 100000
 
-#define COUNT 50
+#define COUNT 1
 
 typedef enum{
     UP_INSERT = 0,
@@ -119,7 +120,7 @@ int main(int argc, char *argv[])
         uint32_t operation = -1; // 1 for inserting, 0 for deleting.
         uint32_t loadBalancing = -1; // 1 to use load balancing, 0 otherwise.
         const int64_t threadArraySize = 1;
-        int64_t threadArray[] = {1};//{1,5,10,15,20,25,30,35,40}; 
+        int64_t threadArray[] = {16};//{1,5,10,15,20,25,30,35,40}; 
         
         int64_t insertionArraySrc[COUNT];
         int64_t insertionArrayDest[COUNT];
@@ -325,6 +326,7 @@ int main(int argc, char *argv[])
 
                 
                 // Remember to comment out the summing phase in streamingbc.c
+                #if 0
 		bcForest* afterBCForest=NULL;
 
 		afterBCForest=CreateForestApproximate(NV, rootArrayForApproximation, NK);
@@ -380,6 +382,7 @@ int main(int argc, char *argv[])
                     }
                 } 
 		destroyExtraArraysForThreads(eAPT_perThreadAfter,NT,NV);
+                #endif
                 
                 destroyExtraArraysForThreads(eAPT_perThread,NT,NV);
 		DestroyForestApproximate(&beforeBCForest,rootArrayForApproximation, NK);
@@ -477,6 +480,7 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 {
 	int64_t ins=0,src,dest,srcAdj,destInAdj,destCounter;
 
+        #if 0
         src = 1;
         dest = 2;
 
@@ -486,8 +490,8 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
         printf("src, dest: %ld, %ld\n", src, dest);
         insertionArraySrc[0] = src;
         insertionArrayDest[0] = dest;
+        #endif
           
-        #if 0
         while (ins<insertionCount)
 	{
 		src = rand() % NV;
@@ -524,7 +528,6 @@ void CreateRandomEdgeListFromGraph(struct stinger* stingerGraph, int64_t NV, int
 		//printf("%ld %ld %ld\n",src,dest,destInAdj);  fflush(stdout);
 		ins++;
 	}
-        #endif
         
 }
 //
