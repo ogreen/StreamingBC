@@ -18,27 +18,27 @@ typedef double bc_t;
 // Betweennes centrality data structures
 
 
-typedef struct{
+typedef struct {
     int64_t level;
     int64_t pathsToRoot;
     int64_t edgesBelow;
     int64_t edgesAbove;
     bc_t delta;
-}bcV;
+} bcV;
 
 typedef struct {
     int64_t NV;
-    bcV* vArr;
-	double dummy[4];
+    bcV * vArr;
+    double dummy[4];
 } bcTree;
-typedef bcTree* bcTreePtr;
+typedef bcTree * bcTreePtr;
 
 typedef struct {
-	bcTreePtr* forest;
-    bc_t* totalBC;
+    bcTreePtr * forest;
+    bc_t * totalBC;
     int64_t NV;
 } bcForest;
-typedef bcForest* bcForestPtr;
+typedef bcForest * bcForestPtr;
 
 typedef struct
 {
@@ -46,28 +46,28 @@ typedef struct
     uint64_t adjacent;
     uint64_t sameLevel;
     uint64_t connectedComponents;
-}StreamingExtraInfo;
+} StreamingExtraInfo;
 
-bcForest* CreateForestExact(int64_t numVertices);
-void DestroyForestExact(bcForest** deadForest);
+bcForest * CreateForestExact(int64_t numVertices);
+void DestroyForestExact(bcForest ** deadForest);
 
-bcForest* CreateForestApproximate(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize);
-void DestroyForestForApproximate(bcForest** deadForest, uint64_t* rootArray, uint64_t rootArraySize);
+bcForest * CreateForestApproximate(int64_t numVertices, uint64_t * rootArray, uint64_t rootArraySize);
+void DestroyForestForApproximate(bcForest ** deadForest, uint64_t * rootArray, uint64_t rootArraySize);
 
 
 //------------------------------------------------
 //------------------------------------------------
 // List
 
-typedef struct struct_node{
+typedef struct struct_node {
     int64_t id;
     int64_t aux_val;
-    struct struct_node *next;
+    struct struct_node * next;
 } node_t;
 
-typedef struct{
-    node_t *head;
-    node_t *tail;
+typedef struct {
+    node_t * head;
+    node_t * tail;
     int64_t size;
 } list_t;
 
@@ -79,7 +79,7 @@ typedef struct struct_queue_node {
 
 typedef struct queue {
     int64_t size;
-    queue_node_t* nodes;
+    queue_node_t * nodes;
 } queue_t;
 
 typedef struct struct_level_node_t {
@@ -89,24 +89,24 @@ typedef struct struct_level_node_t {
 } level_node_t;
 
 
-typedef list_t* list_ptr;
+typedef list_t * list_ptr;
 
-list_t* makeList(void);
-node_t* makeNode(int64_t);
-void append(list_t*,node_t*);
-void appendDS(queue_t*, level_node_t*, int64_t, int64_t);
-void appendDS2(queue_t*, level_node_t*, int64_t, int64_t, int64_t);
-node_t *getFirst(list_t*);
-queue_node_t* getFirstDS(queue_t*, level_node_t*, int64_t);
-void deleteFirst(list_t*);
-void deleteFirstDS(queue_t*, level_node_t*, int64_t);
-void printList(list_t*);
-void printListDS(queue_t*, level_node_t*, int64_t);
-void compareLists(list_t*, queue_t*, level_node_t*, int64_t);
-void emptyList(list_t*);
+list_t * makeList(void);
+node_t * makeNode(int64_t);
+void append(list_t *, node_t *);
+void appendDS(queue_t *, level_node_t *, int64_t, int64_t);
+void appendDS2(queue_t *, level_node_t *, int64_t, int64_t, int64_t);
+node_t * getFirst(list_t *);
+queue_node_t * getFirstDS(queue_t *, level_node_t *, int64_t);
+void deleteFirst(list_t *);
+void deleteFirstDS(queue_t *, level_node_t *, int64_t);
+void printList(list_t *);
+void printListDS(queue_t *, level_node_t *, int64_t);
+void compareLists(list_t *, queue_t *, level_node_t *, int64_t);
+void emptyList(list_t *);
 
-void makeArrayOfLists(list_ptr** aL,int64_t numberOfLists);
-void destroyArrayOfLists(list_ptr** aL,int64_t numberOfLists);
+void makeArrayOfLists(list_ptr ** aL, int64_t numberOfLists);
+void destroyArrayOfLists(list_ptr ** aL, int64_t numberOfLists);
 
 
 //------------------------------------------------
@@ -114,21 +114,21 @@ void destroyArrayOfLists(list_ptr** aL,int64_t numberOfLists);
 // Auxilary data structures
 
 
-uint64_t** createMultiLevelQueue(uint64_t NV);
-void destroyMultiLevelQueue(uint64_t** multiLevelQueue,uint64_t NV);
-uint64_t*** createParallelMultiLevelQueue(uint64_t NV, uint64_t threadCount);
-void destroyParallelMultiLevelQueue(uint64_t*** parallelMultiLevelQueue,uint64_t NV,uint64_t threadCount);
+uint64_t ** createMultiLevelQueue(uint64_t NV);
+void destroyMultiLevelQueue(uint64_t ** multiLevelQueue, uint64_t NV);
+uint64_t ** * createParallelMultiLevelQueue(uint64_t NV, uint64_t threadCount);
+void destroyParallelMultiLevelQueue(uint64_t ** * parallelMultiLevelQueue, uint64_t NV, uint64_t threadCount);
 
-bcTree** createParallelForest(int64_t threadCount,int64_t NV);
-void destroyParallelForest(bcTree** parallelForest, int64_t threadCount);
+bcTree ** createParallelForest(int64_t threadCount, int64_t NV);
+void destroyParallelForest(bcTree ** parallelForest, int64_t threadCount);
 
-list_ptr** createParallelList(int64_t threadCount,int64_t NV);
-void destroyParallelList(list_ptr** parallelList, int64_t threadCount,int64_t NV);
+list_ptr ** createParallelList(int64_t threadCount, int64_t NV);
+void destroyParallelList(list_ptr ** parallelList, int64_t threadCount, int64_t NV);
 
-float** createParallelBetweennessArray(int64_t threadCount,int64_t NV);
-void destroyParallelBetweennessArray(float** parallelList, int64_t threadCount);
+float ** createParallelBetweennessArray(int64_t threadCount, int64_t NV);
+void destroyParallelBetweennessArray(float ** parallelList, int64_t threadCount);
 
- typedef struct{
+typedef struct {
 
     int64_t diffPath;
     int64_t touched;
@@ -142,20 +142,20 @@ void destroyParallelBetweennessArray(float** parallelList, int64_t threadCount);
     int64_t newEdgesAbove;
     int64_t IMoved;
 
-}sbcV;
+} sbcV;
 
 
 typedef struct {
 
-    sbcV* sV;
+    sbcV * sV;
 
-    int64_t* QueueDown;
-    int64_t* QueueUp;
-    int64_t* QueueSame;
-    int64_t* Stack;
-    int64_t* touchedVerticesUp;
-    int64_t* touchedVerticesDown;
-    int64_t* tqBorders;
+    int64_t * QueueDown;
+    int64_t * QueueUp;
+    int64_t * QueueSame;
+    int64_t * Stack;
+    int64_t * touchedVerticesUp;
+    int64_t * touchedVerticesDown;
+    int64_t * tqBorders;
 
     uint64_t samelevelCounter;
     uint64_t compConnCounter;
@@ -167,15 +167,15 @@ typedef struct {
     uint64_t dynamicTraverseVerticeCounter;
     uint64_t dynamicTraverseEdgeCounter;
 
-    list_ptr* multiLevelQueues;
-    queue_t* queue;
-    level_node_t* levelIndices;
+    list_ptr * multiLevelQueues;
+    queue_t * queue;
+    level_node_t * levelIndices;
 
     int64_t qStart;
     int64_t qEnd;
     int64_t qStart_nxt;
     int64_t qEnd_nxt;
-    
+
     int64_t qStartSame;
     int64_t qEndSame;
     int64_t qStartSame_nxt;
@@ -185,15 +185,15 @@ typedef struct {
     int64_t tqEnd;
     int64_t tqStart_nxt;
     int64_t tqEnd_nxt;
- 
+
     uint64_t dummy[8];
 
 } extraArraysPerThread;
 
-extraArraysPerThread* createExtraArraysPerThread(int64_t NV);
-void ClearCounters(extraArraysPerThread* eapt);
-void destroyExtraArraysPerThread(extraArraysPerThread* eapt,int64_t NV);
-extraArraysPerThread** createExtraArraysForThreads(int64_t threadCount,int64_t NV);
-void destroyExtraArraysForThreads(extraArraysPerThread** parallelExtra, int64_t threadCount, int64_t NV);
+extraArraysPerThread * createExtraArraysPerThread(int64_t NV);
+void ClearCounters(extraArraysPerThread * eapt);
+void destroyExtraArraysPerThread(extraArraysPerThread * eapt, int64_t NV);
+extraArraysPerThread ** createExtraArraysForThreads(int64_t threadCount, int64_t NV);
+void destroyExtraArraysForThreads(extraArraysPerThread ** parallelExtra, int64_t threadCount, int64_t NV);
 
 

@@ -1,1 +1,1 @@
-make -C ../; ../main -N ../../graphs/jazz.graph -R 1 -T 1 -K 199 -O 1 -L 1
+make -C ../; ../main -N ../../graphs/jazz.graph -R 0 -T 1 -K 199 -O INSERT -L BALANCE -G COARSE -E 50

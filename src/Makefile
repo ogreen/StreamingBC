@@ -9,9 +9,9 @@ STINGER_SRC=$(PREFIX)/stinger.c $(PREFIX)/stinger-utils.c $(PREFIX)/timer.c $(PR
 
 CFLAGS+=-g -I$(PREFIX) -O3 -fopenmp -g -w
 
-SRC = streamingbc.c streamingbc_init.c streamingbc_internal.c streamingbc_aux.c
+SRC = streamingbc.c streamingbc_init.c streamingbc_internal.c streamingbc_internal_fine.c streamingbc_aux.c
 
-SRCSBC= sbcMain.c $(SRC) $(STINGER_SRC)
+SRCSBC= sbcMain.c sbcMain_utils.c $(SRC) $(STINGER_SRC)
 
 main: $(SRCSBC)
 	$(CC) $(MAINPLFLAG) $(CPPFLAGS) $(CFLAGS) -o $@ $^ \

@@ -14,12 +14,13 @@
 *
 * @return Returns the created data structure.
 */
-bcTree* CreateTree(int64_t numVertices){
-    bcTree* newTree;
-    newTree = (bcTree*)xmalloc(sizeof(bcTree));
+bcTree * CreateTree(int64_t numVertices)
+{
+    bcTree * newTree;
+    newTree = (bcTree *)xmalloc(sizeof(bcTree));
 
     newTree->NV = numVertices;
-    newTree->vArr = (bcV*)xmalloc(numVertices*sizeof(bcV));
+    newTree->vArr = (bcV *)xmalloc(numVertices * sizeof(bcV));
 
     return newTree;
 }
@@ -31,7 +32,8 @@ bcTree* CreateTree(int64_t numVertices){
 *
 * @return None
 */
-void DestroyTree(bcTreePtr deadTree){
+void DestroyTree(bcTreePtr deadTree)
+{
     free(deadTree->vArr);
     free(deadTree);
 }
@@ -46,18 +48,20 @@ void DestroyTree(bcTreePtr deadTree){
 *
 * @return None (see parameter newForest)
 */
-bcForest* CreateForestExact(int64_t numVertices){
-    bcForest* temp;
-    temp = (bcForest*)xmalloc(sizeof(bcForest));
+bcForest * CreateForestExact(int64_t numVertices)
+{
+    bcForest * temp;
+    temp = (bcForest *)xmalloc(sizeof(bcForest));
     temp->NV = numVertices;
-    temp->forest = (bcTreePtr*)xmalloc(numVertices*sizeof(bcTreePtr));
-    temp->totalBC = (bc_t*)xmalloc(numVertices*sizeof(bc_t));
+    temp->forest = (bcTreePtr *)xmalloc(numVertices * sizeof(bcTreePtr));
+    temp->totalBC = (bc_t *)xmalloc(numVertices * sizeof(bc_t));
 
     int64_t i;
-    for(i=0;i<numVertices;i++)
-    {
-      temp->forest[i] = CreateTree(numVertices);
+
+    for (i = 0; i < numVertices; i++) {
+        temp->forest[i] = CreateTree(numVertices);
     }
+
     return temp;
 }
 
@@ -70,16 +74,18 @@ bcForest* CreateForestExact(int64_t numVertices){
 *
 * @return None
 */
-void DestroyForestExact(bcForestPtr* deadForest){
-    bcForest* temp=*deadForest;
+void DestroyForestExact(bcForestPtr * deadForest)
+{
+    bcForest * temp = *deadForest;
     int64_t i;
-    for(i=0;i<(temp->NV);i++)
-    {
+
+    for (i = 0; i < (temp->NV); i++) {
         DestroyTree(temp->forest[i]);
     }
-   free(temp->totalBC);
-   free(temp->forest);
-   free(temp);
+
+    free(temp->totalBC);
+    free(temp->forest);
+    free(temp);
     return;
 }
 
@@ -94,19 +100,21 @@ void DestroyForestExact(bcForestPtr* deadForest){
 *
 * @return None (see parameter newForest)
 */
-bcForest* CreateForestApproximate(int64_t numVertices, uint64_t* rootArray, uint64_t rootArraySize){
-	bcForest* temp;;
-    temp = (bcForest*)xmalloc(sizeof(bcForest));
+bcForest * CreateForestApproximate(int64_t numVertices, uint64_t * rootArray, uint64_t rootArraySize)
+{
+    bcForest * temp;;
+    temp = (bcForest *)xmalloc(sizeof(bcForest));
     temp->NV = numVertices;
-    temp->forest = (bcTreePtr*)xmalloc(numVertices*sizeof(bcTreePtr));
-    temp->totalBC = (bc_t*)xmalloc(numVertices*sizeof(bc_t));
+    temp->forest = (bcTreePtr *)xmalloc(numVertices * sizeof(bcTreePtr));
+    temp->totalBC = (bc_t *)xmalloc(numVertices * sizeof(bc_t));
 
     int64_t i;
-    for(i=0;i<rootArraySize;i++)
-    {
-      temp->forest[rootArray[i]] = CreateTree(numVertices);
+
+    for (i = 0; i < rootArraySize; i++) {
+        temp->forest[rootArray[i]] = CreateTree(numVertices);
     }
-	return temp;
+
+    return temp;
 }
 
 /**
@@ -118,16 +126,18 @@ bcForest* CreateForestApproximate(int64_t numVertices, uint64_t* rootArray, uint
 *
 * @return None
 */
-void DestroyForestApproximate(bcForestPtr* deadForest, uint64_t* rootArray, uint64_t rootArraySize){
-	bcForest* temp=*deadForest;
+void DestroyForestApproximate(bcForestPtr * deadForest, uint64_t * rootArray, uint64_t rootArraySize)
+{
+    bcForest * temp = *deadForest;
     int64_t i;
-    for(i=0;i<(rootArraySize);i++)
-    {
+
+    for (i = 0; i < (rootArraySize); i++) {
         DestroyTree(temp->forest[rootArray[i]]);
     }
-   free(temp->totalBC);
-   free(temp->forest);
-   free(temp);
+
+    free(temp->totalBC);
+    free(temp->forest);
+    free(temp);
     return;
 }
 
@@ -136,114 +146,137 @@ void DestroyForestApproximate(bcForestPtr* deadForest, uint64_t* rootArray, uint
 // Auxilary data structures
 
 // Creates the multi-level queue for the computation of BC. In this case O(NV^2) is allocated.
-uint64_t** createMultiLevelQueue(uint64_t NV){
-    uint64_t** multiLevelQueue = (uint64_t**)malloc(NV*sizeof(uint64_t*));
-    for(uint64_t v=0; v<NV;v++)    {
-        multiLevelQueue[v]=(uint64_t*)malloc(NV*sizeof(uint64_t));
+uint64_t ** createMultiLevelQueue(uint64_t NV)
+{
+    uint64_t ** multiLevelQueue = (uint64_t **)malloc(NV * sizeof(uint64_t *));
+
+    for (uint64_t v = 0; v < NV; v++)    {
+        multiLevelQueue[v] = (uint64_t *)malloc(NV * sizeof(uint64_t));
     }
+
     return multiLevelQueue;
 }
 
 // Destroys the multi level queue
-void destroyMultiLevelQueue(uint64_t** multiLevelQueue,uint64_t NV){
-    for(uint64_t v=0; v<NV;v++){
+void destroyMultiLevelQueue(uint64_t ** multiLevelQueue, uint64_t NV)
+{
+    for (uint64_t v = 0; v < NV; v++) {
         free(multiLevelQueue[v]);
     }
+
     free(multiLevelQueue);
 }
 
 // Creates a multi level queue for each thread/core.
-uint64_t*** createParallelMultiLevelQueue(uint64_t NV, uint64_t threadCount){
-    uint64_t*** parallelMultiLevelQueue = (uint64_t***)malloc(threadCount*sizeof(uint64_t**));
-    for(uint64_t t=0; t<threadCount;t++){
-        parallelMultiLevelQueue[t]=createMultiLevelQueue(NV);
+uint64_t ** * createParallelMultiLevelQueue(uint64_t NV, uint64_t threadCount)
+{
+    uint64_t ** * parallelMultiLevelQueue = (uint64_t ** *)malloc(threadCount * sizeof(uint64_t **));
+
+    for (uint64_t t = 0; t < threadCount; t++) {
+        parallelMultiLevelQueue[t] = createMultiLevelQueue(NV);
     }
+
     return parallelMultiLevelQueue;
 }
 // Destroys the multi level queue of each thread/core.
-void destroyParallelMultiLevelQueue(uint64_t*** parallelMultiLevelQueue,uint64_t NV,uint64_t threadCount){
-    for(uint64_t t=0; t<threadCount;t++){
-        destroyMultiLevelQueue(parallelMultiLevelQueue[t],NV);
+void destroyParallelMultiLevelQueue(uint64_t ** * parallelMultiLevelQueue, uint64_t NV, uint64_t threadCount)
+{
+    for (uint64_t t = 0; t < threadCount; t++) {
+        destroyMultiLevelQueue(parallelMultiLevelQueue[t], NV);
     }
+
     free(parallelMultiLevelQueue);
 }
 
 // Creates a parent list for each thread/core.
-list_ptr** createParallelList(int64_t threadCount,int64_t NV){
-    list_ptr** parallelList = (list_ptr**)xcalloc(threadCount,sizeof(list_ptr**));
-    for(int64_t i=0; i<threadCount;i++){
-        makeArrayOfLists(&parallelList[i],NV);
+list_ptr ** createParallelList(int64_t threadCount, int64_t NV)
+{
+    list_ptr ** parallelList = (list_ptr **)xcalloc(threadCount, sizeof(list_ptr **));
+
+    for (int64_t i = 0; i < threadCount; i++) {
+        makeArrayOfLists(&parallelList[i], NV);
     }
+
     return parallelList;
 }
 
 // Destroys the parent list of each thread/core.
-void destroyParallelList(list_ptr** parallelList, int64_t threadCount,int64_t NV){
-    for(int64_t i=0; i<threadCount;i++){
-        destroyArrayOfLists(&parallelList[i],NV);
+void destroyParallelList(list_ptr ** parallelList, int64_t threadCount, int64_t NV)
+{
+    for (int64_t i = 0; i < threadCount; i++) {
+        destroyArrayOfLists(&parallelList[i], NV);
     }
+
     free(parallelList);
 }
 
 
-float** createParallelBetweennessArray(int64_t threadCount,int64_t NV){
-    float** totalBC = (float**)malloc((threadCount)*sizeof(float*));
-    for(int64_t i=0;i<threadCount;i++){
-        totalBC[i] = malloc(sizeof(float)*NV);
+float ** createParallelBetweennessArray(int64_t threadCount, int64_t NV)
+{
+    float ** totalBC = (float **)malloc((threadCount) * sizeof(float *));
+
+    for (int64_t i = 0; i < threadCount; i++) {
+        totalBC[i] = malloc(sizeof(float) * NV);
     }
+
     return totalBC;
 }
 
-void destroyParallelBetweennessArray(float** parallelScore, int64_t threadCount){
-    for(int64_t i=0; i<threadCount;i++){
+void destroyParallelBetweennessArray(float ** parallelScore, int64_t threadCount)
+{
+    for (int64_t i = 0; i < threadCount; i++) {
         free(parallelScore[i]);
     }
+
     free(parallelScore);
 }
 
-extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
-    extraArraysPerThread* eapt = (extraArraysPerThread*)malloc(sizeof(extraArraysPerThread));
-    eapt->sV = (sbcV*)malloc(NV*sizeof(sbcV));
-    
-    for(int64_t v=0; v<NV; v++){
-        eapt->sV[v].diffPath=0;
-        eapt->sV[v].touched=0;
-        eapt->sV[v].newPathsToRoot=0;
-        eapt->sV[v].movementDelta=0;
-        eapt->sV[v].newDelta=0;
-        eapt->sV[v].totalBC=0;
-        eapt->sV[v].IMoved=-1;
+extraArraysPerThread * createExtraArraysPerThread(int64_t NV)
+{
+    extraArraysPerThread * eapt = (extraArraysPerThread *)malloc(sizeof(extraArraysPerThread));
+    eapt->sV = (sbcV *)malloc(NV * sizeof(sbcV));
+
+    for (int64_t v = 0; v < NV; v++) {
+        eapt->sV[v].diffPath = 0;
+        eapt->sV[v].touched = 0;
+        eapt->sV[v].newPathsToRoot = 0;
+        eapt->sV[v].movementDelta = 0;
+        eapt->sV[v].newDelta = 0;
+        eapt->sV[v].totalBC = 0;
+        eapt->sV[v].IMoved = -1;
         eapt->sV[v].newEdgesAbove = 0;
         eapt->sV[v].newEdgesBelow = 0;
         eapt->sV[v].newLevel = 0;
     }
 
-    eapt->QueueDown = (int64_t*)malloc(NV*sizeof(int64_t));
-    eapt->QueueUp = (int64_t*)malloc(NV*sizeof(int64_t));
-    eapt->QueueSame = (int64_t*)malloc(2 * NV*sizeof(int64_t));
-    eapt->Stack = (int64_t*)malloc(2 * NV*sizeof(int64_t));
-    eapt->touchedVerticesUp = (int64_t*) malloc(NV * sizeof(int64_t));
-    eapt->touchedVerticesDown = (int64_t*) malloc(NV * sizeof(int64_t));
-    eapt->tqBorders = (int64_t*) malloc(NV * sizeof(int64_t));
+    eapt->QueueDown = (int64_t *)malloc(NV * sizeof(int64_t));
+    eapt->QueueUp = (int64_t *)malloc(NV * sizeof(int64_t));
+    eapt->QueueSame = (int64_t *)malloc(2 * NV * sizeof(int64_t));
+    eapt->Stack = (int64_t *)malloc(2 * NV * sizeof(int64_t));
+    eapt->touchedVerticesUp = (int64_t *) malloc(NV * sizeof(int64_t));
+    eapt->touchedVerticesDown = (int64_t *) malloc(NV * sizeof(int64_t));
+    eapt->tqBorders = (int64_t *) malloc(NV * sizeof(int64_t));
     //makeArrayOfLists(&eapt->multiLevelQueues,NV);
-    eapt->queue = (queue_t*) malloc(sizeof(queue_t));
+    eapt->queue = (queue_t *) malloc(sizeof(queue_t));
     eapt->queue->size = 0;
-    eapt->queue->nodes = (queue_node_t*) malloc(NV * sizeof(queue_node_t));
-    eapt->levelIndices = (level_node_t*) malloc(NV * sizeof(level_node_t));
+    eapt->queue->nodes = (queue_node_t *) malloc(NV * sizeof(queue_node_t));
+    eapt->levelIndices = (level_node_t *) malloc(NV * sizeof(level_node_t));
+
     for (int64_t i = 0; i < NV; i++) {
         eapt->levelIndices[i].front = -1;
         eapt->levelIndices[i].back = -1;
         eapt->queue->nodes[i].next = -2;
         eapt->levelIndices[i].back_flag = -1;
     }
-    eapt->samelevelCounter=0;
-    eapt->compConnCounter=0;
-    eapt->adjacentCounter=0;
-    eapt->movementCounter=0;
-    eapt->staticTraverseVerticeCounter=0;
-    eapt->staticTraverseEdgeCounter=0;
-    eapt->dynamicTraverseVerticeCounter=0;
-    eapt->dynamicTraverseEdgeCounter=0;
+
+    eapt->samelevelCounter = 0;
+    eapt->compConnCounter = 0;
+    eapt->adjacentCounter = 0;
+    eapt->movementCounter = 0;
+    eapt->staticTraverseVerticeCounter = 0;
+    eapt->staticTraverseEdgeCounter = 0;
+    eapt->dynamicTraverseVerticeCounter = 0;
+    eapt->dynamicTraverseEdgeCounter = 0;
 
     eapt->qStart = 0;
     eapt->qEnd = 0;
@@ -262,19 +295,21 @@ extraArraysPerThread* createExtraArraysPerThread(int64_t NV){
     return eapt;
 }
 
-void ClearCounters(extraArraysPerThread* eapt){
-    eapt->samelevelCounter=0;
-    eapt->compConnCounter=0;
-    eapt->adjacentCounter=0;
-    eapt->movementCounter=0;
+void ClearCounters(extraArraysPerThread * eapt)
+{
+    eapt->samelevelCounter = 0;
+    eapt->compConnCounter = 0;
+    eapt->adjacentCounter = 0;
+    eapt->movementCounter = 0;
 
-    eapt->staticTraverseVerticeCounter=0;
-    eapt->staticTraverseEdgeCounter=0;
-    eapt->dynamicTraverseVerticeCounter=0;
-    eapt->dynamicTraverseEdgeCounter=0;
+    eapt->staticTraverseVerticeCounter = 0;
+    eapt->staticTraverseEdgeCounter = 0;
+    eapt->dynamicTraverseVerticeCounter = 0;
+    eapt->dynamicTraverseEdgeCounter = 0;
 
 }
-void destroyExtraArraysPerThread(extraArraysPerThread* eapt,int64_t NV){
+void destroyExtraArraysPerThread(extraArraysPerThread * eapt, int64_t NV)
+{
     free(eapt->sV);
     free(eapt->QueueDown);
     free(eapt->QueueUp);
@@ -282,24 +317,29 @@ void destroyExtraArraysPerThread(extraArraysPerThread* eapt,int64_t NV){
     free(eapt->Stack);
     free(eapt->queue->nodes);
     free(eapt->queue);
-    free(eapt->levelIndices); 
+    free(eapt->levelIndices);
     free(eapt->tqBorders);
     //destroyArrayOfLists(&eapt->multiLevelQueues,NV);
     free(eapt);
 }
 
-extraArraysPerThread** createExtraArraysForThreads(int64_t threadCount,int64_t NV){
-    extraArraysPerThread** extraInfoArray = (extraArraysPerThread**)xcalloc(threadCount,sizeof(extraArraysPerThread*));
-    for(int64_t i=0; i<threadCount;i++){
+extraArraysPerThread ** createExtraArraysForThreads(int64_t threadCount, int64_t NV)
+{
+    extraArraysPerThread ** extraInfoArray = (extraArraysPerThread **)xcalloc(threadCount, sizeof(extraArraysPerThread *));
+
+    for (int64_t i = 0; i < threadCount; i++) {
         extraInfoArray[i] = createExtraArraysPerThread(NV);
     }
+
     return extraInfoArray;
 }
 
-void destroyExtraArraysForThreads(extraArraysPerThread** parallelExtra, int64_t threadCount, int64_t NV){
-    for(int64_t i=0; i<threadCount;i++){
-        destroyExtraArraysPerThread(parallelExtra[i],NV);
+void destroyExtraArraysForThreads(extraArraysPerThread ** parallelExtra, int64_t threadCount, int64_t NV)
+{
+    for (int64_t i = 0; i < threadCount; i++) {
+        destroyExtraArraysPerThread(parallelExtra[i], NV);
     }
+
     free(parallelExtra);
 }
 
@@ -312,33 +352,35 @@ void destroyExtraArraysForThreads(extraArraysPerThread** parallelExtra, int64_t 
 // List
 
 
-list_t* makeList()
+list_t * makeList()
 {
-    list_t *l  = (list_t*)xmalloc(sizeof(list_t));
-    l->head=NULL;
-    l->tail=NULL;
-    l->size=0;
+    list_t * l  = (list_t *)xmalloc(sizeof(list_t));
+    l->head = NULL;
+    l->tail = NULL;
+    l->size = 0;
     return l;
 }
 
-node_t* makeNode(int64_t id)
+node_t * makeNode(int64_t id)
 {
-    node_t *newnode = (node_t*)xmalloc(sizeof(node_t));
+    node_t * newnode = (node_t *)xmalloc(sizeof(node_t));
     newnode->id = id;
     newnode->next = NULL;
     return newnode;
 }
 
-void appendDS(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_t data) {
+void appendDS(queue_t * queue, level_node_t * levelIndices, int64_t level, int64_t data)
+{
     appendDS2(queue, levelIndices, level, data, 0);
 }
 
 /* note will be appended at the end. */
-void appendDS2(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_t data, int64_t thread_num) {
+void appendDS2(queue_t * queue, level_node_t * levelIndices, int64_t level, int64_t data, int64_t thread_num)
+{
 
     int64_t next = __sync_fetch_and_add(&(queue->size), 1);
-    queue_node_t *list = queue->nodes;
-    
+    queue_node_t * list = queue->nodes;
+
     while (1) {
         if (__sync_bool_compare_and_swap(&(levelIndices[level].back_flag), -1, thread_num)) {
             if (levelIndices[level].back == -1) {
@@ -350,6 +392,7 @@ void appendDS2(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_
                 levelIndices[level].back = next;
                 list[next].next = -1;
             }
+
             levelIndices[level].back_flag = -1;
             list[next].data = data;
             break;
@@ -357,17 +400,22 @@ void appendDS2(queue_t* queue, level_node_t* levelIndices, int64_t level, int64_
     }
 }
 
-queue_node_t* getFirstDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
+queue_node_t * getFirstDS(queue_t * queue, level_node_t * levelIndices, int64_t level)
+{
     int64_t index = levelIndices[level].front;
+
     if (index == -1) {
         return NULL;
     }
+
     return &queue->nodes[index];
 }
 
-void deleteFirstDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
+void deleteFirstDS(queue_t * queue, level_node_t * levelIndices, int64_t level)
+{
     int64_t front = levelIndices[level].front;
     int64_t back = levelIndices[level].back;
+
     if (front == back) {
         levelIndices[level].front = -1;
         levelIndices[level].back = -1;
@@ -375,92 +423,101 @@ void deleteFirstDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
         int64_t next = queue->nodes[front].next;
         levelIndices[level].front = next;
         queue->nodes[front].next = -2;
-    } 
+    }
 }
 
-void printListDS(queue_t* queue, level_node_t* levelIndices, int64_t level) {
-    int64_t index = levelIndices[level].front;    
+void printListDS(queue_t * queue, level_node_t * levelIndices, int64_t level)
+{
+    int64_t index = levelIndices[level].front;
     printf("DS: ");
+
     while (index != -1) {
         printf("%ld ", queue->nodes[index].data);
         index = queue->nodes[index].next;
-    }    
+    }
+
     printf("\n");
 }
 
-void append(list_t *L, node_t *n)
+void append(list_t * L, node_t * n)
 {
-    if(L->size==0)
-    {
-        L->head=n;
-        L->tail=n;
-    }
-    else
-    {
+    if (L->size == 0) {
+        L->head = n;
+        L->tail = n;
+    } else {
         L->tail->next = n;
         L->tail = n;
     }
+
     L->size++;
 
 }
 
-node_t* getFirst(list_t *L)
+node_t * getFirst(list_t * L)
 {
     return L->head;
 }
 
-void deleteFirst(list_t *L)
+void deleteFirst(list_t * L)
 {
-    node_t *n = L->head;
+    node_t * n = L->head;
     L->head = n->next;
     free(n);
     L->size--;
 }
 
 
-void compareLists(list_t *L, queue_t* queue, level_node_t* levelIndices, int64_t level) {
+void compareLists(list_t * L, queue_t * queue, level_node_t * levelIndices, int64_t level)
+{
     int64_t index = levelIndices[level].front;
+
     if (index == -1 && L->size == 0) return;
+
     if (index == -1 && L->size != 0) {
         printf("Error: DS is empty when LL is of size: %ld\n", L->size);
     }
+
     if (index != -1 && L->size == 0) {
         printf("Error: LL is empty when DS is not.\n");
     }
 
-    node_t *n = L->head;
+    node_t * n = L->head;
+
     while (index != -1 && n != NULL) {
         int64_t dsElem = queue->nodes[index].data;
         int64_t listElem = n->id;
+
         if (dsElem != listElem) {
             printf("Error: lists differ at level: %ld, DS: %ld, List; %ld\n", level, dsElem, listElem);
             return;
         }
+
         n = n->next;
         index = queue->nodes[index].next;
-    }    
+    }
 }
 
-void printList(list_t *L)
+void printList(list_t * L)
 {
-    node_t *n;
+    node_t * n;
     //printf("Printing list of size:%ld\n",L->size);
     printf("LL: ");
-    if(L->size==0) return;
-    for(n=L->head; n!=L->tail; n=n->next)
-    {
-        printf("%ld,",n->id);
+
+    if (L->size == 0) return;
+
+    for (n = L->head; n != L->tail; n = n->next) {
+        printf("%ld,", n->id);
     }
-    printf("%ld,",n->id);
+
+    printf("%ld,", n->id);
     printf("\n");
 }
 
 
-void emptyList(list_t* L)
+void emptyList(list_t * L)
 {
-    while(L->size >0)
-    {
-        node_t *n = L->head;
+    while (L->size > 0) {
+        node_t * n = L->head;
         L->head = n->next;
         free(n);
         L->size--;
@@ -468,23 +525,22 @@ void emptyList(list_t* L)
 }
 
 
-void makeArrayOfLists(list_ptr** aL,int64_t numberOfLists)
+void makeArrayOfLists(list_ptr ** aL, int64_t numberOfLists)
 {
     int64_t i;
 
-    *aL = (list_ptr*)xmalloc(numberOfLists*sizeof(list_ptr*));
+    *aL = (list_ptr *)xmalloc(numberOfLists * sizeof(list_ptr *));
 
-    for(i=0;i<numberOfLists;i++)
-    {
+    for (i = 0; i < numberOfLists; i++) {
         (*aL)[i] = makeList();
     }
 }
 
-void destroyArrayOfLists(list_ptr** aL,int64_t numberOfLists)
+void destroyArrayOfLists(list_ptr ** aL, int64_t numberOfLists)
 {
     int64_t i;
-    for(i=0;i<numberOfLists;i++)
-    {
+
+    for (i = 0; i < numberOfLists; i++) {
         emptyList((*aL)[i]);
         free((*aL)[i]);
     }
