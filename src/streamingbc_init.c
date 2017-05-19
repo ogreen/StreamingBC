@@ -90,14 +90,14 @@ uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
 
     for (uint64_t j = 0; j < tree->NV; j++) {
         tree->vArr[j].level = INFINITY_MY;
-        tree->vArr[j].pathsToRoot = INFINITY_MY;
+        tree->vArr[j].sigma = INFINITY_MY;
         tree->vArr[j].delta = 0;
         tree->vArr[j].edgesBelow = 0;
         tree->vArr[j].edgesAbove = 0;
     }
 
     tree->vArr[currRoot].level = 0;
-    tree->vArr[currRoot].pathsToRoot = 1;
+    tree->vArr[currRoot].sigma = 1;
 
     uint64_t * Stack = eAPT->Stack;
     uint64_t * Queue = eAPT->QueueDown;
@@ -128,12 +128,12 @@ uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
                     tree->vArr[k].delta = 0;
                 }
 
-                if (tree->vArr[k].pathsToRoot == INFINITY_MY) {
+                if (tree->vArr[k].sigma == INFINITY_MY) {
                     // k has not been found and therefore its paths to the roots are through its parent.
-                    tree->vArr[k].pathsToRoot = tree->vArr[currElement].pathsToRoot;
+                    tree->vArr[k].sigma = tree->vArr[currElement].sigma;
                 } else {
                     // k has been found and has multiple paths to the root as it has multiple parents.
-                    tree->vArr[k].pathsToRoot += tree->vArr[currElement].pathsToRoot;
+                    tree->vArr[k].sigma += tree->vArr[currElement].sigma;
                 }
             }
         }
@@ -159,7 +159,7 @@ uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
             // If this is a neighbor and has not been found
             if ((tree->vArr[k].level == (tree->vArr[currElement].level - 1))) {
                 tree->vArr[k].delta +=
-                    ((bc_t)tree->vArr[k].pathsToRoot / (bc_t)tree->vArr[currElement].pathsToRoot) *
+                    ((bc_t)tree->vArr[k].sigma / (bc_t)tree->vArr[currElement].sigma) *
                     (bc_t)(tree->vArr[currElement].delta + 1);
             } else if (tree->vArr[k].level == tree->vArr[currElement].level + 1) {
                 tree->vArr[currElement].edgesBelow += tree->vArr[k].edgesBelow + 1;

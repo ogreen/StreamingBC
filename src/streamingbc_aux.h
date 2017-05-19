@@ -20,7 +20,7 @@ typedef double bc_t;
 
 typedef struct {
     int64_t level;
-    int64_t pathsToRoot;
+    int64_t sigma;
     int64_t edgesBelow;
     int64_t edgesAbove;
     bc_t delta;
@@ -132,7 +132,7 @@ typedef struct {
 
     int64_t diffPath;
     int64_t touched;
-    int64_t newPathsToRoot;
+    int64_t newSigma;
     int64_t movementDelta;
     int64_t newLevel;
     bc_t newDelta;

@@ -522,9 +522,9 @@ void CompareDynamicWithExactResults(bcForest * beforeBCForest, struct stinger * 
         }
 
         for (int j = 0; j < beforeBCForest->NV; j++) {
-            if (beforeTree->vArr[j].pathsToRoot != afterTree->vArr[j].pathsToRoot) {
+            if (beforeTree->vArr[j].sigma != afterTree->vArr[j].sigma) {
                 printf("Error in sigma value - root: %ld, vertex: %ld, before: %ld, after: %ld\n",
-                       root, j, beforeTree->vArr[j].pathsToRoot, afterTree->vArr[j].pathsToRoot);
+                       root, j, beforeTree->vArr[j].sigma, afterTree->vArr[j].sigma);
             }
         }
 

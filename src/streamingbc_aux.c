@@ -239,7 +239,7 @@ extraArraysPerThread * createExtraArraysPerThread(int64_t NV)
     for (int64_t v = 0; v < NV; v++) {
         eapt->sV[v].diffPath = 0;
         eapt->sV[v].touched = 0;
-        eapt->sV[v].newPathsToRoot = 0;
+        eapt->sV[v].newSigma = 0;
         eapt->sV[v].movementDelta = 0;
         eapt->sV[v].newDelta = 0;
         eapt->sV[v].totalBC = 0;

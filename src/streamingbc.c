@@ -155,9 +155,9 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
                 // Case 2 -- adjacent level insertion
 
                 if (diff == -1) {
-                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot, myExtraArrays, (uint64_t)NT);
+                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newV, newU, tree->vArr[newU].sigma, myExtraArrays, (uint64_t)NT);
                 } else {
-                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays, (uint64_t)NT);
+                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newU, newV, tree->vArr[newV].sigma, myExtraArrays, (uint64_t)NT);
                 }
 
                 eAPT[thread]->adjacentCounter++;
@@ -197,9 +197,9 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
             else if (diff == -1 || diff == 1) {
 
                 if (diff == -1) {
-                    addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].pathsToRoot, myExtraArrays);
+                    addEdgeWithoutMovementBrandes(forest, sStinger, i, newV, newU, tree->vArr[newU].sigma, myExtraArrays);
                 } else {
-                    addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].pathsToRoot, myExtraArrays);
+                    addEdgeWithoutMovementBrandes(forest, sStinger, i, newU, newV, tree->vArr[newV].sigma, myExtraArrays);
                 }
 
                 eAPT[thread]->adjacentCounter++;
@@ -334,7 +334,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
             if (extraParents >= 1) {
                 // Case 2 -- adjacent level deletion.
                 removeEdgeWithoutMovementBrandes(forest, sStinger, i, childVertex, parentVertex,
-                                                 tree->vArr[parentVertex].pathsToRoot, myExtraArrays);
+                                                 tree->vArr[parentVertex].sigma, myExtraArrays);
                 eAPT[thread]->adjacentCounter++;
                 adjacent++;
             } else {
@@ -385,7 +385,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
 
             if (extraParents >= 1) {
                 removeEdgeWithoutMovementBrandesFG(forest, sStinger, i, childVertex, parentVertex,
-                                                 tree->vArr[parentVertex].pathsToRoot, myExtraArrays, NT);
+                                                 tree->vArr[parentVertex].sigma, myExtraArrays, NT);
                 eAPT[thread]->adjacentCounter++;
                 adjacent++;
             } else {
