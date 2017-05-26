@@ -1,5 +1,5 @@
 
-CC=gcc -std=c++11
+CC=gcc -std=gnu9x
 CXX=g++
 LDLIBS=-lm -lrt
 
