@@ -17,7 +17,7 @@
 
 #include <omp.h>
 
-#define LINE_SIZE 100000
+#define LINE_SIZE 1000000
 
 void CreateRandomEdgeListFromGraph(struct stinger * stingerGraph, int64_t NV, int64_t * insertionArraySrc,
                                    int64_t * insertionArrayDest, int64_t insertionCount)
