@@ -161,7 +161,7 @@ int main(int argc, char * argv[])
 
 
     // Not necessary unless you want to check what the static algorithm would output on the final graph.
-    CompareDynamicWithExactResults(beforeBCForest, stingerGraph, rootArrayForApproximation, NK, NT, NV);
+    //CompareDynamicWithExactResults(beforeBCForest, stingerGraph, rootArrayForApproximation, NK, NT, NV);
     //------- streaming computation END
 
     free(rootArrayForApproximation);
