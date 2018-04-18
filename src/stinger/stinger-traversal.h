@@ -64,7 +64,7 @@
     while(current_eb__ != ebpool) {						\
       int64_t source__ = current_eb__->vertexID;			\
       int64_t type__ = current_eb__->etype;				\
-      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
         if(!stinger_eb_is_blank(current_eb__, i__)) {			\
 	  struct stinger_edge * current_edge__ = current_eb__->edges + i__;
 
@@ -82,7 +82,7 @@
       int64_t source__ = current_eb__->vertexID;			\
       int64_t type__ = current_eb__->etype;				\
       if(current_eb__->etype == TYPE_) {				\
-	  for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+	  for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 	    if(!stinger_eb_is_blank(current_eb__, i__)) {               \
 	      struct stinger_edge * current_edge__ = current_eb__->edges + i__;
 
@@ -102,7 +102,7 @@
       int64_t type__ = current_eb__->etype;				\
       OMP("omp parallel for")						\
       MTA("mta assert parallel")					\
-      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
         if(!stinger_eb_is_blank(current_eb__, i__)) {                   \
 	  struct stinger_edge * current_edge__ = current_eb__->edges + i__;
 
@@ -122,7 +122,7 @@
       if(current_eb__->etype == TYPE_) {				\
         OMP("omp parallel for")						\
 	  MTA("mta assert parallel")					\
-	  for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+	  for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 	    if(!stinger_eb_is_blank(current_eb__, i__)) {               \
 	      struct stinger_edge * current_edge__ = current_eb__->edges + i__;
 
@@ -138,11 +138,11 @@
 /* all edges of a given type */
 #define STINGER_FORALL_EDGES_BEGIN(STINGER_,TYPE_) \
   do {									\
-    for(uint64_t p__ = 0; p__ < (STINGER_)->ETA[(TYPE_)].high; p__++) {	\
+    for(int64_t p__ = 0; p__ < (STINGER_)->ETA[(TYPE_)].high; p__++) {	\
       struct stinger_eb *  current_eb__ = ebpool + (STINGER_)->ETA[(TYPE_)].blocks[p__]; \
       int64_t source__ = current_eb__->vertexID;			\
       int64_t type__ = current_eb__->etype;				\
-      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 	if(!stinger_eb_is_blank(current_eb__, i__)) {                   \
 	  struct stinger_edge * current_edge__ = current_eb__->edges + i__;
 
@@ -156,11 +156,11 @@
   do {									\
     OMP("omp parallel for")						\
     MTA("mta assert parallel")						\
-    for(uint64_t p__ = 0; p__ < (STINGER_)->ETA[(TYPE_)].high; p__++) {	\
+    for(int64_t p__ = 0; p__ < (STINGER_)->ETA[(TYPE_)].high; p__++) {	\
       struct stinger_eb *  current_eb__ = ebpool + (STINGER_)->ETA[(TYPE_)].blocks[p__]; \
       int64_t source__ = current_eb__->vertexID;			\
       int64_t type__ = current_eb__->etype;				\
-      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 	if(!stinger_eb_is_blank(current_eb__, i__)) {                   \
 	  struct stinger_edge * current_edge__ = current_eb__->edges + i__;
 
@@ -175,12 +175,12 @@
 /* source vertex based */
 #define STINGER_READ_ONLY_FORALL_EDGES_OF_VTX_BEGIN(STINGER_,VTX_)      \
   do {                                                                  \
-    struct stinger_eb * restrict ebp__ = ebpool;                        \
+    struct stinger_eb * __restrict__ ebp__ = ebpool;                        \
     const int64_t source__ = (VTX_);                                    \
     int64_t ebp_k__ = (STINGER_)->LVA[source__].edges;                  \
     while(ebp_k__) {                                                    \
       MTA("mta assert parallel")                                        \
-        for(uint64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {       \
+        for(int64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {       \
           if(!stinger_eb_is_blank(&ebp__[ebp_k__], i__)) {              \
             const struct stinger_edge local_current_edge__ = ebp__[ebp_k__].edges[i__]; \
             if(local_current_edge__.neighbor >= 0) {
@@ -195,7 +195,7 @@
 
 #define STINGER_READ_ONLY_FORALL_EDGES_OF_TYPE_OF_VTX_BEGIN(STINGER_,TYPE_,VTX_)      \
   do {                                                                  \
-    struct stinger_eb * restrict ebp__ = ebpool;                        \
+    struct stinger_eb * __restrict__ ebp__ = ebpool;                        \
     const int64_t source__ = (VTX_);                                    \
     const int64_t etype__ = (TYPE_);                                    \
     int64_t ebp_k__ = (STINGER_)->LVA[source__].edges;                  \
@@ -204,7 +204,7 @@
     while(ebp_k__ && ebp__[ebp_k__].etype == etype__) {                 \
       if (ebp__[ebp_k__].etype == etype__) {                            \
         MTA("mta assert parallel")                                      \
-          for(uint64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {     \
+          for(int64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {     \
             if(!stinger_eb_is_blank(&ebp__[ebp_k__], i__)) {            \
               const struct stinger_edge local_current_edge__ = ebp__[ebp_k__].edges[i__]; \
               if(local_current_edge__.neighbor >= 0) {
@@ -221,14 +221,14 @@
 #define STINGER_READ_ONLY_PARALLEL_FORALL_EDGES_OF_VTX_BEGIN(STINGER_,VTX_) \
   do {                                                                  \
     OMP("omp parallel") {                                               \
-      struct stinger_eb * restrict ebp__ = ebpool;                      \
+      struct stinger_eb * __restrict__ ebp__ = ebpool;                      \
       const int64_t source__ = (VTX_);                                  \
       OMP("omp single") {                                               \
         int64_t ebp_k__ = (STINGER_)->LVA[source__].edges;              \
         while(ebp_k__) {                                                \
           OMP("omp task untied firstprivate(ebp_k__)")                  \
             MTA("mta assert parallel")                                  \
-            for(uint64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {   \
+            for(int64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {   \
               if(!stinger_eb_is_blank(&ebp__[ebp_k__], i__)) {          \
                 const struct stinger_edge local_current_edge__ = ebp__[ebp_k__].edges[i__]; \
                 if(local_current_edge__.neighbor >= 0) {
@@ -246,7 +246,7 @@
 #define STINGER_READ_ONLY_PARALLEL_FORALL_EDGES_OF_TYPE_OF_VTX_BEGIN(STINGER_,VTX_) \
   do {                                                                  \
     OMP("omp parallel") {                                               \
-      struct stinger_eb * restrict ebp__ = ebpool;                      \
+      struct stinger_eb * __restrict__ ebp__ = ebpool;                      \
       const int64_t source__ = (VTX_);                                  \
       const int64_t etype__ = (TYPE_);                                  \
       OMP("omp single") {                                               \
@@ -256,7 +256,7 @@
         while(ebp_k__ && ebp__[ebp_k__].etype == etype__) {             \
           OMP("omp task untied firstprivate(ebp_k__)")                  \
             MTA("mta assert parallel")                                  \
-            for(uint64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {   \
+            for(int64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {   \
               if(!stinger_eb_is_blank(&ebp__[ebp_k__], i__)) {          \
                 const struct stinger_edge local_current_edge__ = ebp__[ebp_k__].edges[i__]; \
                 if(local_current_edge__.neighbor >= 0) {
@@ -275,14 +275,14 @@
 /* all edges of a given type */
 #define STINGER_READ_ONLY_FORALL_EDGES_BEGIN(STINGER_,TYPE_)            \
       do {                                                              \
-        struct stinger_eb * restrict ebp__ = ebpool;                    \
-        const struct stinger * restrict S__ = (STINGER_);               \
+        struct stinger_eb * __restrict__ ebp__ = ebpool;                    \
+        const struct stinger * __restrict__ S__ = (STINGER_);               \
         const int64_t etype__ = (TYPE_);                                \
-        for(uint64_t p__ = 0; p__ < S__->ETA[(TYPE_)].high; p__++) {    \
+        for(int64_t p__ = 0; p__ < S__->ETA[(TYPE_)].high; p__++) {    \
           int64_t ebp_k__ = S__->ETA[(TYPE_)].blocks[p__];              \
           const int64_t source__ = ebp__[ebp_k__].vertexID;             \
           const int64_t type__ = ebp__[ebp_k__].etype;                  \
-          for(uint64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {     \
+          for(int64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) {     \
             if(!stinger_eb_is_blank(&ebp__[ebp_k__], i__)) {            \
               constt struct stinger_edge local_current_edge__ = current_eb__->edges[i__]; \
               if(local_current_edge__.neighbor >= 0) {
@@ -298,16 +298,16 @@
 #define STINGER_READ_ONLY_PARALLEL_FORALL_EDGES_BEGIN(STINGER_,TYPE_)   \
       do {                                                              \
         OMP("omp parallel") {                                           \
-          struct stinger_eb * restrict ebp__ = ebpool;                  \
-          const struct stinger * restrict S__ = (STINGER_);             \
+          struct stinger_eb * __restrict__ ebp__ = ebpool;                  \
+          const struct stinger * __restrict__ S__ = (STINGER_);             \
           const int64_t etype__ = (TYPE_);                              \
           OMP("omp single") {                                           \
-            for(uint64_t p__ = 0; p__ < S__->ETA[(TYPE_)].high; p__++) { \
+            for(int64_t p__ = 0; p__ < S__->ETA[(TYPE_)].high; p__++) { \
               int64_t ebp_k__ = S__->ETA[(TYPE_)].blocks[p__];          \
               const int64_t source__ = ebp__[ebp_k__].vertexID;         \
               const int64_t type__ = ebp__[ebp_k__].etype;              \
               OMP("omp task untied firstprivate(ebp_k__)")              \
-                for(uint64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) { \
+                for(int64_t i__ = 0; i__ < ebp__[ebp_k__].high; i__++) { \
                   if(!stinger_eb_is_blank(&ebp__[ebp_k__], i__)) {      \
                     constt struct stinger_edge local_current_edge__ = current_eb__->edges[i__]; \
                     if(local_current_edge__.neighbor >= 0) {
@@ -349,8 +349,8 @@
   int filt_mask = 0; \
   int64_t modified_before = INT64_MAX, modified_after = INT64_MIN; \
   int64_t created_before = INT64_MAX, created_after = INT64_MIN; \
-  uint64_t * vtx_filter, * edge_type_filter, * vtx_type_filter; \
-  uint64_t vtx_filter_count, edge_type_filter_count, vtx_type_filter_count; \
+  int64_t * vtx_filter, * edge_type_filter, * vtx_type_filter; \
+  int64_t vtx_filter_count, edge_type_filter_count, vtx_type_filter_count; \
   { filter }\
   switch(filt_mask) { \
     default: { \
@@ -358,7 +358,7 @@
     } break; \
     /* vtx */  \
     case 1: { \
-      for(uint64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_OF_VTX_BEGIN((stinger), vtx_filter[j__]) { \
 	  { code } \
 	} STINGER_FORALL_EDGES_OF_VTX_END(); \
@@ -366,7 +366,7 @@
     } break; \
     /* etype */ \
     case 2: { \
-      for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_BEGIN((stinger), edge_type_filter[j__]) { \
 	  { code } \
 	} STINGER_FORALL_EDGES_END(); \
@@ -374,14 +374,14 @@
     } break; \
     /* vtx + etype */ \
     case 3: { \
-      for(uint64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
+      for(int64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
 	struct stinger_eb *  current_eb__ = (stinger)->LVA[(vtx_filter[k__])].edges;	\
 	while(current_eb__ != ebpool) {						\
 	  int64_t source__ = current_eb__->vertexID;			\
 	  int64_t type__ = current_eb__->etype;				\
-	  for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+	  for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	    if(current_eb__->etype == edge_type_filter[j__]) {				\
-	      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+	      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 		if(!stinger_eb_is_blank(current_eb__, i__)) {               \
 		  struct stinger_edge * current_edge__ = current_eb__->edges + i__; \
 		  { code } \
@@ -396,11 +396,11 @@
     } break; \
     /* vtype */ \
     case 4: { \
-      for(uint64_t j__ = 0; j__ < STINGER_MAX_LVERTICES; j__++) { \
-	for(uint64_t i__ = 0; i__ < vtx_type_filter_count; i__++) { \
+      for(int64_t j__ = 0; j__ < STINGER_MAX_LVERTICES; j__++) { \
+	for(int64_t i__ = 0; i__ < vtx_type_filter_count; i__++) { \
 	  if(stinger_vtype((stinger), j__) == vtx_type_filter[i__]) { \
 	    STINGER_FORALL_EDGES_OF_VTX_BEGIN(stinger, j__) { \
-	      for(uint64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
+	      for(int64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
 		if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[k__]) { \
 		  { code }  \
 		  break; \
@@ -414,9 +414,9 @@
     } break; \
     /* vtx + vtype */ \
     case 5: { \
-      for(uint64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_OF_VTX_BEGIN((stinger), vtx_filter[j__]) { \
-	  for(uint64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
+	  for(int64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
 	    if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[k__]) { \
 	      { code }  \
 	      break; \
@@ -427,9 +427,9 @@
     } break; \
     /* etype + vtype */ \
     case 6: { \
-      for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_BEGIN((stinger), edge_type_filter[j__]) { \
-	  for(uint64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
+	  for(int64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
 	    if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[k__]) { \
 	      { code }  \
 	      break; \
@@ -440,17 +440,17 @@
     } break; \
     /* vtx + etype + vtype */ \
     case 7: { \
-      for(uint64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
+      for(int64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
 	struct stinger_eb *  current_eb__ = (stinger)->LVA[(vtx_filter[k__])].edges;	\
 	while(current_eb__ != ebpool) {						\
 	  int64_t source__ = current_eb__->vertexID;			\
 	  int64_t type__ = current_eb__->etype;				\
-	  for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+	  for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	    if(current_eb__->etype == edge_type_filter[j__]) {				\
-	      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+	      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 		if(!stinger_eb_is_blank(current_eb__, i__)) {               \
 		  struct stinger_edge * current_edge__ = current_eb__->edges + i__; \
-		  for(uint64_t p__ = 0; p__ < vtx_type_filter_count; p__++) { \
+		  for(int64_t p__ = 0; p__ < vtx_type_filter_count; p__++) { \
 		    if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[p__]) { \
 		      { code }  \
 		      break; \
@@ -466,7 +466,7 @@
       } \
     } break; \
     case 8: { \
-      for(uint64_t j__ = 0; j__ < STINGER_MAX_LVERTICES; j__++) { \
+      for(int64_t j__ = 0; j__ < STINGER_MAX_LVERTICES; j__++) { \
 	STINGER_FORALL_EDGES_OF_VTX_BEGIN(stinger, j__) { \
 	  if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 	     STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \
@@ -476,7 +476,7 @@
       } \
     } break; \
     case 9: { \
-      for(uint64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_OF_VTX_BEGIN((stinger), vtx_filter[j__]) { \
 	  if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 	     STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \
@@ -487,7 +487,7 @@
     } break; \
     /* etype */ \
     case 10: { \
-      for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_BEGIN((stinger), edge_type_filter[j__]) { \
 	  if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 	     STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \
@@ -498,14 +498,14 @@
     } break; \
     /* vtx + etype */ \
     case 11: { \
-      for(uint64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
+      for(int64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
 	struct stinger_eb *  current_eb__ = (stinger)->LVA[(vtx_filter[k__])].edges;	\
 	while(current_eb__ != ebpool) {						\
 	  int64_t source__ = current_eb__->vertexID;			\
 	  int64_t type__ = current_eb__->etype;				\
-	  for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+	  for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	    if(current_eb__->etype == edge_type_filter[j__]) {				\
-	      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+	      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 		if(!stinger_eb_is_blank(current_eb__, i__)) {               \
 		  struct stinger_edge * current_edge__ = current_eb__->edges + i__; \
 		  if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
@@ -523,11 +523,11 @@
     } break; \
     /* vtype */ \
     case 12: { \
-      for(uint64_t j__ = 0; j__ < STINGER_MAX_LVERTICES; j__++) { \
-	for(uint64_t i__ = 0; i__ < vtx_type_filter_count; i__++) { \
+      for(int64_t j__ = 0; j__ < STINGER_MAX_LVERTICES; j__++) { \
+	for(int64_t i__ = 0; i__ < vtx_type_filter_count; i__++) { \
 	  if(stinger_vtype((stinger), j__) == vtx_type_filter[i__]) { \
 	    STINGER_FORALL_EDGES_OF_VTX_BEGIN(stinger, j__) { \
-	      for(uint64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
+	      for(int64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
 		if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[k__]) { \
 		  if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 		     STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \
@@ -544,9 +544,9 @@
     } break; \
     /* vtx + vtype */ \
     case 13: { \
-      for(uint64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < vtx_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_OF_VTX_BEGIN((stinger), vtx_filter[j__]) { \
-	  for(uint64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
+	  for(int64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
 	    if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[k__]) { \
 	      if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 		 STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \
@@ -560,9 +560,9 @@
     } break; \
     /* etype + vtype */ \
     case 14: { \
-      for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+      for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	STINGER_FORALL_EDGES_BEGIN((stinger), edge_type_filter[j__]) { \
-	  for(uint64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
+	  for(int64_t k__ = 0; k__ < vtx_type_filter_count; k__++) { \
 	    if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[k__]) { \
 	      if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 		 STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \
@@ -576,17 +576,17 @@
     } break; \
     /* vtx + etype + vtype */ \
     case 15: { \
-      for(uint64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
+      for(int64_t k__ = 0; k__ < vtx_filter_count; k__++) { \
 	struct stinger_eb *  current_eb__ = (stinger)->LVA[(vtx_filter[k__])].edges;	\
 	while(current_eb__ != ebpool) {						\
 	  int64_t source__ = current_eb__->vertexID;			\
 	  int64_t type__ = current_eb__->etype;				\
-	  for(uint64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
+	  for(int64_t j__ = 0; j__ < edge_type_filter_count; j__++) { \
 	    if(current_eb__->etype == edge_type_filter[j__]) {				\
-	      for(uint64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
+	      for(int64_t i__ = 0; i__ < stinger_eb_high(current_eb__); i__++) { \
 		if(!stinger_eb_is_blank(current_eb__, i__)) {               \
 		  struct stinger_edge * current_edge__ = current_eb__->edges + i__; \
-		  for(uint64_t p__ = 0; p__ < vtx_type_filter_count; p__++) { \
+		  for(int64_t p__ = 0; p__ < vtx_type_filter_count; p__++) { \
 		    if(stinger_vtype((stinger), STINGER_EDGE_DEST) == vtx_type_filter[p__]) { \
 		      if(STINGER_EDGE_TIME_FIRST > created_after && STINGER_EDGE_TIME_FIRST < created_before && \
 			 STINGER_EDGE_TIME_RECENT > modified_after && STINGER_EDGE_TIME_RECENT < modified_before) { \

@@ -17,7 +17,7 @@ long tic_ts;
 struct timeval tic_ts, toc_ts;
 #elif defined(HAVE_MACH_ABSOLUTE_TIME)
 #include <mach/mach_time.h>
-static uint64_t tic_ts;
+static int64_t tic_ts;
 #else
 #if defined(CLOCK_MONOTONIC)
 #define TICTOC_CLOCK CLOCK_MONOTONIC
@@ -61,7 +61,7 @@ toc (void)
   out = toc_ts.tv_sec - tic_ts.tv_sec;
   /*fprintf (stderr, "%ld %g %g %g\n", ts, out, mta_clock_period(), mta_clock_freq());*/
 #elif defined(HAVE_MACH_ABSOLUTE_TIME)
-  uint64_t ts, nanosec;
+  int64_t ts, nanosec;
   static mach_timebase_info_data_t info = {0,0};
   if (info.denom == 0) {
     mach_timebase_info(&info);

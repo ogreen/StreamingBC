@@ -149,7 +149,7 @@ void xzero(void *x, const size_t sz)
   memset (x, 0, sz);
 #else
   /* No, really.  They couldn't be bothered to implement memset intelligently. */
-  unsigned char *restrict t = (unsigned char *) x;
+  unsigned char * __restrict__ t = (unsigned char *) x;
   MTA ("mta block schedule") MTASTREAMS ()
     for (size_t k = 0; k < sz; ++k)
       t[k] = 0;

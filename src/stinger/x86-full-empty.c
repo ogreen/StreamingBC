@@ -17,9 +17,9 @@
 
 #if !defined(__MTA__) /* x86 only */
 
-uint64_t 
-readfe(uint64_t * v) {
-  uint64_t val;
+int64_t 
+readfe(int64_t * v) {
+  int64_t val;
   while(1) {
     val = *v;
     while(val == MARKER) {
@@ -31,9 +31,9 @@ readfe(uint64_t * v) {
   return val;
 }
 
-uint64_t
-writeef(uint64_t * v, uint64_t new_val) {
-  uint64_t val;
+int64_t
+writeef(int64_t * v, int64_t new_val) {
+  int64_t val;
   while(1) {
     val = *v;
     while(val != MARKER) {
@@ -45,18 +45,18 @@ writeef(uint64_t * v, uint64_t new_val) {
   return val;
 }
 
-uint64_t
-readff(uint64_t * v) {
-  uint64_t val = *v;
+int64_t
+readff(int64_t * v) {
+  int64_t val = *v;
   while(val == MARKER) {
     val = *v;
   }
   return val;
 }
 
-uint64_t
-writeff(uint64_t * v, uint64_t new_val) {
-  uint64_t val;
+int64_t
+writeff(int64_t * v, int64_t new_val) {
+  int64_t val;
   while(1) {
     val = *v;
     while(val == MARKER) {
@@ -68,8 +68,8 @@ writeff(uint64_t * v, uint64_t new_val) {
   return val;
 }
 
-uint64_t
-writexf(uint64_t * v, uint64_t new_val) {
+int64_t
+writexf(int64_t * v, int64_t new_val) {
   *v = new_val;
   return new_val;
 }

@@ -29,7 +29,6 @@ typedef struct {
 typedef struct {
     int64_t NV;
     bcV * vArr;
-    double dummy[4];
 } bcTree;
 typedef bcTree * bcTreePtr;
 
@@ -42,17 +41,17 @@ typedef bcForest * bcForestPtr;
 
 typedef struct
 {
-    uint64_t movement;
-    uint64_t adjacent;
-    uint64_t sameLevel;
-    uint64_t connectedComponents;
+    int64_t movement;
+    int64_t adjacent;
+    int64_t sameLevel;
+    int64_t connectedComponents;
 } StreamingExtraInfo;
 
 bcForest * CreateForestExact(int64_t numVertices);
 void DestroyForestExact(bcForest ** deadForest);
 
-bcForest * CreateForestApproximate(int64_t numVertices, uint64_t * rootArray, uint64_t rootArraySize);
-void DestroyForestForApproximate(bcForest ** deadForest, uint64_t * rootArray, uint64_t rootArraySize);
+bcForest * CreateForestApproximate(int64_t numVertices, int64_t * rootArray, int64_t rootArraySize);
+void DestroyForestApproximate(bcForest ** deadForest, int64_t * rootArray, int64_t rootArraySize);
 
 
 //------------------------------------------------
@@ -114,10 +113,10 @@ void destroyArrayOfLists(list_ptr ** aL, int64_t numberOfLists);
 // Auxilary data structures
 
 
-uint64_t ** createMultiLevelQueue(uint64_t NV);
-void destroyMultiLevelQueue(uint64_t ** multiLevelQueue, uint64_t NV);
-uint64_t ** * createParallelMultiLevelQueue(uint64_t NV, uint64_t threadCount);
-void destroyParallelMultiLevelQueue(uint64_t ** * parallelMultiLevelQueue, uint64_t NV, uint64_t threadCount);
+int64_t ** createMultiLevelQueue(int64_t NV);
+void destroyMultiLevelQueue(int64_t ** multiLevelQueue, int64_t NV);
+int64_t ** * createParallelMultiLevelQueue(int64_t NV, int64_t threadCount);
+void destroyParallelMultiLevelQueue(int64_t ** * parallelMultiLevelQueue, int64_t NV, int64_t threadCount);
 
 bcTree ** createParallelForest(int64_t threadCount, int64_t NV);
 void destroyParallelForest(bcTree ** parallelForest, int64_t threadCount);
@@ -157,15 +156,15 @@ typedef struct {
     int64_t * touchedVerticesDown;
     int64_t * tqBorders;
 
-    uint64_t samelevelCounter;
-    uint64_t compConnCounter;
-    uint64_t adjacentCounter;
-    uint64_t movementCounter;
+    int64_t samelevelCounter;
+    int64_t compConnCounter;
+    int64_t adjacentCounter;
+    int64_t movementCounter;
 
-    uint64_t staticTraverseVerticeCounter;
-    uint64_t staticTraverseEdgeCounter;
-    uint64_t dynamicTraverseVerticeCounter;
-    uint64_t dynamicTraverseEdgeCounter;
+    int64_t staticTraverseVerticeCounter;
+    int64_t staticTraverseEdgeCounter;
+    int64_t dynamicTraverseVerticeCounter;
+    int64_t dynamicTraverseEdgeCounter;
 
     list_ptr * multiLevelQueues;
     queue_t * queue;
@@ -185,8 +184,6 @@ typedef struct {
     int64_t tqEnd;
     int64_t tqStart_nxt;
     int64_t tqEnd_nxt;
-
-    uint64_t dummy[8];
 
 } extraArraysPerThread;
 

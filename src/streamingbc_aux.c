@@ -100,7 +100,7 @@ void DestroyForestExact(bcForestPtr * deadForest)
 *
 * @return None (see parameter newForest)
 */
-bcForest * CreateForestApproximate(int64_t numVertices, uint64_t * rootArray, uint64_t rootArraySize)
+bcForest * CreateForestApproximate(int64_t numVertices, int64_t * rootArray, int64_t rootArraySize)
 {
     bcForest * temp;;
     temp = (bcForest *)xmalloc(sizeof(bcForest));
@@ -126,7 +126,7 @@ bcForest * CreateForestApproximate(int64_t numVertices, uint64_t * rootArray, ui
 *
 * @return None
 */
-void DestroyForestApproximate(bcForestPtr * deadForest, uint64_t * rootArray, uint64_t rootArraySize)
+void DestroyForestApproximate(bcForestPtr * deadForest, int64_t * rootArray, int64_t rootArraySize)
 {
     bcForest * temp = *deadForest;
     int64_t i;
@@ -146,21 +146,21 @@ void DestroyForestApproximate(bcForestPtr * deadForest, uint64_t * rootArray, ui
 // Auxilary data structures
 
 // Creates the multi-level queue for the computation of BC. In this case O(NV^2) is allocated.
-uint64_t ** createMultiLevelQueue(uint64_t NV)
+int64_t ** createMultiLevelQueue(int64_t NV)
 {
-    uint64_t ** multiLevelQueue = (uint64_t **)malloc(NV * sizeof(uint64_t *));
+    int64_t ** multiLevelQueue = (int64_t **)malloc(NV * sizeof(int64_t *));
 
-    for (uint64_t v = 0; v < NV; v++)    {
-        multiLevelQueue[v] = (uint64_t *)malloc(NV * sizeof(uint64_t));
+    for (int64_t v = 0; v < NV; v++)    {
+        multiLevelQueue[v] = (int64_t *)malloc(NV * sizeof(int64_t));
     }
 
     return multiLevelQueue;
 }
 
 // Destroys the multi level queue
-void destroyMultiLevelQueue(uint64_t ** multiLevelQueue, uint64_t NV)
+void destroyMultiLevelQueue(int64_t ** multiLevelQueue, int64_t NV)
 {
-    for (uint64_t v = 0; v < NV; v++) {
+    for (int64_t v = 0; v < NV; v++) {
         free(multiLevelQueue[v]);
     }
 
@@ -168,20 +168,20 @@ void destroyMultiLevelQueue(uint64_t ** multiLevelQueue, uint64_t NV)
 }
 
 // Creates a multi level queue for each thread/core.
-uint64_t ** * createParallelMultiLevelQueue(uint64_t NV, uint64_t threadCount)
+int64_t ** * createParallelMultiLevelQueue(int64_t NV, int64_t threadCount)
 {
-    uint64_t ** * parallelMultiLevelQueue = (uint64_t ** *)malloc(threadCount * sizeof(uint64_t **));
+    int64_t ** * parallelMultiLevelQueue = (int64_t ** *)malloc(threadCount * sizeof(int64_t **));
 
-    for (uint64_t t = 0; t < threadCount; t++) {
+    for (int64_t t = 0; t < threadCount; t++) {
         parallelMultiLevelQueue[t] = createMultiLevelQueue(NV);
     }
 
     return parallelMultiLevelQueue;
 }
 // Destroys the multi level queue of each thread/core.
-void destroyParallelMultiLevelQueue(uint64_t ** * parallelMultiLevelQueue, uint64_t NV, uint64_t threadCount)
+void destroyParallelMultiLevelQueue(int64_t ** * parallelMultiLevelQueue, int64_t NV, int64_t threadCount)
 {
-    for (uint64_t t = 0; t < threadCount; t++) {
+    for (int64_t t = 0; t < threadCount; t++) {
         destroyMultiLevelQueue(parallelMultiLevelQueue[t], NV);
     }
 
@@ -216,7 +216,7 @@ float ** createParallelBetweennessArray(int64_t threadCount, int64_t NV)
     float ** totalBC = (float **)malloc((threadCount) * sizeof(float *));
 
     for (int64_t i = 0; i < threadCount; i++) {
-        totalBC[i] = malloc(sizeof(float) * NV);
+        totalBC[i] = (float *)malloc(sizeof(float) * NV);
     }
 
     return totalBC;

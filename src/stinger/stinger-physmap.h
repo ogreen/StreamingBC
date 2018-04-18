@@ -19,12 +19,12 @@ stinger_physmap_create();
 void
 stinger_physmap_delete(stinger_physmap_t * map);
 
-uint64_t
-stinger_physmap_create_mapping (stinger_physmap_t * map, char * string, uint64_t length);
+int64_t
+stinger_physmap_create_mapping (stinger_physmap_t * map, char * string, int64_t length);
 
-uint64_t
-stinger_physmap_get_mapping (stinger_physmap_t * map, char * string, uint64_t length);
+int64_t
+stinger_physmap_get_mapping (stinger_physmap_t * map, char * string, int64_t length);
 
 int
-stinger_physmap_get_key (stinger_physmap_t * map, char ** outbuffer, uint64_t * outbufferlength, uint64_t vertexID);
+stinger_physmap_get_key (stinger_physmap_t * map, char ** outbuffer, int64_t * outbufferlength, int64_t vertexID);
 

@@ -1,7 +1,7 @@
 #if !defined(STINGER_INTERNAL_H_)
 #define STINGER_INTERNAL_H_
 
-extern uint64_t ebpool_tail;
+extern int64_t ebpool_tail;
 extern struct stinger_eb *ebpool;
 #define EBPOOL_SIZE (STINGER_MAX_LVERTICES*4)
 
@@ -11,10 +11,10 @@ extern struct stinger_eb *ebpool;
     const struct stinger * stinger__ = (STINGER_);			\
     const int64_t stinger_srcvtx__ = (STINGER_SRCVTX_);			\
     if (stinger_srcvtx__ >= 0) {					\
-      const struct stinger_eb * restrict stinger_eb__;			\
+      const struct stinger_eb * __restrict__ stinger_eb__;			\
       stinger_eb__ = stinger_edgeblocks (stinger__, stinger_srcvtx__);	\
       while (stinger_eb__ != ebpool) {						\
-	const struct stinger_eb * restrict STINGER_EBNM_ = stinger_eb__; \
+	const struct stinger_eb * __restrict__ STINGER_EBNM_ = stinger_eb__; \
 	do {								\
 
 #define STINGER_FORALL_EB_END()						\
@@ -42,7 +42,7 @@ extern struct stinger_eb *ebpool;
     }									\
   } while (0)
 
-typedef uint64_t eb_index_t;
+typedef int64_t eb_index_t;
 
 /**
 * @brief A single edge in STINGER
@@ -103,10 +103,10 @@ struct stinger
 };
 
 struct stinger_fragmentation_t {
-  uint64_t num_empty_edges;
-  uint64_t num_fragmented_blocks;
-  uint64_t num_edges;
-  uint64_t edge_blocks_in_use;
+  int64_t num_empty_edges;
+  int64_t num_fragmented_blocks;
+  int64_t num_edges;
+  int64_t edge_blocks_in_use;
   double fill_percent;
 };
 
@@ -177,14 +177,14 @@ int64_t stinger_count_outdeg (struct stinger *G, int64_t v);
 struct curs etype_begin (struct stinger_vb *v, int etype);
 
 void update_edge_data (struct stinger * S, struct stinger_eb *eb,
-                  uint64_t index, int64_t neighbor, int64_t weight, int64_t ts);
+                  int64_t index, int64_t neighbor, int64_t weight, int64_t ts);
 
-void remove_edge (struct stinger * S, struct stinger_eb *eb, uint64_t index);
+void remove_edge (struct stinger * S, struct stinger_eb *eb, int64_t index);
 
 void new_ebs (eb_index_t *out, size_t neb, int64_t etype, int64_t from);
 
 void push_ebs (struct stinger *G, size_t neb,
-          eb_index_t * restrict eb);
+          eb_index_t * __restrict__ eb);
 
 const struct stinger_eb *
 stinger_edgeblocks (const struct stinger *s_, int64_t i_);
@@ -196,7 +196,7 @@ stinger_next_eb (const struct stinger *G /*UNUSED*/,
 int64_t
 stinger_eb_type (const struct stinger_eb * eb_);
 
-void stinger_fragmentation (struct stinger *S, uint64_t NV, struct stinger_fragmentation_t *frag);
+void stinger_fragmentation (struct stinger *S, int64_t NV, struct stinger_fragmentation_t *frag);
 
 #include "stinger-deprecated.h"
 

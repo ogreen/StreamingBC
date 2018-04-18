@@ -12,12 +12,12 @@
 #include "streamingbc_aux.h"
 #include "timer.h"
 
-bcForest * streamingBCCreateForestExact(uint64_t NV)
+bcForest * streamingBCCreateForestExact(int64_t NV)
 {
     return CreateForestExact(NV);
 }
 
-bcForest * streamingBCCreateForestApproximate(uint64_t NV, uint64_t NK, uint64_t * rootArray)
+bcForest * streamingBCCreateForestApproximate(int64_t NV, int64_t NK, int64_t * rootArray)
 {
     return CreateForestApproximate(NV, rootArray, NK);
 }
@@ -27,12 +27,12 @@ extraArraysPerThread ** streamingBCCreateAuxilary(int64_t threadCount, int64_t N
     return createExtraArraysForThreads(threadCount, NV);
 }
 
-void streamingBCInitStaticExact(bcForest * forest, struct stinger * stingerGraph, uint64_t NT, extraArraysPerThread ** auxilary)
+void streamingBCInitStaticExact(bcForest * forest, struct stinger * stingerGraph, int64_t NT, extraArraysPerThread ** auxilary)
 {
     BrandesExactParallel(forest, stingerGraph, NT, auxilary);
 }
 
-void streamingBCInitStaticApproximate(bcForest * forest, struct stinger * stingerGraph, uint64_t NT, extraArraysPerThread ** auxilary, uint64_t NK, uint64_t * rootArray)
+void streamingBCInitStaticApproximate(bcForest * forest, struct stinger * stingerGraph, int64_t NT, extraArraysPerThread ** auxilary, int64_t NK, int64_t * rootArray)
 {
     BrandesApproxCaseParallel(forest, stingerGraph, rootArray, NK, auxilary, NT);
 }
@@ -47,14 +47,14 @@ void streamingBCDeleteForestExact(bcForestPtr * deadForest)
 {
     DestroyForestExact(deadForest);
 }
-void streamingBCDeleteForestApproximate(bcForestPtr * deadForest, uint64_t rootArraySize, uint64_t * rootArray)
+void streamingBCDeleteForestApproximate(bcForestPtr * deadForest, int64_t rootArraySize, int64_t * rootArray)
 {
     DestroyForestApproximate(deadForest, rootArray, rootArraySize);
 }
 
 
-StreamingExtraInfo insertVertexStreamingBC(bcForest * forest, struct stinger * sStinger, uint64_t src,
-        uint64_t * adjacencyArray, uint64_t adjacencySize, uint64_t * rootArrayForApproximation,
+StreamingExtraInfo insertVertexStreamingBC(bcForest * forest, struct stinger * sStinger, int64_t src,
+        int64_t * adjacencyArray, int64_t adjacencySize, int64_t * rootArrayForApproximation,
         int64_t NK, int64_t NV, int64_t NT, extraArraysPerThread ** eAPT)
 {
     StreamingExtraInfo oneSEI, returnsei;
@@ -62,8 +62,8 @@ StreamingExtraInfo insertVertexStreamingBC(bcForest * forest, struct stinger * s
     returnsei.movement = 0;
     returnsei.sameLevel = 0;
 
-    for (uint64_t d = 0; d < adjacencySize; d++) {
-        uint64_t dest = adjacencyArray[d];
+    for (int64_t d = 0; d < adjacencySize; d++) {
+        int64_t dest = adjacencyArray[d];
         stinger_insert_edge(sStinger, 0, src, dest, 0, 0);
         stinger_insert_edge(sStinger, 0, dest, src, 0, 0);
         // Set to load balancing and coarse-grained implementation.
@@ -77,7 +77,7 @@ StreamingExtraInfo insertVertexStreamingBC(bcForest * forest, struct stinger * s
 }
 
 
-int64_t compareArrays(const void * arr1, const void * arr2)
+int compareArrays(const void * arr1, const void * arr2)
 {
     const int64_t * one = (const int64_t *) arr1;
     const int64_t * two = (const int64_t *) arr2;
@@ -86,17 +86,17 @@ int64_t compareArrays(const void * arr1, const void * arr2)
 }
 
 StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sStinger,
-        uint64_t newU, uint64_t newV, uint64_t * rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
+        int64_t newU, int64_t newV, int64_t * rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
         extraArraysPerThread ** eAPT, uint32_t loadBalancing, uint32_t granularity)
 {
 
     int64_t workPerVertex[NK][2]; // First column has vertex ids, second col has work values per id.
-    uint64_t currRoot = 0;
-    uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
+    int64_t currRoot = 0;
+    int64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
     int64_t workIndex = 0;
 
     for (currRoot = 0; currRoot < NK; currRoot++) {
-        uint64_t i = rootArrayForApproximation[currRoot];
+        int64_t i = rootArrayForApproximation[currRoot];
         int64_t thread = 0;
         extraArraysPerThread * myExtraArrays = eAPT[thread];
         bcTree * tree = forest->forest[i];
@@ -118,13 +118,13 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
     }
 
     if (loadBalancing == BALANCE) {
-        qsort((const int *)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
+        qsort((void *)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
     }
 
 
     if (granularity == FINE) {
         // fine-grain portion.
-        for (uint64_t r = 0; r < NK; r++) {
+        for (int64_t r = 0; r < NK; r++) {
 
             int64_t i = workPerVertex[r][0];
 
@@ -143,9 +143,9 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
                 // Case 3 -- non-adjacent level insertion
 
                 if (diff < -1) {
-                    moveUpTreeBrandesFG(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (uint64_t)NT);
+                    moveUpTreeBrandesFG(forest, sStinger, i, newV, newU, (-diff) - 1,  myExtraArrays, (int64_t)NT);
                 } else {
-                    moveUpTreeBrandesFG(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (uint64_t)NT);
+                    moveUpTreeBrandesFG(forest,  sStinger, i, newU, newV, (diff) - 1, myExtraArrays, (int64_t)NT);
                 }
 
                 eAPT[thread]->movementCounter++;
@@ -155,9 +155,9 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
                 // Case 2 -- adjacent level insertion
 
                 if (diff == -1) {
-                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newV, newU, tree->vArr[newU].sigma, myExtraArrays, (uint64_t)NT);
+                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newV, newU, tree->vArr[newU].sigma, myExtraArrays, (int64_t)NT);
                 } else {
-                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newU, newV, tree->vArr[newV].sigma, myExtraArrays, (uint64_t)NT);
+                    addEdgeWithoutMovementBrandesFG(forest, sStinger, i, newU, newV, tree->vArr[newV].sigma, myExtraArrays, (int64_t)NT);
                 }
 
                 eAPT[thread]->adjacentCounter++;
@@ -210,8 +210,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
 
     #pragma omp parallel for
 
-    for (uint64_t v = 0; v < NV; v++) {
-        for (uint64_t t = 0; t < NT; t++) {
+    for (int64_t v = 0; v < NV; v++) {
+        for (int64_t t = 0; t < NT; t++) {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
@@ -226,8 +226,8 @@ StreamingExtraInfo insertEdgeStreamingBC(bcForest * forest, struct stinger * sSt
 }
 
 
-StreamingExtraInfo deleteVertexStreamingBC(bcForest * forest, struct stinger * sStinger, uint64_t src,
-        uint64_t * adjacencyArray, uint64_t * adjacencySize, uint64_t * rootArrayForApproximation,
+StreamingExtraInfo deleteVertexStreamingBC(bcForest * forest, struct stinger * sStinger, int64_t src,
+        int64_t * adjacencyArray, int64_t * adjacencySize, int64_t * rootArrayForApproximation,
         int64_t NK, int64_t NV, int64_t NT, extraArraysPerThread ** eAPT)
 {
 
@@ -238,7 +238,7 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest * forest, struct stinger * s
 
     int64_t d = 0;
     STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, src) {
-        uint64_t dest = STINGER_EDGE_DEST;
+        int64_t dest = STINGER_EDGE_DEST;
         adjacencyArray[d] = dest;
         stinger_remove_edge(sStinger, 0, src, dest);
         stinger_remove_edge(sStinger, 0, dest, src);
@@ -255,14 +255,14 @@ StreamingExtraInfo deleteVertexStreamingBC(bcForest * forest, struct stinger * s
     return returnsei;
 }
 
-StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sStinger, uint64_t oldU, uint64_t oldV,
-        uint64_t * rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
+StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sStinger, int64_t oldU, int64_t oldV,
+        int64_t * rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
         extraArraysPerThread ** eAPT, uint32_t loadBalancing, uint32_t granularity)
 {
     omp_set_num_threads(NT);
 
-    uint64_t currRoot = 0;
-    uint64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
+    int64_t currRoot = 0;
+    int64_t samelevel = 0, compConn = 0, adjacent = 0, movement = 0;
 
     int64_t thread = 0;
 
@@ -270,7 +270,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
     int64_t workIndex = 0;
 
     if (loadBalancing == BALANCE) {
-        for (uint64_t r = 0; r < NK; r++) {
+        for (int64_t r = 0; r < NK; r++) {
             int64_t i = rootArrayForApproximation[r];
             bcTree * tree = forest->forest[i];
             int64_t diff = tree->vArr[oldU].level - tree->vArr[oldV].level;
@@ -287,13 +287,13 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
     }
 
     if (loadBalancing == BALANCE) {
-        qsort((const int *)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
+        qsort((void *)&workPerVertex, workIndex, sizeof(int64_t[2]), compareArrays);
     }
 
     if (granularity == COARSE) {
         #pragma omp parallel for schedule(dynamic,1)
 
-        for (uint64_t r = 0; r < NK; r++) {
+        for (int64_t r = 0; r < NK; r++) {
             int64_t i = workPerVertex[r][0];
 
             if (loadBalancing == 0) {
@@ -323,7 +323,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
             }
 
             STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, childVertex) {
-                uint64_t neighbor = STINGER_EDGE_DEST;
+                int64_t neighbor = STINGER_EDGE_DEST;
 
                 if (tree->vArr[neighbor].level + 1 == tree->vArr[childVertex].level) {
                     extraParents++;
@@ -345,7 +345,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
             }
         }
     } else {
-        for (uint64_t r = 0; r < NK; r++) {
+        for (int64_t r = 0; r < NK; r++) {
             int64_t i = workPerVertex[r][0];
 
             if (loadBalancing == 0) {
@@ -375,7 +375,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
             }
 
             STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, childVertex) {
-                uint64_t neighbor = STINGER_EDGE_DEST;
+                int64_t neighbor = STINGER_EDGE_DEST;
 
                 if (tree->vArr[neighbor].level + 1 == tree->vArr[childVertex].level) {
                     extraParents++;
@@ -389,7 +389,7 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
                 eAPT[thread]->adjacentCounter++;
                 adjacent++;
             } else {
-                moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays, NT);
+                moveDownTreeBrandes(forest, sStinger, i, childVertex, parentVertex, myExtraArrays);
                 eAPT[thread]->movementCounter++;
                 movement++;
             }
@@ -399,8 +399,8 @@ StreamingExtraInfo deleteEdgeStreamingBC(bcForest * forest, struct stinger * sSt
     int64_t tlow = (NV * thread) / NT;
     int64_t thigh = (NV * (thread + 1)) / NT ;
 
-    for (uint64_t v = tlow; v < NV; v++) {
-        for (uint64_t t = 0; t < NT; t++) {
+    for (int64_t v = tlow; v < NV; v++) {
+        for (int64_t t = 0; t < NT; t++) {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }

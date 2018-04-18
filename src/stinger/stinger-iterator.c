@@ -15,7 +15,7 @@
  */
 stinger_iterator_t *
 stinger_iterator_new(struct stinger * s) {
-  stinger_iterator_t * iter = xmalloc(sizeof(stinger_iterator_t));
+  stinger_iterator_t * iter = (stinger_iterator_t *) xmalloc(sizeof(stinger_iterator_t));
   iter->i.vtx_filter_copy	= 1;
   iter->i.edge_type_filter_copy	= 1;
   iter->i.vtx_type_filter_copy	= 1;
@@ -58,8 +58,8 @@ stinger_iterator_renew(stinger_iterator_t * iter, struct stinger * s) {
  * @return A bitfield of flags that each indicate an error
  */
 int64_t
-stinger_iterator_consistency_check(stinger_iterator_t * iter, uint64_t nv) {
-  uint64_t  rtn = 0;
+stinger_iterator_consistency_check(stinger_iterator_t * iter, int64_t nv) {
+  int64_t  rtn = 0;
 
   if(!iter->i.s)
     return 0x1;
@@ -78,7 +78,7 @@ stinger_iterator_consistency_check(stinger_iterator_t * iter, uint64_t nv) {
       rtn &= 0x8;
     else if(iter->i.vtx_index >= iter->i.vtx_filter_count)
       rtn &= 0x10;
-    else for(uint64_t i = iter->i.vtx_index; i < iter->i.vtx_filter_count; i++)
+    else for(int64_t i = iter->i.vtx_index; i < iter->i.vtx_filter_count; i++)
       if(iter->i.vtx_filter[i] >= nv) 
 	rtn &= 0x20;
   }
@@ -89,7 +89,7 @@ stinger_iterator_consistency_check(stinger_iterator_t * iter, uint64_t nv) {
       rtn &= 0x40;
     else if(iter->i.edge_type_index >= iter->i.edge_type_filter_count)
       rtn &= 0x80;
-    else for(uint64_t i = iter->i.edge_type_index; i < iter->i.edge_type_filter_count; i++)
+    else for(int64_t i = iter->i.edge_type_index; i < iter->i.edge_type_filter_count; i++)
       if(iter->i.edge_type_filter[i] >= STINGER_NUMETYPES) 
 	rtn &= 0x100;
   }
@@ -108,7 +108,7 @@ stinger_iterator_consistency_check(stinger_iterator_t * iter, uint64_t nv) {
     rtn &= 0x800;
   else {
     rtn &= 0x1000;
-    for(uint64_t i = 0; i < iter->i.s->ETA[iter->i.cur_eb->etype].high; i++)
+    for(int64_t i = 0; i < iter->i.s->ETA[iter->i.cur_eb->etype].high; i++)
       if(ebpool + iter->i.s->ETA[iter->i.cur_eb->etype].blocks[i] == iter->i.cur_eb) {
 	rtn &= ~0x1000;
         if(iter->i.cur_edge >= iter->i.cur_eb->high)
@@ -174,7 +174,7 @@ stinger_iterator_t *
 stinger_iterator_vertex_filter(int64_t * vertices, int64_t count, stinger_iterator_t * iter) {
   if(!iter->i.vtx_filter_copy && iter->i.vtx_filter)
     free(iter->i.vtx_filter);
-  iter->i.vtx_filter = xmalloc(count * sizeof(int64_t));
+  iter->i.vtx_filter = (int64_t *) xmalloc(count * sizeof(int64_t));
   xelemcpy(iter->i.vtx_filter, vertices, count);
   iter->i.vtx_filter_count = count;
   iter->i.vtx_filter_copy = 0;
@@ -198,7 +198,7 @@ stinger_iterator_t *
 stinger_iterator_vertex_type_filter(int64_t * types, int64_t count, int both, stinger_iterator_t * iter) {
   if(!iter->i.vtx_type_filter_copy && iter->i.vtx_type_filter)
     free(iter->i.vtx_type_filter);
-  iter->i.vtx_type_filter = xmalloc(count * sizeof(int64_t));
+  iter->i.vtx_type_filter = (int64_t *) xmalloc(count * sizeof(int64_t));
   xelemcpy(iter->i.vtx_type_filter, types, count);
   iter->i.vtx_type_filter_count = count;
   iter->i.vtx_type_filter_both = both;
@@ -221,7 +221,7 @@ stinger_iterator_t *
 stinger_iterator_edge_type_filter(int64_t * types, int64_t count, stinger_iterator_t * iter) {
   if(!iter->i.edge_type_filter_copy && iter->i.edge_type_filter)
     free(iter->i.edge_type_filter);
-  iter->i.edge_type_filter = xmalloc(count * sizeof(int64_t));
+  iter->i.edge_type_filter = (int64_t *) xmalloc(count * sizeof(int64_t));
   xelemcpy(iter->i.edge_type_filter, types, count);
   iter->i.edge_type_filter_count = count;
   iter->i.edge_type_filter_copy = 0;
@@ -492,7 +492,7 @@ stinger_iterator_check_vtype(stinger_iterator_t * iter) {
   if(iter->i.vtx_type_filter_both) {
     int found_src = 0;
     int found_dst = 0;
-    for(uint64_t i = 0; i < iter->i.vtx_type_filter_count; i++) {
+    for(int64_t i = 0; i < iter->i.vtx_type_filter_count; i++) {
       if(src_type == iter->i.vtx_type_filter[i])
 	found_src = 1;
       if(dst_type == iter->i.vtx_type_filter[i])
@@ -502,7 +502,7 @@ stinger_iterator_check_vtype(stinger_iterator_t * iter) {
     }
     return 0;
   } else {
-    for(uint64_t i = 0; i < iter->i.vtx_type_filter_count; i++) {
+    for(int64_t i = 0; i < iter->i.vtx_type_filter_count; i++) {
       if(src_type == iter->i.vtx_type_filter[i] || dst_type == iter->i.vtx_type_filter[i])
 	return 1;
     }
@@ -513,7 +513,7 @@ stinger_iterator_check_vtype(stinger_iterator_t * iter) {
 int
 stinger_iterator_check_etype(stinger_iterator_t * iter) {
   int64_t type = iter->i.cur_eb->etype;
-  for(uint64_t i = 0; i < iter->i.edge_type_filter_count; i++) {
+  for(int64_t i = 0; i < iter->i.edge_type_filter_count; i++) {
     if(type == iter->i.edge_type_filter[i])
       return 1;
   }

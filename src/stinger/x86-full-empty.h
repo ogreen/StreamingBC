@@ -23,20 +23,20 @@
 #include  <stdint.h>
 #define MARKER INT64_MAX
 
-uint64_t 
-readfe(uint64_t * v);
+int64_t 
+readfe(int64_t * v);
 
-uint64_t
-writeef(uint64_t * v, uint64_t new_val);
+int64_t
+writeef(int64_t * v, int64_t new_val);
 
-uint64_t
-readff(uint64_t * v);
+int64_t
+readff(int64_t * v);
 
-uint64_t
-writeff(uint64_t * v, uint64_t new_val);
+int64_t
+writeff(int64_t * v, int64_t new_val);
 
-uint64_t
-writexf(uint64_t * v, uint64_t new_val);
+int64_t
+writexf(int64_t * v, int64_t new_val);
 
 #endif  /* x86 only */
 

@@ -134,17 +134,17 @@ __attribute__ ((const))
 int64_t
 bs64 (int64_t xin)
 {
-  uint64_t x = (uint64_t) xin;  /* avoid sign-extension issues */
+  int64_t x = (int64_t) xin;  /* avoid sign-extension issues */
   x = (x >> 32) | (x << 32);
-  x = ((x & ((uint64_t) 0xFFFF0000FFFF0000ull)) >> 16)
-    | ((x & ((uint64_t) 0x0000FFFF0000FFFFull)) << 16);
-  x = ((x & ((uint64_t) 0xFF00FF00FF00FF00ull)) >> 8)
-    | ((x & ((uint64_t) 0x00FF00FF00FF00FFull)) << 8);
+  x = ((x & ((int64_t) 0xFFFF0000FFFF0000ull)) >> 16)
+    | ((x & ((int64_t) 0x0000FFFF0000FFFFull)) << 16);
+  x = ((x & ((int64_t) 0xFF00FF00FF00FF00ull)) >> 8)
+    | ((x & ((int64_t) 0x00FF00FF00FF00FFull)) << 8);
   return x;
 }
 
 void
-bs64_n (size_t n, int64_t * restrict d)
+bs64_n (size_t n, int64_t * __restrict__ d)
 {
   OMP ("omp parallel for")
     for (size_t k = 0; k < n; ++k)
@@ -217,7 +217,7 @@ snarf_graph (const char *initial_graph_name,
     abort ();
   }
 
-  mem = xmalloc (sz);
+  mem = (int64_t *) xmalloc (sz);
 
 #if !defined(__MTA__)
   {
@@ -308,7 +308,7 @@ snarf_actions (const char *action_stream_name,
     abort ();
   }
 
-  mem = xmalloc (sz);
+  mem = (int64_t *) xmalloc (sz);
 
 #if !defined(__MTA__)
   {
@@ -450,7 +450,7 @@ stinger_to_sorted_csr (const struct stinger *G, const int64_t nv,
     int64_t start_offset = (*off_out)[i];
     int64_t degree = (*off_out)[i+1] - start_offset;
     int64_t * start = (*ind_out) + start_offset;
-    int64_t ** pointers = xmalloc(degree * sizeof(int64_t *));
+    int64_t ** pointers = (int64_t **) xmalloc(degree * sizeof(int64_t *));
     for(int64_t j = 0; j < degree; j++) {
       pointers[j] = start++; 
     }
@@ -460,7 +460,7 @@ stinger_to_sorted_csr (const struct stinger *G, const int64_t nv,
 
     // reorder adjacencies based on pointers
     start = (*ind_out) + start_offset;
-    int64_t * tmp_buffer = xmalloc(degree * sizeof(int64_t));
+    int64_t * tmp_buffer = (int64_t *) xmalloc(degree * sizeof(int64_t));
     for(int64_t j = 0; j < degree; j++) {
       tmp_buffer[j] = *pointers[j];
     }
@@ -503,14 +503,14 @@ stinger_to_unsorted_csr (const struct stinger *G, const int64_t nv,
                          int64_t ** off_out, int64_t ** ind_out, int64_t ** weight_out, 
 			 int64_t ** timefirst_out, int64_t ** timerecent_out, int64_t ** type_out)
 {
-  int64_t *restrict off;
-  int64_t *restrict ind;
-  int64_t *restrict weight;
-  int64_t *restrict timefirst;
-  int64_t *restrict timerecent;
-  int64_t *restrict type;
+  int64_t *__restrict__ off;
+  int64_t *__restrict__ ind;
+  int64_t *__restrict__ weight;
+  int64_t *__restrict__ timefirst;
+  int64_t *__restrict__ timerecent;
+  int64_t *__restrict__ type;
 
-  off = xcalloc (nv + 1, sizeof (*off));
+  off = (int64_t *) xcalloc (nv + 1, sizeof (*off));
 
   MTA ("mta assert nodep")
   for (int64_t i = 0; i < nv; ++i)
@@ -524,11 +524,11 @@ stinger_to_unsorted_csr (const struct stinger *G, const int64_t nv,
   }
   off[nv] = t;
 
-  ind = xmalloc (t * sizeof (*ind));
-  if(weight_out) weight = xmalloc (t * sizeof (int64_t));
-  if(timefirst_out) timefirst = xmalloc (t * sizeof (int64_t));
-  if(timerecent_out) timerecent = xmalloc (t * sizeof (int64_t));
-  if(type_out) type = xmalloc (t * sizeof (int64_t));
+  ind = (int64_t *) xmalloc (t * sizeof (*ind));
+  if(weight_out) weight = (int64_t *) xmalloc (t * sizeof (int64_t));
+  if(timefirst_out) timefirst = (int64_t *) xmalloc (t * sizeof (int64_t));
+  if(timerecent_out) timerecent = (int64_t *) xmalloc (t * sizeof (int64_t));
+  if(type_out) type = (int64_t *) xmalloc (t * sizeof (int64_t));
 
   OMP ("omp parallel for")
   MTA ("mta assert nodep")
@@ -576,7 +576,7 @@ counting_sort (int64_t * array, size_t num, size_t size)
   }
 
   int range = max - min + 1;
-  int64_t *count = xmalloc (range * sizeof (int64_t));
+  int64_t *count = (int64_t *) xmalloc (range * sizeof (int64_t));
 
   for (i = 0; i < range; i++)
     count[i] = 0;
@@ -722,15 +722,15 @@ edge_list_to_stinger (int64_t nv, int64_t ne,
 
   struct stinger *S = stinger_new ();
 
-  int64_t *ind = xmalloc (ne * sizeof (int64_t));
-  int64_t *weight = xmalloc (ne * sizeof (int64_t));
-  int64_t *off = xmalloc ((nv + 2) * sizeof (int64_t));
+  int64_t *ind = (int64_t *) xmalloc (ne * sizeof (int64_t));
+  int64_t *weight = (int64_t *) xmalloc (ne * sizeof (int64_t));
+  int64_t *off = (int64_t *) xmalloc ((nv + 2) * sizeof (int64_t));
   int64_t *t1 = NULL;
   int64_t *t2 = NULL;
 
   if(timeRecent && timeFirst) {
-    t1 = xmalloc (ne * sizeof (int64_t));
-    t2 = xmalloc (ne * sizeof (int64_t));
+    t1 = (int64_t *) xmalloc (ne * sizeof (int64_t));
+    t2 = (int64_t *) xmalloc (ne * sizeof (int64_t));
   }
 
   edge_list_to_csr (nv, ne, sv, ev, w, timeRecent, timeFirst, ind, weight, off, t2, t1);
@@ -776,7 +776,7 @@ stinger_sort_edge_list (const struct stinger *S, const int64_t srcvtx,
 
     sorted = 1;
     while (cur_eb != ebpool && cur_eb->etype == type) {
-      for (uint64_t i = 1; i < STINGER_EDGEBLOCKSIZE; i += 2) {
+      for (int64_t i = 1; i < STINGER_EDGEBLOCKSIZE; i += 2) {
         if (i < STINGER_EDGEBLOCKSIZE - 1) {
           if (cur_eb->edges[i].neighbor > cur_eb->edges[i + 1].neighbor) {
             struct stinger_edge tmp = cur_eb->edges[i + 1];
@@ -801,7 +801,7 @@ stinger_sort_edge_list (const struct stinger *S, const int64_t srcvtx,
     cur_eb = start;
 
     while (cur_eb != ebpool && cur_eb->etype == type) {
-      for (uint64_t i = 0; i < STINGER_EDGEBLOCKSIZE; i += 2) {
+      for (int64_t i = 0; i < STINGER_EDGEBLOCKSIZE; i += 2) {
         if (i < STINGER_EDGEBLOCKSIZE - 1) {
           if (cur_eb->edges[i].neighbor > cur_eb->edges[i + 1].neighbor) {
             struct stinger_edge tmp = cur_eb->edges[i + 1];
@@ -831,7 +831,7 @@ stinger_sort_edge_list (const struct stinger *S, const int64_t srcvtx,
     int64_t curNumEdges = 0;
     int64_t curHigh = 0;
 
-    for (uint64_t i = 0; i < STINGER_EDGEBLOCKSIZE; i++) {
+    for (int64_t i = 0; i < STINGER_EDGEBLOCKSIZE; i++) {
       if (!stinger_eb_is_blank (cur_eb, i)) {
         if (cur_eb->edges[i].neighbor == 0
             && cur_eb->edges[i].weight == 0
@@ -878,7 +878,7 @@ bucket_sort_pairs (int64_t *array, size_t num)
 {
   int64_t i;
   int64_t max, min;
-  int64_t *tmp = xmalloc (2 * num * sizeof(int64_t));
+  int64_t *tmp = (int64_t *) xmalloc (2 * num * sizeof(int64_t));
 
   max = min = array[0];
 
@@ -895,7 +895,7 @@ bucket_sort_pairs (int64_t *array, size_t num)
   int64_t range = max - min + 1;
   int64_t offset = 0 - min;
 
-  int64_t *start = xmalloc ( (range+2) * sizeof(int64_t) );
+  int64_t *start = (int64_t *) xmalloc ( (range+2) * sizeof(int64_t) );
 
   OMP("omp parallel for")
   for (i = 0; i < range + 2; i++)
@@ -957,9 +957,9 @@ void radix_sort_pairs (int64_t *x, int64_t length, int64_t numBits)
   int64_t max, min;
   int64_t numBuckets = 1 << numBits;
   int64_t bitMask = numBuckets - 1;
-  int64_t * buckets = xmalloc ( (numBuckets + 2) * sizeof(int64_t));
-  int64_t * copy1 = xmalloc ( length * sizeof(int64_t));
-  int64_t * copy2 = xmalloc ( length * sizeof(int64_t));
+  int64_t * buckets = (int64_t *) xmalloc ( (numBuckets + 2) * sizeof(int64_t));
+  int64_t * copy1 = (int64_t *) xmalloc ( length * sizeof(int64_t));
+  int64_t * copy2 = (int64_t *) xmalloc ( length * sizeof(int64_t));
   int64_t * tmp;
 
   max = x[1];
@@ -1113,8 +1113,8 @@ i64_cmp (const void *a, const void *b)
 MTA ("mta inline")
 int i2cmp (const void *va, const void *vb)
 {
-  const int64_t *a = va;
-  const int64_t *b = vb;
+  const int64_t *a = (const int64_t *) va;
+  const int64_t *b = (const int64_t *) vb;
   if (a[0] < b[0])
     return -1;
   if (a[0] > b[0])
@@ -1137,7 +1137,7 @@ int i2cmp (const void *va, const void *vb)
 MTA ("mta inline") MTA ("mta expect parallel context")
 int64_t
 find_in_sorted (const int64_t tofind,
-                const int64_t N, const int64_t * restrict ary)
+                const int64_t N, const int64_t * __restrict__ ary)
 {
   int64_t out = -1;
   if (N <= 0)
@@ -1199,7 +1199,7 @@ prefix_sum (const int64_t n, int64_t *ary)
   tid = omp_get_thread_num ();
 
   OMP("omp master")
-    buf = alloca (nt * sizeof (*buf));
+    buf = (int64_t *) alloca (nt * sizeof (*buf));
   OMP("omp flush (buf)");
   OMP("omp barrier");
 

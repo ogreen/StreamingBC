@@ -12,7 +12,7 @@ void BrandesExact(bcForest * forest, struct stinger * sStinger, extraArraysPerTh
     for (int64_t i = 0; i < forest->NV; i++)
         forest->totalBC[i] = 0.0;
 
-    for (uint64_t i = 0; i < forest->NV; i++) {
+    for (int64_t i = 0; i < forest->NV; i++) {
         //		VB("\tTree[%ld]...\n",i)
         BrandesSingleTree(forest, sStinger, i, forest->totalBC, eAPT);
     }
@@ -21,29 +21,30 @@ void BrandesExact(bcForest * forest, struct stinger * sStinger, extraArraysPerTh
 }
 
 
-void BrandesExactParallel(bcForest * forest, struct stinger * sStinger, extraArraysPerThread ** eAPT, int64_t NT)
+void BrandesExactParallel(bcForest * forest, struct stinger * sStinger, int64_t NT, extraArraysPerThread ** eAPT)
 {
     for (int64_t i = 0; i < forest->NV; i++)
         forest->totalBC[i] = 0.0;
 
     #pragma omp parallel for schedule(dynamic,1)
 
-    for (uint64_t i = 0; i < forest->NV; i++) {
-        BrandesSingleTree(forest, sStinger, i, forest->totalBC, eAPT);
+    for (int64_t i = 0; i < forest->NV; i++) {
+        int64_t thread = omp_get_thread_num();
+        BrandesSingleTree(forest, sStinger, i, forest->totalBC, eAPT[thread]);
     }
 
     #pragma omp parallel for
 
-    for (uint64_t v = 0; v < forest->NV; v++) {
-        for (uint64_t t = 0; t < NT; t++) {
+    for (int64_t v = 0; v < forest->NV; v++) {
+        for (int64_t t = 0; t < NT; t++) {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
     }
 }
 
-void BrandesApproxCase(bcForest * forest, struct stinger * sStinger, uint64_t * rootArrayForApproximation,
-                       uint64_t rootArraySizeForApproximation, extraArraysPerThread * eAPT)
+void BrandesApproxCase(bcForest * forest, struct stinger * sStinger, int64_t * rootArrayForApproximation,
+                       int64_t rootArraySizeForApproximation, extraArraysPerThread * eAPT)
 {
     //	printf("bfsBrandesForApproxCase started, forest=%ld\n",forest);
     //bfsBrandes(forest, sStinger);
@@ -51,13 +52,13 @@ void BrandesApproxCase(bcForest * forest, struct stinger * sStinger, uint64_t * 
     for (int64_t i = 0; i < forest->NV; i++)
         forest->totalBC[i] = 0.0;
 
-    for (uint64_t i = 0; i < rootArraySizeForApproximation; i++) {
+    for (int64_t i = 0; i < rootArraySizeForApproximation; i++) {
         BrandesSingleTree(forest, sStinger, rootArrayForApproximation[i], forest->totalBC, eAPT);
     }
 }
 
-void BrandesApproxCaseParallel(bcForest * forest, struct stinger * sStinger, uint64_t * rootArrayForApproximation,
-                               uint64_t NK, extraArraysPerThread ** eAPT, int64_t NT)
+void BrandesApproxCaseParallel(bcForest * forest, struct stinger * sStinger, int64_t * rootArrayForApproximation,
+                               int64_t NK, extraArraysPerThread ** eAPT, int64_t NT)
 {
     omp_set_num_threads(NT);
 
@@ -67,15 +68,15 @@ void BrandesApproxCaseParallel(bcForest * forest, struct stinger * sStinger, uin
     //printf("static threads here: %ld\n", NT);
     #pragma omp parallel for schedule(dynamic,1)
 
-    for (uint64_t i = 0; i < NK; i++) {
+    for (int64_t i = 0; i < NK; i++) {
         int64_t thread = omp_get_thread_num();
         BrandesSingleTree(forest, sStinger, rootArrayForApproximation[i], forest->totalBC, eAPT[thread]);
     }
 
     #pragma omp parallel for
 
-    for (uint64_t v = 0; v < forest->NV; v++) {
-        for (uint64_t t = 0; t < NT; t++) {
+    for (int64_t v = 0; v < forest->NV; v++) {
+        for (int64_t t = 0; t < NT; t++) {
             forest->totalBC[v] += eAPT[t]->sV[v].totalBC;
             eAPT[t]->sV[v].totalBC = 0.0;
         }
@@ -83,12 +84,12 @@ void BrandesApproxCaseParallel(bcForest * forest, struct stinger * sStinger, uin
 }
 
 
-uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
-                           uint64_t currRoot, bc_t * totalBC, extraArraysPerThread * eAPT)
+int64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
+                           int64_t currRoot, bc_t * totalBC, extraArraysPerThread * eAPT)
 {
     bcTree * tree = forest->forest[currRoot];
 
-    for (uint64_t j = 0; j < tree->NV; j++) {
+    for (int64_t j = 0; j < tree->NV; j++) {
         tree->vArr[j].level = INFINITY_MY;
         tree->vArr[j].sigma = INFINITY_MY;
         tree->vArr[j].delta = 0;
@@ -99,8 +100,8 @@ uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
     tree->vArr[currRoot].level = 0;
     tree->vArr[currRoot].sigma = 1;
 
-    uint64_t * Stack = eAPT->Stack;
-    uint64_t * Queue = eAPT->QueueDown;
+    int64_t * Stack = eAPT->Stack;
+    int64_t * Queue = eAPT->QueueDown;
 
     Queue[0] = currRoot;
     int64_t qStart = 0, qEnd = 1;
@@ -109,7 +110,7 @@ uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
 
     // While queue is not empty
     while (qStart != qEnd) {
-        uint64_t currElement = Queue[qStart];
+        int64_t currElement = Queue[qStart];
         Stack[sStart] = currElement;
         sStart++;
         qStart++;
@@ -152,7 +153,7 @@ uint64_t BrandesSingleTree(bcForest * forest, struct stinger * sStinger,
     int64_t sEnd = sStart - 1;
 
     while (sEnd >= 0) {
-        uint64_t currElement = Stack[sEnd];
+        int64_t currElement = Stack[sEnd];
         STINGER_FORALL_EDGES_OF_VTX_BEGIN(sStinger, currElement) {
             k = STINGER_EDGE_DEST;
 

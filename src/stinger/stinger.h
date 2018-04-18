@@ -31,12 +31,12 @@ struct stinger *stinger_free_all (struct stinger *);
  * reading back will allocate a new STINGER
  */
 int stinger_save_to_file (struct stinger * /* STINGER */, 
-			  uint64_t /* max active vtx */, 
+			  int64_t /* max active vtx */, 
 			  const char * /* directory name */);
 
 int stinger_open_from_file (const char * /* directory */, 
 			    struct stinger ** /* reference for empty output pointer */, 
-			    uint64_t * /* reference for output max vtx */);
+			    int64_t * /* reference for output max vtx */);
 
 /* Edge insertion and deletion */
 int stinger_insert_edge (struct stinger *, int64_t /* type */ ,
@@ -93,9 +93,9 @@ int stinger_edge_touch (struct stinger *, int64_t /* vtx 1 */ ,
 			int64_t /* timestamp */ );
 
 /* Vertex metadata */
-uint64_t stinger_max_active_vertex(const struct stinger * S);
+int64_t stinger_max_active_vertex(const struct stinger * S);
 
-uint64_t stinger_num_active_vertices(const struct stinger * S);
+int64_t stinger_num_active_vertices(const struct stinger * S);
 
 XMTI int64_t stinger_outdegree (const struct stinger *, int64_t);
 int64_t stinger_typed_outdegree(const struct stinger *, int64_t /* vtx */, int64_t /* type */);
@@ -212,9 +212,9 @@ size_t stinger_graph_size (const struct stinger *);
  * This macro will traverse all edges according to the specified filter.
  * For example, this code will add the weights of any edges 
  * from 4, 5, and 6 that are of type 1 or 2. 
- * uint64_t vertices[] = {4, 5, 6};
- * uint64_t etypes[] = {1, 2};
- * uint64_t weight;
+ * int64_t vertices[] = {4, 5, 6};
+ * int64_t etypes[] = {1, 2};
+ * int64_t weight;
  * STINGER_TRAVERSE_EDGES(S, OF_VERTICES(vertices, 3) OF_TYPE(etypes, 2),
  *    weight += STINGER_EDGE_WEIGHT;
  * )
@@ -230,7 +230,7 @@ size_t stinger_graph_size (const struct stinger *);
 /* coming soon - parallel */
 
 /* Basic test for structural problems - should return 0*/
-uint32_t stinger_consistency_check (struct stinger *S, uint64_t NV);
+uint32_t stinger_consistency_check (struct stinger *S, int64_t NV);
 
 #include "stinger-traversal.h"
 

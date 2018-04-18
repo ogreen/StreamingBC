@@ -26,7 +26,7 @@ void
 stinger_iterator_free(stinger_iterator_t * iter);
 
 int64_t
-stinger_iterator_consistency_check(stinger_iterator_t * iter, uint64_t nv);
+stinger_iterator_consistency_check(stinger_iterator_t * iter, int64_t nv);
 
 int
 stinger_iterator_is_active(stinger_iterator_t * iter);

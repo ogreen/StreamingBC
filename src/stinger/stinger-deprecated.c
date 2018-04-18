@@ -214,7 +214,7 @@ stinger_remove_and_insert_edges (struct stinger *G,
       const int64_t w = insert[k];
       if (w >= 0) {
         int64_t ks;
-        struct stinger_eb *restrict eb;
+        struct stinger_eb *__restrict__ eb;
         int64_t which = stinger_int64_fetch_add (&nslot, 1);
 
         assert (which < ninsert_remaining);
@@ -265,7 +265,7 @@ stinger_remove_and_insert_batch (struct stinger * G, int64_t type,
     const int64_t i = act[2 * deloff[k]];
     const int64_t nrem = insoff[k] - deloff[k];
     const int64_t nins = deloff[k + 1] - insoff[k];
-    int64_t *restrict torem, *restrict toins;
+    int64_t *__restrict__ torem, *__restrict__ toins;
 
     torem = (nrem + nins ? xmalloc ((nrem + nins) * sizeof (*torem)) : NULL);
     toins = (torem ? &torem[nrem] : NULL);

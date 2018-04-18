@@ -6,11 +6,11 @@
 
 static inline int stinger_int_fetch_add (int *, int);
 static inline int64_t stinger_int64_fetch_add (int64_t *, int64_t);
-static inline uint64_t stinger_uint64_fetch_add (uint64_t *, uint64_t);
+static inline int64_t stinger_uint64_fetch_add (int64_t *, int64_t);
 static inline size_t stinger_size_fetch_add (size_t *, size_t);
 
 static inline void stinger_int64_swap (int64_t *, int64_t *);
-static inline void stinger_uint64_swap (uint64_t *, uint64_t *);
+static inline void stinger_uint64_swap (int64_t *, int64_t *);
 
 static inline int64_t stinger_int64_cas (int64_t *, int64_t, int64_t);
 /* XXX: This declaration may break aliasing, depending on how you
@@ -36,8 +36,8 @@ stinger_int64_fetch_add (int64_t * x, int64_t i)
 }
 
 #pragma mta inline
-uint64_t
-stinger_uint64_fetch_add (uint64_t * x, uint64_t i)
+int64_t
+stinger_uint64_fetch_add (int64_t * x, int64_t i)
 {
   return int_fetch_add (x, i);
 }
@@ -62,9 +62,9 @@ stinger_int64_swap (int64_t * x, int64_t * y)
 
 #pragma mta inline
 void
-stinger_uint64_swap (uint64_t * x, uint64_t * y)
+stinger_uint64_swap (int64_t * x, int64_t * y)
 {
-  uint64_t vx, vy, t;
+  int64_t vx, vy, t;
   vx = readfe (x);
   vy = readfe (y);
   writeef (x, vy);
@@ -114,8 +114,8 @@ stinger_int64_fetch_add (int64_t * x, int64_t i)
   return __sync_fetch_and_add (x, i);
 }
 
-uint64_t
-stinger_uint64_fetch_add (uint64_t * x, uint64_t i)
+int64_t
+stinger_uint64_fetch_add (int64_t * x, int64_t i)
 {
   return __sync_fetch_and_add (x, i);
 }
@@ -138,9 +138,9 @@ stinger_int64_swap (int64_t * x, int64_t * y)
 }
 
 void
-stinger_uint64_swap (uint64_t * x, uint64_t * y)
+stinger_uint64_swap (int64_t * x, int64_t * y)
 {
-  uint64_t vx;
+  int64_t vx;
   do
     {
       vx = *x;
@@ -175,8 +175,8 @@ stinger_int64_fetch_add (int64_t * x, int64_t i)
   return __fetch_and_addlp ((volatile unsigned long*)x, (unsigned long)i);
 }
 
-uint64_t
-stinger_uint64_fetch_add (uint64_t * x, uint64_t i)
+int64_t
+stinger_uint64_fetch_add (int64_t * x, int64_t i)
 {
   return __fetch_and_addlp ((int64_t*)x, i);
 }
@@ -199,9 +199,9 @@ stinger_int64_swap (int64_t * x, int64_t * y)
 }
 
 void
-stinger_uint64_swap (uint64_t * x, uint64_t * y)
+stinger_uint64_swap (int64_t * x, int64_t * y)
 {
-  uint64_t vx;
+  int64_t vx;
   do
     {
       vx = *x;
@@ -245,10 +245,10 @@ stinger_int64_fetch_add (int64_t * v, int64_t x)
   return out;
 }
 
-uint64_t
-stinger_uint64_fetch_add (uint64_t * v, uint64_t x)
+int64_t
+stinger_uint64_fetch_add (int64_t * v, int64_t x)
 {
-  uint64_t out = *v;
+  int64_t out = *v;
   *v += x;
   return out;
 }
@@ -270,9 +270,9 @@ stinger_int64_swap (int64_t * a, int64_t * b)
 }
 
 void
-stinger_uint64_swap (uint64_t * a, uint64_t * b)
+stinger_uint64_swap (int64_t * a, int64_t * b)
 {
-  uint64_t t = *a;
+  int64_t t = *a;
   *a = *b;
   *b = t;
 }

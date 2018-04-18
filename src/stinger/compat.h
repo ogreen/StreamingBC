@@ -22,8 +22,8 @@ typedef long int64_t;
 typedef unsigned uint32_fast_t;
 #define PRId64 "ld"
 #define SCNd64 "ld"
-#if !defined(restrict)
-#define restrict
+#if !defined(__restrict__)
+#define __restrict__
 #endif
 #endif
 

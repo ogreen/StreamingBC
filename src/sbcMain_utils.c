@@ -96,7 +96,7 @@ void CreateRandomEdgeListFromGraphDeleting(struct stinger * stingerGraph, int64_
 
 
 void hostParseArgsVitalUpdate(int argc, char ** argv, int64_t * NV, int64_t * NE, int64_t * NK, int64_t * NT,
-                              int64_t * randomSeed, int64_t * iterationCount, char * initial_graph_name[1024],
+                              int64_t * randomSeed, int64_t * iterationCount, char * initial_graph_name,
                               operation_t * operation, lbalance_t * loadBalancing, granularity_t * granularity, int64_t * edgeCount)
 {
     updateType opType;
@@ -184,7 +184,7 @@ void hostParseArgsVitalUpdate(int argc, char ** argv, int64_t * NV, int64_t * NE
                 exit(-1);
             }
 
-            iterationCount = intout;
+            *iterationCount = intout;
             break;
 
         case 'G':
@@ -399,8 +399,8 @@ void ParseDimacsGraph(char initial_graph_name[1024], struct stinger ** stingerGr
     int64_t counter = 0;
 
     for (int64_t u = 1; fgets(line, LINE_SIZE, fp); u++) {
-        uint64_t neigh = 0;
-        uint64_t v = 0;
+        int64_t neigh = 0;
+        int64_t v = 0;
         char * ptr = line;
         int read = 0;
 
@@ -422,7 +422,7 @@ void ParseDimacsGraph(char initial_graph_name[1024], struct stinger ** stingerGr
 }
 
 /* Randomly picks NK roots to use for the algorithm (static and dynamic) */
-void PickRoots(uint64_t * rootArrayForApproximation, int64_t NK, int64_t NV) 
+void PickRoots(int64_t * rootArrayForApproximation, int64_t NK, int64_t NV) 
 {
     if (NK == NV) {
         for (int64_t vr = 0; vr < NK; vr++) {
@@ -433,7 +433,7 @@ void PickRoots(uint64_t * rootArrayForApproximation, int64_t NK, int64_t NV)
         printf("Error - Number of roots is greater than number of vertices\n");
     } 
     else {
-        int64_t * flag = (uint64_t *)xmalloc(sizeof(uint64_t) * NV);
+        int64_t * flag = (int64_t *)xmalloc(sizeof(int64_t) * NV);
 
         for (int64_t vv = 0; vv < NV; vv++) {
             flag[vv] = 0;
@@ -554,15 +554,15 @@ void FreeCSR(csrGraph * graph)
 }
 // NE number of undirected edges.
 double updateEdgeNEW(struct stinger * stingerGraph, StreamingExtraInfo * oneSEI,
-                     extraArraysPerThread ** eAPT_perThread, uint64_t * rootArrayForApproximation, int64_t NK,
+                     extraArraysPerThread ** eAPT_perThread, int64_t * rootArrayForApproximation, int64_t NK,
                      int64_t NV, int64_t NT, bcForest * beforeBCForest, int64_t u_new, int64_t v_new, int64_t * iterationCount,
                      lbalance_t loadBalancing, granularity_t granularity)
 {
 
-    uint64_t iterator;
+    int64_t iterator;
     float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti = 0;
     float_t avgComponents = 0;
-    iterationCount = 1;
+    *iterationCount = 1;
     double  timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 
     tic();
@@ -574,14 +574,14 @@ double updateEdgeNEW(struct stinger * stingerGraph, StreamingExtraInfo * oneSEI,
 }
 
 double deleteEdgeNEW(struct stinger * stingerGraph, StreamingExtraInfo * oneSEI, extraArraysPerThread ** eAPT_perThread,
-                     uint64_t * rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
+                     int64_t * rootArrayForApproximation, int64_t NK, int64_t NV, int64_t NT,
                      bcForest * beforeBCForest, int64_t u_old, int64_t v_old, int64_t * iterationCount, lbalance_t loadBalancing, granularity_t granularity)
 {
-    uint64_t iterator;
+    int64_t iterator;
     float timeFullBeforeMulti = 0, timeFullAfterMulti = 0, timeStreamMulti = 0;
     float_t avgComponents = 0;
 
-    iterationCount = 1;
+    *iterationCount = 1;
 
     double timeFullBefore = 0, timeFullAfter = 0, timeStream = 0;
 

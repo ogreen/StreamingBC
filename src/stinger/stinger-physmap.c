@@ -7,7 +7,7 @@
 #include "stinger-atomics.h"
 
 #define MARKERINT INT64_MAX
-uint64_t MARKER_;
+int64_t MARKER_;
 void * MARKER = (void *)&MARKER_;
 
 #define CHILDREN_COUNT 256
@@ -18,25 +18,25 @@ typedef struct tree_node {
   struct tree_node * children[CHILDREN_COUNT];
   struct tree_node * parent;
   uint8_t isEndpoint;
-  uint64_t vertexID;
-  uint64_t depth;
+  int64_t vertexID;
+  int64_t depth;
   char value;
 } tree_node_t;
 
 struct stinger_physmap {
   tree_node_t keyTree[MAX_NODES];
-  uint64_t keyTreeTop;
+  int64_t keyTreeTop;
   tree_node_t * vtxStack[MAX_VTXID];
-  uint64_t vtxStackTop;
+  int64_t vtxStackTop;
 };
 
 /* internal functions protos */
 
 tree_node_t *
-allocateTreeNode (stinger_physmap_t * map, tree_node_t * parent, uint64_t depth, char value);
+allocateTreeNode (stinger_physmap_t * map, tree_node_t * parent, int64_t depth, char value);
 
 int
-insertIntoTree(stinger_physmap_t * map, tree_node_t ** node, char * string, uint64_t length);
+insertIntoTree(stinger_physmap_t * map, tree_node_t ** node, char * string, int64_t length);
 
 /* function defs */
 
@@ -67,8 +67,8 @@ stinger_physmap_delete(stinger_physmap_t * map) {
 }
 
 tree_node_t *
-allocateTreeNode (stinger_physmap_t * map, tree_node_t * parent, uint64_t depth, char value) {
-  uint64_t myNode = stinger_int64_fetch_add(&(map->keyTreeTop),1);
+allocateTreeNode (stinger_physmap_t * map, tree_node_t * parent, int64_t depth, char value) {
+  int64_t myNode = stinger_int64_fetch_add(&(map->keyTreeTop),1);
   if(map->keyTreeTop >= MAX_NODES) {
     fprintf(stderr, "PHYSMAP: ERROR Out of treenodes\n");
     return NULL;
@@ -81,7 +81,7 @@ allocateTreeNode (stinger_physmap_t * map, tree_node_t * parent, uint64_t depth,
 }
 
 int
-insertIntoTree(stinger_physmap_t * map, tree_node_t ** node, char * string, uint64_t length) {
+insertIntoTree(stinger_physmap_t * map, tree_node_t ** node, char * string, int64_t length) {
   if(length == 0) {
     if((*node)->isEndpoint)
       return 1;
@@ -121,13 +121,13 @@ insertIntoTree(stinger_physmap_t * map, tree_node_t ** node, char * string, uint
  *  @param length The length of the string.
  *  @return A unique vertex ID or -1 if the mapping exists or an error occurs.
  */
-uint64_t
-stinger_physmap_create_mapping (stinger_physmap_t * map, char * string, uint64_t length) {
+int64_t
+stinger_physmap_create_mapping (stinger_physmap_t * map, char * string, int64_t length) {
   if(map->vtxStackTop == MAX_VTXID) {
     fprintf(stderr, "PHYSMAP: ERROR Out of vertices\n");
     return -1;
   }
-  uint64_t vertexID;
+  int64_t vertexID;
   tree_node_t * node = map->keyTree;
   int result = insertIntoTree(map, &node, string, length);
   switch(result) {
@@ -156,8 +156,8 @@ stinger_physmap_create_mapping (stinger_physmap_t * map, char * string, uint64_t
  *  @param length The length of the string.
  *  @return A unique vertex ID or -1 if the mapping does not exist.
  */
-uint64_t
-stinger_physmap_get_mapping (stinger_physmap_t * map, char * string, uint64_t length) {
+int64_t
+stinger_physmap_get_mapping (stinger_physmap_t * map, char * string, int64_t length) {
   tree_node_t * cur = map->keyTree;
   while(length > 0 && cur) {
     cur = cur->children[(int)string[0]];
@@ -186,7 +186,7 @@ stinger_physmap_get_mapping (stinger_physmap_t * map, char * string, uint64_t le
  *  @return 0 on success, -1 on failure.
  */
 int
-stinger_physmap_get_key (stinger_physmap_t * map, char ** outbuffer, uint64_t * outbufferlength, uint64_t vertexID) {
+stinger_physmap_get_key (stinger_physmap_t * map, char ** outbuffer, int64_t * outbufferlength, int64_t vertexID) {
   if(vertexID >= map->vtxStackTop || map->vtxStack[vertexID] == NULL || (!map->vtxStack[vertexID]->isEndpoint)) 
     return -1;
   tree_node_t * node = map->vtxStack[vertexID];
@@ -207,8 +207,8 @@ stinger_physmap_get_key (stinger_physmap_t * map, char ** outbuffer, uint64_t * 
   return 0;
 }
 
-uint64_t
-stinger_physmap_remove_mapping (stinger_physmap_t * map, uint64_t vertexID) {
+int64_t
+stinger_physmap_remove_mapping (stinger_physmap_t * map, int64_t vertexID) {
   printf("***TODO***\n");
   return -1;
 }
@@ -258,9 +258,9 @@ int main(int argc, char *argv[]) {
   }
   int threads = atoi(argv[1]);
   omp_set_num_threads(threads);
-  uint64_t lines_in_file = 0;
+  int64_t lines_in_file = 0;
   char ** strings;
-  uint64_t * lengths;
+  int64_t * lengths;
   float insertion, lookup, reverselookup;
 #pragma omp parallel
   {
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
       printf("%d,", omp_get_num_threads());
       FILE * fp = fopen(argv[2], "r");
       char * string = malloc(100*sizeof(char));;
-      uint64_t read = 0;
+      int64_t read = 0;
       int bytes = 100;
       while((read = getline(&string, &bytes, fp)) != EOF ) {
 	lines_in_file++;
@@ -278,8 +278,8 @@ int main(int argc, char *argv[]) {
       fclose(fp);
       fp = fopen(argv[2], "r");
       strings = malloc(lines_in_file * sizeof(char *));
-      lengths = malloc(lines_in_file * sizeof(uint64_t));
-      for(uint64_t i = 0; i < lines_in_file; ++i) {
+      lengths = malloc(lines_in_file * sizeof(int64_t));
+      for(int64_t i = 0; i < lines_in_file; ++i) {
 	string = malloc(100*sizeof(char));;
 	read = getline(&string, &bytes, fp);
 	strings[i] = string;
@@ -291,14 +291,14 @@ int main(int argc, char *argv[]) {
 
   tic_reset();
 #pragma omp parallel for
-  for(uint64_t i = 0; i < lines_in_file; ++i) {
-    uint64_t mapping = stinger_physmap_create_mapping(map, strings[i ], lengths[i ]);
+  for(int64_t i = 0; i < lines_in_file; ++i) {
+    int64_t mapping = stinger_physmap_create_mapping(map, strings[i ], lengths[i ]);
   }
   insertion = tic_sincelast();
 
 #pragma omp parallel for
-  for(uint64_t i = 0; i < lines_in_file; ++i) {
-    uint64_t mapping = stinger_physmap_get_mapping(map, strings[i ], lengths[i ]);
+  for(int64_t i = 0; i < lines_in_file; ++i) {
+    int64_t mapping = stinger_physmap_get_mapping(map, strings[i ], lengths[i ]);
     if(mapping == -1)
       printf("lu %s %lu %lu\n", strings[i ], lengths[i ], mapping);
   }
@@ -309,8 +309,8 @@ int main(int argc, char *argv[]) {
   char * string2 = malloc(sizeof(char) * 100);
   tic_reset();
 #pragma omp for
-  for(uint64_t i = 0; i < map->vtxStackTop; ++i) {
-    uint64_t slen2 = 100;
+  for(int64_t i = 0; i < map->vtxStackTop; ++i) {
+    int64_t slen2 = 100;
     if(stinger_physmap_get_key(map, &string2, &slen2, i ))
       printf("rlu %s %lu\n", string2, slen2);
   }

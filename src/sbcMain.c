@@ -33,13 +33,15 @@ int main(int argc, char * argv[])
     granularity_t granularity = COARSE; 
 
     hostParseArgsVitalUpdate(argc, argv, &NV, &NE, &NK, &NT, &randomSeed,
-                             &iterationCount, &initial_graph_name, &operation, &loadBalancing, &granularity, &edgeCount);
+                             &iterationCount, initial_graph_name, &operation, &loadBalancing, &granularity, &edgeCount);
 
+    //ignoring: edgeCount is the edge to change
+    //FIXME: delete dynamicRelated things
+    //Or just leave it there(preferred)
     int64_t insertionArraySrc[edgeCount];
     int64_t insertionArrayDest[edgeCount];
     int64_t deletionArraySrc[edgeCount];
     int64_t deletionArrayDest[edgeCount];
-
 
     printf("initial_graph_name: %s\n", initial_graph_name);
     double timingDynamic[edgeCount];
@@ -67,14 +69,16 @@ int main(int argc, char * argv[])
         srand(randomSeed);
     }
 
-    uint64_t * rootArrayForApproximation = NULL;
-    rootArrayForApproximation = (uint64_t *) xmalloc(sizeof(uint64_t) * NK);
+    int64_t * rootArrayForApproximation = NULL;
+    rootArrayForApproximation = (int64_t *) xmalloc(sizeof(int64_t) * NK);
 
+    //pickup roots randomly
     PickRoots(rootArrayForApproximation, NK, NV);
 
     bcForest * beforeBCForest = NULL;
 
     // Create batch of edges to delete or insert from the graph depending on the operation.
+    // FIXME: dynamic related
     if (operation == INSERT) {
         // Remove edges from the graph to re-insert and update BC values.
         CreateRandomEdgeListFromGraph(stingerGraph, NV, insertionArraySrc, insertionArrayDest, edgeCount);
@@ -95,13 +99,13 @@ int main(int argc, char * argv[])
 
     // Timing analysis.
     timingStatic = toc();
+    printf("%lf\n", timingStatic);
     staticTraverseVerticeCounter = eAPT_perThread2[0]->staticTraverseVerticeCounter;
     staticTraverseEdgeCounter = eAPT_perThread2[0]->staticTraverseEdgeCounter;
     destroyExtraArraysForThreads(eAPT_perThread2, NT, NV);
 
     //------- static computation END
-
-
+/*
     //-------Compute streaming BC
     //-------START
     StreamingExtraInfo oneSEI;
@@ -171,5 +175,5 @@ int main(int argc, char * argv[])
     for (int64_t i = 0; i < edgeCount; i++) {
         printf("%ld, %9lf\n", i, (double)(timingDynamic[i])); // Min speedup
     }
+ */
 }
-
