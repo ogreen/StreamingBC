@@ -29,7 +29,8 @@ void BrandesExactParallel(bcForest * forest, struct stinger * sStinger, extraArr
     #pragma omp parallel for schedule(dynamic,1)
 
     for (uint64_t i = 0; i < forest->NV; i++) {
-        BrandesSingleTree(forest, sStinger, i, forest->totalBC, eAPT);
+        int64_t thread = omp_get_thread_num();
+        BrandesSingleTree(forest, sStinger, i, forest->totalBC, eAPT[thread]);
     }
 
     #pragma omp parallel for
